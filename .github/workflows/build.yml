@@ -34,17 +34,26 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      - name: Build
-        run: |
+      - run: |
           dotnet publish src/EdcHost/EdcHost.csproj -c Release -o build \
           --sc false -r ${{ matrix.runtime }} -p:DebugType=none \
           -p:PublishSingleFile=true
 
-      - name: Copy essential files
-        run: |
+      - run: |
           cp CHANGELOG.md LICENSE README.md build
 
       - uses: actions/upload-artifact@v3
         with:
           name: edchost-${{ matrix.runtime }}
           path: build
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
+
+      - run: dotnet format --verify-no-changes src/EdcHost
