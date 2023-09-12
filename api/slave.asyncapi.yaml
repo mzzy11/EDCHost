@@ -1,32 +1,34 @@
-asyncapi: '2.6.0'
+asyncapi: "2.6.0"
 info:
   title: EDCHost Slave API
-  version: '0.1.0'
-channels: 
+  version: "0.1.0"
+channels:
   slave:
     publish:
       message:
         payload:
           type: object
           additionalProperties: false
-          properties: 
+          properties:
             actionType:
               type: integer
               format: int8
               description: |
                 The action type.
-                0: attack
-                1: trade
+                0: ATTACK
+                1: PLACE_BLOCK
+                2: TRADE
               enum:
                 - 0
                 - 1
+                - 2
             param:
               type: integer
               format: int8
               description: |
                 The parameter.
-                Chunk id for attack.
-                Item id for trade.
+                Chunk id for ATTACK and PLACE_BLOCK.
+                Item id for TRADE.
     subscribe:
       message:
         payload:

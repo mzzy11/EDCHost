@@ -1,8 +1,8 @@
-asyncapi: '2.6.0'
+asyncapi: "2.6.0"
 info:
   title: EDCHost Viewer API
-  version: '0.1.0'
-channels: 
+  version: "0.1.0"
+channels:
   viewer:
     subscribe:
       message:
@@ -40,7 +40,7 @@ channels:
                 oneOf:
                   - type: object
                     additionalProperties: false
-                    properties: 
+                    properties:
                       eventType:
                         type: string
                         const: PLAYER_ATTACK
@@ -106,7 +106,7 @@ channels:
                         type: integer
                         description: |
                           The target chunk.
-                      
+
             gameStage:
               type: string
               description: |
@@ -133,7 +133,7 @@ channels:
                   accumulatedCount:
                     type: integer
                     description: |
-                      The accumulated count.  
+                      The accumulated count.
                   mineType:
                     type: string
                     description: |
@@ -309,7 +309,7 @@ channels:
                       serialPort:
                         type: string
                         description: |
-                          The serial port.  
+                          The serial port.
           - name: Control
             payload:
               type: object

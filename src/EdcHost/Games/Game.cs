@@ -1,6 +1,5 @@
 namespace EdcHost.Games;
 
-partial class Game
+public partial class Game : IGame
 {
-
-};
+}
