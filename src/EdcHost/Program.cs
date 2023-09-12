@@ -18,7 +18,7 @@ class Program
             SetupDotEnv();
             SetupSerilog();
 
-            var edcHost = new EdcHost();
+            EdcHost edcHost = new();
 
         }
         catch (Exception exception)
