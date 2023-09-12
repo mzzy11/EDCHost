@@ -35,7 +35,7 @@ jobs:
           dotnet-version: 6.0.x
 
       - run: |
-          dotnet publish src/EDCHost/EDCHost.csproj -c Release -o bin \
+          dotnet publish src/EdcHost/EdcHost.csproj -c Release -o bin \
           --sc false -r ${{ matrix.runtime }} -p:DebugType=none \
           -p:PublishSingleFile=true
 
@@ -56,9 +56,9 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      - run: dotnet format --verify-no-changes src/EDCHost
+      - run: dotnet format --verify-no-changes src/EdcHost
 
-      - run: dotnet format --verify-no-changes src/EDCHost.Tests
+      - run: dotnet format --verify-no-changes src/EdcHost.Tests
 
   upload-to-release:
     needs:
@@ -140,4 +140,4 @@ jobs:
           dotnet-version: 6.0.x
 
       - run: |
-          dotnet test src/EDCHost.Tests/EDCHost.Tests.csproj
+          dotnet test src/EdcHost.Tests/EdcHost.Tests.csproj
