@@ -1,23 +1,19 @@
 # EDCHost
 
-EDCHost is the official host program for the Electronic Design Competition, offering judging features and WebSocket APIs for inspection and control of the competition.
+The official host program for Electronic Design Competition
 
-## Installation
+## Install
 
-This program is portable. Therefore, you can simply download a release bundle, extract it, and run the executable file.
+Download the latest release from [here](https://github.com/THUASTA/EDCHost/releases) and unzip it to an empty folder.
 
 ## Usage
 
-_This section is under construction._
-
-## Support
-
-Please raise an issue on GitHub if you have any questions or problems.
+Run `EdcHost.exe` to launch the program.
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+If you have any suggestions or improvements, please submit [an issue](https://github.com/THUASTA/EDCHost/issues/new) or a pull request.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+[GPL-3.0-only](LICENSE) © THUASTA
