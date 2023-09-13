@@ -72,6 +72,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - run: |
+          mkdir -p site/api/slave
+          mkdir -p site/api/viewer
+
       - uses: docker://asyncapi/github-action-for-generator
         with:
           filepath: docs/api/slave/asyncapi.yaml
