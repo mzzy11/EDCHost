@@ -7,6 +7,8 @@ public class Chunk : IChunk
 
     public int Height { get; }
     public bool IsVoid { get; }
+    public bool CanPlaceBlock { get; }
+    public IPosition<int> Position { get; }
 
     #endregion
 
@@ -16,10 +18,12 @@ public class Chunk : IChunk
     /// Constructor
     /// </summary>
     /// <param name="height">Height of the chunk.</param>
-    public Chunk(int height)
+    public Chunk(int height, IPosition<int> position)
     {
         Height = height;
         IsVoid = (height == 0);
+        CanPlaceBlock = true;
+        Position = position;
     }
 
     #endregion

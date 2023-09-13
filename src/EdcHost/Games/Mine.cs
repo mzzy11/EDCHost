@@ -4,8 +4,8 @@ public class Mine : IMine
 {
     #region Public properties
 
-    public int GeneratedOreCount { get; private set; }
-    public int OreKind { get; }
+    public int AccumulatedOreCount { get; private set; }
+    public IMine.OreKindType OreKind { get; }
     public IPosition<float> Position { get; }
 
     #endregion
@@ -15,21 +15,18 @@ public class Mine : IMine
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="oreKind">Kind of the ore</param>
+    /// <param name="oreKind">The kind of the ore</param>
     /// <param name="position">Position of the mine</param>
-    public Mine(int oreKind, Position<float> position)
+    public Mine(IMine.OreKindType oreKind, Position<float> position)
     {
-        GeneratedOreCount = 0;
+        AccumulatedOreCount = 0;
         OreKind = oreKind;
         Position = position;
     }
 
-    /// <summary>
-    /// Generate a new ore.
-    /// </summary>
-    public void GenerateOre()
+    public void PickUpOre(int count)
     {
-        GeneratedOreCount++;
+        AccumulatedOreCount = Math.Max(0, AccumulatedOreCount - count);
     }
 
     #endregion
