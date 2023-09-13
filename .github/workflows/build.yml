@@ -58,7 +58,7 @@ jobs:
       - run: dotnet format --verify-no-changes src/EdcHost.Tests
 
   deploy-documentation:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: generate-documentation
     permissions:
       id-token: write
