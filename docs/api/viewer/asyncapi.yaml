@@ -3,19 +3,23 @@ info:
   title: Viewer API
   version: "0.1.0"
 channels:
-  /competition/updates:
-    subscribe:
-      message:
-        $ref: "#/components/messages/CompetitionUpdate"
   /competition/control:
     subscribe:
       message:
-        $ref: "#/components/messages/HostConfiguration"
+        oneOf:
+          - $ref: "#/components/messages/Error"
+          - $ref: "#/components/messages/HostConfiguration"
     publish:
       message:
         oneOf:
           - $ref: "#/components/messages/CompetitionControlCommand"
           - $ref: "#/components/messages/HostConfiguration"
+  /competition/updates:
+    subscribe:
+      message:
+        oneOf:
+          - $ref: "#/components/messages/CompetitionUpdate"
+          - $ref: "#/components/messages/Error"
 components:
   messages:
     CompetitionControlCommand:
@@ -24,11 +28,14 @@ components:
         additionalProperties: false
         required:
           - messageType
+          - token
           - command
         properties:
           messageType:
             type: string
             const: COMPETITION_CONTROL_COMMAND
+          token:
+            type: string
           command:
             type: string
             enum:
@@ -167,12 +174,29 @@ components:
                     type: integer
               position:
                 $ref: "#/components/schemas/Position"
+    Error:
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - messageType
+          - errorCode
+          - message
+        properties:
+          messageType:
+            type: string
+            const: ERROR
+          errorCode:
+            type: integer
+          message:
+            type: string
     HostConfiguration:
       payload:
         type: object
         additionalProperties: false
         required:
           - messageType
+          - token
           - availabelCameraIds
           - availableSerialPortNames
           - players
@@ -180,6 +204,8 @@ components:
           messageType:
             type: string
             const: HOST_CONFIGURATION
+          token:
+            type: string
           availableCameras:
             type: array
             items:
