@@ -1,4 +1,4 @@
-## github.com/github/gitignore/community/DotNet/core.gitignore
+## https://github.com/github/gitignore/blob/main/community/DotNet/core.gitignore
 *.swp
 *.*~
 project.lock.json
@@ -38,5 +38,5 @@ msbuild.wrn
 .vs/
 
 
-## Repo specific ignores
-.vscode/
+## Repository specific ignores
+/site/
