@@ -1,6 +1,6 @@
 namespace EdcHost;
 
-public partial class EdcHost
+public partial class EdcHost : IEdcHost
 {
     public EdcHost()
     {
