@@ -8,12 +8,12 @@ channels:
       message:
         oneOf:
           - $ref: "#/components/messages/Error"
-          - $ref: "#/components/messages/HostConfiguration"
+          - $ref: "#/components/messages/HostConfigurationFromServer"
     publish:
       message:
         oneOf:
           - $ref: "#/components/messages/CompetitionControlCommand"
-          - $ref: "#/components/messages/HostConfiguration"
+          - $ref: "#/components/messages/HostConfigurationFromClient"
   /competition/updates:
     subscribe:
       message:
@@ -59,12 +59,18 @@ components:
               required:
                 - cameraId
                 - frameData
+                - height
+                - width
               properties:
                 cameraId:
                   type: integer
                 frameData:
                   type: string
                   format: binary
+                height:
+                  type: integer
+                width:
+                  type: integer
           chunks:
             type: array
             items:
@@ -80,7 +86,7 @@ components:
                 height:
                   type: integer
                 position:
-                  $ref: "#/components/schemas/Position"
+                  $ref: "#/components/schemas/PositionInt"
           events:
             type: array
             items:
@@ -129,7 +135,7 @@ components:
                     - GOLD_ORE
                     - DIAMOND_ORE
                 position:
-                  $ref: "#/components/schemas/Position"
+                  $ref: "#/components/schemas/PositionInt"
           players:
             type: array
             additionalProperties: false
@@ -190,22 +196,112 @@ components:
             type: integer
           message:
             type: string
-    HostConfiguration:
+    HostConfigurationFromClient:
       payload:
         type: object
         additionalProperties: false
         required:
           - messageType
           - token
+          - players
+        properties:
+          messageType:
+            type: string
+            const: HOST_CONFIGURATION_FROM_CLIENT
+          token:
+            type: string
+          players:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+                - playerId
+                - camera
+                - serialPort
+              properties:
+                playerId:
+                  type: integer
+                camera:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - cameraId
+                    - calibration
+                    - recognition
+                  properties:
+                    cameraId:
+                      type: integer
+                    calibration:
+                      type: object
+                      additionalProperties: false
+                      required:
+                        - topLeft
+                        - topRight
+                        - bottomLeft
+                        - bottomRight
+                      properties:
+                        topLeft:
+                          $ref: "#/components/schemas/Position"
+                        topRight:
+                          $ref: "#/components/schemas/Position"
+                        bottomLeft:
+                          $ref: "#/components/schemas/Position"
+                        bottomRight:
+                          $ref: "#/components/schemas/Position"
+                    recognition:
+                      type: object
+                      additionalProperties: false
+                      required:
+                        - hueCenter
+                        - hueRange
+                        - saturationCenter
+                        - saturationRange
+                        - valueCenter
+                        - valueRange
+                        - minArea
+                        - showMask
+                      properties:
+                        hueCenter:
+                          type: number
+                        hueRange:
+                          type: number
+                        saturationCenter:
+                          type: number
+                        saturationRange:
+                          type: number
+                        valueCenter:
+                          type: number
+                        valueRange:
+                          type: number
+                        minArea:
+                          type: number
+                        showMask:
+                          type: boolean
+                serialPort:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - portName
+                    - baudRate
+                  properties:
+                    portName:
+                      type: string
+                    baudRate:
+                      type: integer
+    HostConfigurationFromServer:
+      payload:
+        type: object
+        additionalProperties: false
+        required:
+          - messageType
           - availabelCameraIds
           - availableSerialPortNames
           - players
         properties:
           messageType:
             type: string
-            const: HOST_CONFIGURATION
-          token:
-            type: string
+            const: HOST_CONFIGURATION_FROM_SERVER
           availableCameras:
             type: array
             items:
@@ -305,6 +401,17 @@ components:
           type: number
         y:
           type: number
+    PositionInt:
+      type: object
+      additionalProperties: false
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+        y:
+          type: integer
     PlayerAttackEvent:
       type: object
       additionalProperties: false
