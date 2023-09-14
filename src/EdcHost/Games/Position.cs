@@ -1,15 +1,20 @@
 namespace EdcHost.Games;
 
+/// <summary>
+/// Position represents a position in 2D space.
+/// </summary>
+/// <typeparam name="T">The type of the position.</typeparam>
 public class Position<T> : IPosition<T>
 {
-    #region Public properties
-
+    /// <summary>
+    /// The X coordinate of the position.
+    /// </summary>
     public T X { get; set; }
+
+    /// <summary>
+    /// The Y coordinate of the position.
+    /// </summary>
     public T Y { get; set; }
-
-    #endregion
-
-    #region Public methods
 
     /// <summary>
     /// Constructor
@@ -22,5 +27,4 @@ public class Position<T> : IPosition<T>
         Y = y;
     }
 
-    #endregion
 }

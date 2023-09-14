@@ -1,29 +1,36 @@
 namespace EdcHost.Games;
 
+/// <summary>
+/// Map represents the map of the game.
+/// </summary>
 public class Map : IMap
 {
 
-    #region Public properties
-
+    /// <summary>
+    /// The list of chunks.
+    /// </summary>
     public List<IChunk> Chunks { get; }
-
-    #endregion
-
-    #region Public methods
 
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="chunks"></param>
-    public Map(List<IChunk> chunks)
+    public Map()
     {
-        Chunks = chunks;
+        Chunks = new();
+        for (int i = 0; i < 64; i++)
+        {
+            Chunks.Add(new Chunk(0, new Position<int>(i / 8, i % 8)));
+        }
     }
 
+    /// <summary>
+    /// Gets the chunk at the position.
+    /// </summary>
+    /// <param name="position">The position</param>
+    /// <returns>The chunk</returns>
     public IChunk GetChunkAt(IPosition<int> position)
     {
         return Chunks[8 * position.X + position.Y];
     }
 
-    #endregion
 }
