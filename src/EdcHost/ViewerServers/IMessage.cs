@@ -10,5 +10,7 @@ public interface IMessage
     [JsonPropertyName("messageType")]
     public string MessageType { get; }
 
-    public byte[] Serialize();
+    public byte[] SerializeToUtf8Bytes();
+
+    public string SerializeToString();
 }

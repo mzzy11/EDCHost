@@ -3,15 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace EdcHost.ViewerServers;
 
-public class Error : IError
+public class Message : IMessage
 {
     public string MessageType { get; }
-    public int ErrorCode { get; }
-    public string Message { get; }
 
     [JsonConstructor]
-    public Error(string messageType, int errorCode, string message)
-        => (MessageType, ErrorCode, Message) = (messageType, errorCode, message);
+    public Message(string messageType)
+        => MessageType = messageType;
 
     public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
 

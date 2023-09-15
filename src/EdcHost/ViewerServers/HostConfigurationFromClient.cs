@@ -21,5 +21,7 @@ public class HostConfigurationFromClient : IHostConfigurationFromClient
     public HostConfigurationFromClient(string messageType, string token, List<object> players) 
         => (MessageType, Token, Players) = (messageType, token, players);
     
-    public byte[] Serialize() => JsonSerializer.SerializeToUtf8Bytes(this);
+    public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
+
+    public string SerializeToString() => JsonSerializer.Serialize(this);
 }

@@ -26,5 +26,7 @@ public class CompetitionUpdate : ICompetitionUpdate
     )  => (MessageType, Cameras, Chunks, Events, Info, Mines, Players) 
         = (messageType, cameras, chunks, events, info, mines, players);
 
-    public byte[] Serialize() => JsonSerializer.SerializeToUtf8Bytes(this);
+    public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
+
+    public string SerializeToString() => JsonSerializer.Serialize(this);
 }

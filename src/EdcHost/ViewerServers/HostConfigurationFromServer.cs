@@ -19,5 +19,7 @@ public class HostConfigurationFromServer : IHostConfigurationFromServer
     )  => (MessageType, AvailableCameras, AvailableSerialPorts, Message) 
         = (messageType, availableCameras, availableSerialPorts, message);
     
-    public byte[] Serialize() => JsonSerializer.SerializeToUtf8Bytes(this);
+    public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
+
+    public string SerializeToString() => JsonSerializer.Serialize(this);
 }
