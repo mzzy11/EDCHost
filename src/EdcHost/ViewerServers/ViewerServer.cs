@@ -14,6 +14,7 @@ public class ViewerServer
     private readonly WebSocketServer _webSocketServer;
     private readonly ILogger _logger = Log.Logger.ForContext<ViewerServer>();
     private IWebSocketConnection? _socket = null;
+    private readonly Updater _updater = new Updater();
 
     public ViewerServer(int port)
     {
@@ -29,8 +30,10 @@ public class ViewerServer
     {
         WebSocketServerStart();
         _logger.Information("Server started.");
-
         
+        _updater.SendCaller += (sender, args) => Send(args.Message);
+
+        _updater.StartUpdate();
     }
     /// <summary>
     /// Stops the server.
@@ -39,6 +42,7 @@ public class ViewerServer
     {
         _webSocketServer.Dispose();
         _socket?.Close();
+        _updater.End();
     }
 
     public void Send(IMessage message)
@@ -129,10 +133,5 @@ public class ViewerServer
             default:
                 throw new InvalidDataException("Invalide message type.");
         }
-    }
-
-    public void RegisterSendMessage(EventHandler<MessageTransferEventArgs> eventHandler)
-    {
-        eventHandler += (sender, args) => Send(args.Message);
     }
 }

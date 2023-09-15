@@ -5,7 +5,7 @@ namespace EdcHost.ViewerServers;
 
 public class Updater : IUpdater
 {
-    public IMessage? CachedMessage { get; } = null;
+    public IMessage? CachedMessage { get; private set; } = null;
     public bool EndTag { get; private set; }
     public event EventHandler<MessageTransferEventArgs>? SendCaller = null;
 
@@ -28,6 +28,8 @@ public class Updater : IUpdater
             }
         });
     }
+
+    public void UpdateMessage(IMessage message) => CachedMessage = message;
 
     public void End()
     {
