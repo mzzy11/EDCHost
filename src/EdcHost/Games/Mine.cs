@@ -42,4 +42,12 @@ public class Mine : IMine
         AccumulatedOreCount = Math.Max(0, AccumulatedOreCount - count);
     }
 
+    /// <summary>
+    /// Generate ore automaticly.
+    /// </summary>
+    public void Generate()
+    {
+        AccumulatedOreCount++;
+    }
+
 }

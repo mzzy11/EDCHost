@@ -1,11 +1,39 @@
 namespace EdcHost.Games;
 
+/// <summary>
+/// Game handles the game logic.
+/// </summary>
 public partial class Game : IGame
 {
     //TODO: Seperate class Game
 
     //TODO: Add events to Game
     //TODO: Add other fields and properties
+
+    /// <summary>
+    /// How many seconds one tick takes.
+    /// </summary>
+    private const decimal SecondsPerTick = 0.05M;
+
+    /// <summary>
+    /// Maximum count of same type of items a player can hold.
+    /// </summary>
+    private const int MaximumItemCount = 64;
+
+    /// <summary>
+    /// When will Battling stage start.
+    /// </summary>
+    private readonly TimeSpan StartBattlingTime = TimeSpan.FromSeconds(600);
+
+    /// <summary>
+    /// How much time a player should wait until respawn.
+    /// </summary>
+    private readonly TimeSpan RespawnTimeInterval = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// How much time required to generate ore.
+    /// </summary>
+    private readonly TimeSpan AccumulateOreInterval = TimeSpan.FromSeconds(10);
 
     /// <summary>
     /// Current stage of the game.
@@ -26,14 +54,19 @@ public partial class Game : IGame
     public IPlayer? Winner { get; private set; }
 
     /// <summary>
-    /// When will Battling stage start.
+    /// When game starts.
     /// </summary>
-    private readonly TimeSpan _startBattlingTime = TimeSpan.FromSeconds(600);
+    private DateTime? _startTime;
 
     /// <summary>
-    /// How nuch time a player should wait until respawn.
+    /// Last tick.
     /// </summary>
-    private readonly TimeSpan _respawnTimeInterval = TimeSpan.FromSeconds(15);
+    private DateTime? _lastTickTime;
+
+    /// <summary>
+    /// Last time ore generated.
+    /// </summary>
+    private DateTime? _lastOreGeneratedTime;
 
     /// <summary>
     /// The game map.
@@ -63,11 +96,17 @@ public partial class Game : IGame
         CurrentStage = IGame.Stage.Ready;
         ElapsedTime = TimeSpan.FromSeconds(0);
         Winner = null;
+
+        _startTime = null;
+        _lastTickTime = null;
+        _lastOreGeneratedTime = null;
+
         _map = new Map();
         _players = new(2);
         _mines = new();
-        _tickTask = new(Tick);
         GenerateMines();
+
+        _tickTask = new(Tick);
         //TODO: Add players
         //TODO: Subscribe player events
     }
@@ -77,7 +116,7 @@ public partial class Game : IGame
     /// </summary>
     public void Start()
     {
-        if (CurrentStage == IGame.Stage.Running || CurrentStage == IGame.Stage.Battling)
+        if (_startTime is not null)
         {
             throw new InvalidOperationException("The game is already started.");
         }
@@ -85,8 +124,13 @@ public partial class Game : IGame
         //TODO: Start game after all players are ready
 
         CurrentStage = IGame.Stage.Running;
-        ElapsedTime = TimeSpan.FromSeconds(0);
         Winner = null;
+
+        DateTime initTime = DateTime.Now;
+        _startTime = initTime;
+        _lastTickTime = initTime;
+        _lastOreGeneratedTime = initTime;
+        ElapsedTime = TimeSpan.FromSeconds(0);
 
         _tickTask.Start();
 
@@ -98,13 +142,17 @@ public partial class Game : IGame
     /// </summary>
     public void Stop()
     {
-        if (CurrentStage == IGame.Stage.Ready)
+        if (_startTime is null)
         {
             Serilog.Log.Warning("The game has not started yet.");
         }
         lock (this)
         {
             Judge();
+            _startTime = null;
+            _lastTickTime = null;
+            _lastOreGeneratedTime = null;
+            ElapsedTime = TimeSpan.FromSeconds(0);
         }
         _tickTask.Wait();
     }
@@ -120,18 +168,15 @@ public partial class Game : IGame
             {
                 lock (this)
                 {
-                    if (CurrentStage == IGame.Stage.Ready
-                        || CurrentStage == IGame.Stage.Finished)
+                    if (_startTime is null)
                     {
                         break;
                     }
 
                     //TODO: Handle time and ticks
+                    ElapsedTime = DateTime.Now - (DateTime)_startTime;
 
-                    UpdateMap();
-                    UpdateMines();
-                    UpdatePlayerInfo();
-                    UpdateGameStage();
+                    Update();
 
                     if (CurrentStage == IGame.Stage.Finished)
                     {
@@ -167,19 +212,30 @@ public partial class Game : IGame
     }
 
     /// <summary>
+    /// Update game.
+    /// </summary>
+    private void Update()
+    {
+        if (_startTime is null)
+        {
+            throw new InvalidOperationException("The game is not running.");
+        }
+        UpdateMap();
+        UpdateMines();
+        UpdatePlayerInfo();
+        UpdateGameStage();
+    }
+
+    /// <summary>
     /// Update game stage.
     /// </summary>
     private void UpdateGameStage()
     {
-        if (CurrentStage == IGame.Stage.Ready || CurrentStage == IGame.Stage.Finished)
-        {
-            throw new InvalidOperationException("The game is not running.");
-        }
         if (IsFinished())
         {
             CurrentStage = IGame.Stage.Finished;
         }
-        else if (ElapsedTime >= _startBattlingTime)
+        else if (ElapsedTime >= StartBattlingTime)
         {
             CurrentStage = IGame.Stage.Battling;
         }
@@ -202,7 +258,21 @@ public partial class Game : IGame
     /// </summary>
     private void UpdateMines()
     {
-        //TODO: Accumulate ore automaticly
+        if (_lastOreGeneratedTime is null)
+        {
+            throw new NullReferenceException("_lastOreGeneratedTime is null");
+        }
+
+        DateTime currentTime = DateTime.Now;
+        if (currentTime - (DateTime)_lastOreGeneratedTime >= AccumulateOreInterval)
+        {
+            foreach (Mine mine in _mines)
+            {
+                mine.Generate();
+            }
+            _lastOreGeneratedTime = currentTime;
+        }
+
         //TODO: Update AccumulatedOreCount when a player collects ore
     }
 
@@ -242,6 +312,7 @@ public partial class Game : IGame
         //TODO: Handle PlayerMoveEvent
     }
 
-    //TODO: Create more player event handler
+    //TODO: Add more player event handler
+    //TODO: Add methods to calculate values based on players' properties
 
 }

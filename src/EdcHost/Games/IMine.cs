@@ -33,4 +33,9 @@ public interface IMine
     /// </summary>
     /// <param name="count">The count of ore to pick up.</param>
     public void PickUpOre(int count);
+
+    /// <summary>
+    /// Generate ore automaticly.
+    /// </summary>
+    public void Generate();
 }
