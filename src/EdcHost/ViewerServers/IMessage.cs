@@ -7,7 +7,6 @@ namespace EdcHost.ViewerServers;
 /// </summary>
 public interface IMessage
 {
-    [JsonPropertyName("messageType")]
     public string MessageType { get; }
 
     public byte[] SerializeToUtf8Bytes();

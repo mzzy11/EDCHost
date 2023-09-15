@@ -14,8 +14,10 @@ public class HostConfigurationFromClient : IHostConfigurationFromClient
     [JsonPropertyName("messageType")]
     public string MessageType { get; private set; }
     
+    [JsonPropertyName("token")]
     public string Token { get; private set; }
     
+    [JsonPropertyName("players")]
     public List<object> Players{ get; private set; }
 
     [JsonConstructor]
