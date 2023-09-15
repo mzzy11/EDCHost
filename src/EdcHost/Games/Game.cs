@@ -307,7 +307,7 @@ public partial class Game : IGame
     /// </summary>
     /// <param name="sender">Sender of the event</param>
     /// <param name="e">Event args</param>
-    private void PlayerMoveEventHandler(object? sender, PlayerMoveEventArgs e)
+    private void HandlePlayerMoveEvent(object? sender, PlayerMoveEventArgs e)
     {
         //TODO: Handle PlayerMoveEvent
     }
