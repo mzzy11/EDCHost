@@ -15,7 +15,7 @@ public class Chunk : IChunk
     /// <summary>
     /// Whether the chunk is void.
     /// </summary>
-    public bool IsVoid { get; }
+    public bool IsVoid { get => (Height == 0); }
 
     /// <summary>
     /// The position of the chunk.
@@ -30,7 +30,6 @@ public class Chunk : IChunk
     public Chunk(int height, IPosition<int> position)
     {
         Height = height;
-        IsVoid = (height == 0);
         CanPlaceBlock = true;
         Position = position;
     }

@@ -16,10 +16,10 @@ public class Map : IMap
     /// </summary>
     public Map()
     {
-        Chunks = new();
+        Chunks = new(64);
         for (int i = 0; i < 64; i++)
         {
-            Chunks.Add(new Chunk(0, new Position<int>(i / 8, i % 8)));
+            Chunks[i] = new Chunk(0, new Position<int>(i / 8, i % 8));
         }
     }
 
