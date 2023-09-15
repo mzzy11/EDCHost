@@ -11,10 +11,11 @@ namespace EdcHost.ViewerServers;
 public class HostConfigurationFromClient : IHostConfigurationFromClient
 {
     // The message type of the command
+    [JsonPropertyName("messageType")]
     public string MessageType { get; private set; }
-    // The token of the command
+    
     public string Token { get; private set; }
-    // The command to be executed
+    
     public List<object> Players{ get; private set; }
 
     [JsonConstructor]

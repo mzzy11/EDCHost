@@ -5,12 +5,25 @@ namespace EdcHost.ViewerServers;
 
 public class CompetitionUpdate : ICompetitionUpdate
 {
+    [JsonPropertyName("messageType")]
     public string MessageType { get; }
+
+    [JsonPropertyName("cameras")]
     public List<object> Cameras { get; }
+
+    [JsonPropertyName("chunks")]
     public List<object> Chunks { get; }
+
+    [JsonPropertyName("events")]
     public List<object> Events { get; }
+
+    [JsonPropertyName("info")]
     public List<object> Info { get; }
+
+    [JsonPropertyName("mines")]
     public List<object> Mines { get; }
+
+    [JsonPropertyName("players")]
     public List<object> Players { get; }
     
 

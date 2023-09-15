@@ -5,8 +5,13 @@ namespace EdcHost.ViewerServers;
 
 public class Error : IError
 {
+    [JsonPropertyName("messageType")]
     public string MessageType { get; }
+
+    [JsonPropertyName("errorCode")]
     public int ErrorCode { get; }
+
+    [JsonPropertyName("message")]
     public string Message { get; }
 
     [JsonConstructor]

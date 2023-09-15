@@ -63,7 +63,7 @@ public class ViewerServer
         }
     }
 
-    public void WebSocketServerStart()
+    private void WebSocketServerStart()
     {
         _webSocketServer.Start(socket =>
         {
@@ -85,22 +85,7 @@ public class ViewerServer
             {
                 try
                 {
-                    IMessage message = JsonSerializer.Deserialize<Message>(text)!;
-                    switch (message.MessageType)
-                    {
-                        case "COMPETITION_CONTROL_COMMAND":
-                            ICompetitionControlCommand command 
-                                = JsonSerializer.Deserialize<CompetitionControlCommand>(text)!;
-                            break;
-                        
-                        case "HOST_CONFIGURATION_FROM_CLIENT":
-                            IHostConfigurationFromClient hostConfiguration
-                                = JsonSerializer.Deserialize<HostConfigurationFromClient>(text)!;
-                            break;
-
-                        default:
-                            break;
-                    }
+                    DeserializeMessage(text);
                 }
                 catch (Exception e)
                 {
@@ -114,22 +99,7 @@ public class ViewerServer
                 try
                 {
                     string text = Encoding.UTF8.GetString(bytes);
-                    IMessage message = JsonSerializer.Deserialize<Message>(text)!;
-                    switch (message.MessageType)
-                    {
-                        case "COMPETITION_CONTROL_COMMAND":
-                            ICompetitionControlCommand command 
-                                = JsonSerializer.Deserialize<CompetitionControlCommand>(text)!;
-                            break;
-                        
-                        case "HOST_CONFIGURATION_FROM_CLIENT":
-                            IHostConfigurationFromClient hostConfiguration
-                                = JsonSerializer.Deserialize<HostConfigurationFromClient>(text)!;
-                            break;
-
-                        default:
-                            break;
-                    }
+                    DeserializeMessage(text);
                 }
                 catch (Exception e)
                 {
@@ -144,5 +114,25 @@ public class ViewerServer
                 socket.Close();
             };
         });
+    }
+
+    private void DeserializeMessage(string text)
+    {
+        IMessage message = JsonSerializer.Deserialize<Message>(text)!;
+        switch (message.MessageType)
+        {
+            case "COMPETITION_CONTROL_COMMAND":
+                ICompetitionControlCommand command 
+                    = JsonSerializer.Deserialize<CompetitionControlCommand>(text)!;
+                break;
+            
+            case "HOST_CONFIGURATION_FROM_CLIENT":
+                IHostConfigurationFromClient hostConfiguration
+                    = JsonSerializer.Deserialize<HostConfigurationFromClient>(text)!;
+                break;
+
+            default:
+                throw new InvalidDataException("Invalide message type.");
+        }
     }
 }

@@ -5,9 +5,16 @@ namespace EdcHost.ViewerServers;
 
 public class HostConfigurationFromServer : IHostConfigurationFromServer
 {
+    [JsonPropertyName("messageType")]
     public string MessageType { get; }
+
+    [JsonPropertyName("availableCameras")]
     public List<object> AvailableCameras { get; }
+
+    [JsonPropertyName("availableSerialPorts")]
     public List<object> AvailableSerialPorts { get; }
+
+    [JsonPropertyName("message")]
     public string Message { get; }
 
     [JsonConstructor]
