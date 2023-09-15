@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EdcHost.ViewerServers;
+namespace EdcHost.ViewerServers.Messages;
 
 public interface ICompetitionUpdate : IMessage
 {

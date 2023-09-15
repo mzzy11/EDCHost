@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EdcHost.ViewerServers;
+namespace EdcHost.ViewerServers.Messages;
 
 /// <summary>
 /// Store information of game status.

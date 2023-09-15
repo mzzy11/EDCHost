@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using EdcHost.Games;
 
-namespace EdcHost.ViewerServers;
+namespace EdcHost.ViewerServers.Messages;
 
 public class HostConfigurationFromClient : IHostConfigurationFromClient
 {

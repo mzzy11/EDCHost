@@ -1,14 +1,9 @@
-using System.Net;
-using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Fleck;
 using Serilog;
-using Serilog.Core;
-using System.Diagnostics;
+using EdcHost.ViewerServers.Messages;
+using EdcHost.ViewerServers.EventArgs;
 namespace EdcHost.ViewerServers;
 
 /// <summary>
@@ -134,5 +129,10 @@ public class ViewerServer
             default:
                 throw new InvalidDataException("Invalide message type.");
         }
+    }
+
+    public void RegisterSendMessage(EventHandler<MessageTransferEventArgs> eventHandler)
+    {
+        eventHandler += (sender, args) => Send(args.Message);
     }
 }

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace EdcHost.ViewerServers;
+namespace EdcHost.ViewerServers.Messages;
 
 public class CompetitionUpdate : ICompetitionUpdate
 {
