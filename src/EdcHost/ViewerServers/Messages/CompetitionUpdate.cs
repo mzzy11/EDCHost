@@ -25,10 +25,9 @@ public class CompetitionUpdate : ICompetitionUpdate
 
     [JsonPropertyName("players")]
     public List<object> Players { get; }
-    
 
     [JsonConstructor]
-    public CompetitionUpdate (
+    public CompetitionUpdate(
         string messageType,
         List<object> cameras,
         List<object> chunks,
@@ -36,7 +35,7 @@ public class CompetitionUpdate : ICompetitionUpdate
         List<object> info,
         List<object> mines,
         List<object> players
-    )  => (MessageType, Cameras, Chunks, Events, Info, Mines, Players) 
+    ) => (MessageType, Cameras, Chunks, Events, Info, Mines, Players)
         = (messageType, cameras, chunks, events, info, mines, players);
 
     public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);

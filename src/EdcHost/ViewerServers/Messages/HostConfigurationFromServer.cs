@@ -19,13 +19,13 @@ public class HostConfigurationFromServer : IHostConfigurationFromServer
 
     [JsonConstructor]
     public HostConfigurationFromServer(
-        string messageType, 
-        List<object> availableCameras, 
-        List<object> availableSerialPorts, 
+        string messageType,
+        List<object> availableCameras,
+        List<object> availableSerialPorts,
         string message
-    )  => (MessageType, AvailableCameras, AvailableSerialPorts, Message) 
+    ) => (MessageType, AvailableCameras, AvailableSerialPorts, Message)
         = (messageType, availableCameras, availableSerialPorts, message);
-    
+
     public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
 
     public string SerializeToString() => JsonSerializer.Serialize(this);

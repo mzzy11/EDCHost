@@ -19,7 +19,7 @@ public class CompetitionControlCommand : ICompetitionControlCommand
     public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
 
     [JsonConstructor]
-    public CompetitionControlCommand(string messageType, string token, string command) 
+    public CompetitionControlCommand(string messageType, string token, string command)
         => (MessageType, Token, Command) = (messageType, token, command);
 
     public string SerializeToString() => JsonSerializer.Serialize(this);
