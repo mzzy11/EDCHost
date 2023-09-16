@@ -44,7 +44,7 @@ jobs:
           name: EDCHost-${{ matrix.runtime }}-${{ github.sha }}
           path: bin
 
-  format:
+  check-style:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +56,42 @@ jobs:
       - run: dotnet format --verify-no-changes src/EdcHost
 
       - run: dotnet format --verify-no-changes src/EdcHost.Tests
+
+  deploy-documentation:
+    # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push'
+    needs: generate-documentation
+    permissions:
+      id-token: write
+      pages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v2
+
+  generate-documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: |
+          mkdir -p site/api/slave
+          mkdir -p site/api/viewer
+
+      - uses: docker://asyncapi/github-action-for-generator
+        with:
+          filepath: docs/api/slave/asyncapi.yaml
+          template: '@asyncapi/html-template'
+          output: site/api/slave
+
+      - uses: docker://asyncapi/github-action-for-generator
+        with:
+          filepath: docs/api/viewer/asyncapi.yaml
+          template: '@asyncapi/html-template'
+          output: site/api/viewer
+
+      - uses: actions/upload-pages-artifact@v2
+        with:
+          path: site/
 
   test:
     strategy:
