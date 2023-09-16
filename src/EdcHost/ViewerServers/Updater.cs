@@ -1,5 +1,5 @@
-using EdcHost.ViewerServers.Messages;
 using EdcHost.ViewerServers.EventArgs;
+using EdcHost.ViewerServers.Messages;
 
 namespace EdcHost.ViewerServers;
 
@@ -12,7 +12,7 @@ public class Updater : IUpdater
     public async void StartUpdate()
     {
         EndTag = false;
-        await Task.Run(() => 
+        await Task.Run(() =>
         {
             while (true)
             {

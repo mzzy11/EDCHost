@@ -3,7 +3,7 @@ using System.Text.Json;
 using Fleck;
 using Serilog;
 using EdcHost.ViewerServers.Messages;
-using EdcHost.ViewerServers.EventArgs;
+
 namespace EdcHost.ViewerServers;
 
 /// <summary>
@@ -30,7 +30,7 @@ public class ViewerServer
     {
         WebSocketServerStart();
         _logger.Information("Server started.");
-        
+
         _updater.SendCaller += (sender, args) => Send(args.Message);
 
         _updater.StartUpdate();
@@ -107,7 +107,7 @@ public class ViewerServer
                 }
             };
 
-            socket.OnError = exception => 
+            socket.OnError = exception =>
             {
                 _logger.Error(exception, "Error while receiving message.");
                 socket.Close();
@@ -121,10 +121,10 @@ public class ViewerServer
         switch (message.MessageType)
         {
             case "COMPETITION_CONTROL_COMMAND":
-                ICompetitionControlCommand command 
+                ICompetitionControlCommand command
                     = JsonSerializer.Deserialize<CompetitionControlCommand>(text)!;
                 break;
-            
+
             case "HOST_CONFIGURATION_FROM_CLIENT":
                 IHostConfigurationFromClient hostConfiguration
                     = JsonSerializer.Deserialize<HostConfigurationFromClient>(text)!;

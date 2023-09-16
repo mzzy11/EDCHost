@@ -1,5 +1,4 @@
 using EdcHost.ViewerServers.Messages;
-using EdcHost.ViewerServers.EventArgs;
 
 namespace EdcHost.ViewerServers;
 
