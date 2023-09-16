@@ -1,5 +1,5 @@
-using Xunit;
 using EdcHost.Games;
+using Xunit;
 
 namespace EdcHost.Tests.UnitTests.Games;
 
