@@ -38,6 +38,7 @@ public class Player : IPlayer
         // Check if the player has wool in their inventory, and if so, process wool data
         // Trigger the OnPlace event to notify the placed block
         if(WoolCount > 0){
+            WoolCount -= 1;
             OnPlace?.Invoke(this, new PlayerPlaceEventArgs(this, new Position<float>(newX, newY)));
         }
     } 
