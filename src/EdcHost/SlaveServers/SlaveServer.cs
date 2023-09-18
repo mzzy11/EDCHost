@@ -1,9 +1,4 @@
 using System.IO.Ports;
-using System.Net.Sockets;
-using System.Reflection.Emit;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading;
-using EdcHost.ViewerServers;
 
 namespace EdcHost.SlaveServers;
 

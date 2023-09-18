@@ -1,9 +1,3 @@
-using System;
-using System.ComponentModel.Design;
-using System.Diagnostics.Contracts;
-using System.Runtime.CompilerServices;
-using System.Security;
-using EdcHost.Games;
 using EdcHost.ViewerServers.EventArgs;
 using EdcHost.ViewerServers.Messages;
 
@@ -45,7 +39,8 @@ public class Updater : IUpdater
         _sendThread.Start();
     }
 
-    public void Clear() {
+    public void Clear()
+    {
         CachedMessage = new CompetitionUpdate();
         _playerUpdate = false;
         _cameraUpdate = false;
@@ -75,7 +70,7 @@ public class Updater : IUpdater
 
     public void UpdatePlayers(object[]? players)
     {
-        if(players == null)
+        if (players == null)
         {
             return;
         }

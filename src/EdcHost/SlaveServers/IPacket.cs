@@ -1,5 +1,3 @@
-using System.Diagnostics.Contracts;
-
 namespace EdcHost.SlaveServers;
 
 public interface IPacket
@@ -12,6 +10,6 @@ public interface IPacket
     /// </param>
     /// <returns></returns>
     public void ExtractPacketData(byte[] bytes);
-    
+
     public byte[] MakePacket();
 }
