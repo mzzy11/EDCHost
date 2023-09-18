@@ -10,7 +10,7 @@ public class PlayerAttackEventArgs : EventArgs
     public int Strength { get; }
 
     /// <summary>
-    /// The position of the player after the movement.
+    /// The position the player attack.
     /// </summary>
     public IPosition<float> Position { get; }
 
