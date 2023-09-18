@@ -23,8 +23,8 @@ public interface IPlayer
     public enum ActionKindType
     {
         Attack,
-        PlaceBlock,
- 
+        PlaceBlock
+
     }
 
     /// <summary>
@@ -67,10 +67,10 @@ public interface IPlayer
     /// The count of wool blocks the player has.
     /// </summary>
     public int WoolCount { get; }
-    public int Health { get; } // 玩家生命值
-    public int MaxHealth { get; } // 玩家最大生命值
-    public int Strength { get; } // 玩家攻击力
-    public int ActionPoints { get; } // 玩家行动值
+    public int Health { get; }
+    public int MaxHealth { get; }
+    public int Strength { get; }
+    public int ActionPoints { get; }
     /// <summary>
     /// Performs an action.
     /// </summary>
