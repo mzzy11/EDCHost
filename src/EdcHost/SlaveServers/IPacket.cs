@@ -4,7 +4,6 @@ namespace EdcHost.SlaveServers;
 
 public interface IPacket
 {
-
     /// <summary>
     /// Extract the data from a packet in raw byte array form.
     /// </summary>
@@ -12,7 +11,7 @@ public interface IPacket
     /// The raw data.
     /// </param>
     /// <returns></returns>
-    public byte[] ExtractPacketData(byte[] bytes);
-
-    public void MakePacket(byte[] bytes);
+    public void ExtractPacketData(byte[] bytes);
+    
+    public byte[] MakePacket();
 }
