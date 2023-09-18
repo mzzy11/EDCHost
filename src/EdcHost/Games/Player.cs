@@ -146,9 +146,9 @@ public class Player : IPlayer
                 // You can perform the strength boost operation here and update the player's status
                 break;
             case IPlayer.CommodityKindType.Wool:
-                if(EmeraldCount >= Math.Pow(2,ActionPoints)){
-                    EmeraldCount -= (int) Math.Pow(2, ActionPoints);
-                    Strength += 1;
+                if(EmeraldCount >= 1){
+                    EmeraldCount -= 1;
+                    WoolCount += 1;
                     return true;
                 }
                 break;
