@@ -14,13 +14,11 @@ public class SlaveServer : ISlaveServer
     private readonly IPacket?[] _packetsReceived = { null, null };
     public event EventHandler<EventArgs>? OnPacketReceived;
 
-    public SlaveServer(string[] PortNameList, int[] BaudRateList, Parity[] ParityList, int[] DataBitsList, StopBits[] StopBitsList)
+    public SlaveServer(string[] PortNameList, int[] BaudRateList, Parity[] ParityList, int DataBits, StopBits StopBits)
     {
         if (PortNameList.Length != PLAYER_NUM
             || BaudRateList.Length != PLAYER_NUM
-            || ParityList.Length != PLAYER_NUM
-            || DataBitsList.Length != PLAYER_NUM
-            || StopBitsList.Length != PLAYER_NUM)
+            || ParityList.Length != PLAYER_NUM)
         {
             throw new ArgumentException($"PortNameList, BaudRateList, ParityList, DataBitsList, StopBitsList must have length {PLAYER_NUM}");
         }
@@ -31,8 +29,8 @@ public class SlaveServer : ISlaveServer
             SetPortName(i, PortNameList[i]);
             SetPortBaudRate(i, BaudRateList[i]);
             SetPortParity(i, ParityList[i]);
-            SetPortDataBits(i, DataBitsList[i]);
-            SetStopBits(i, StopBitsList[i]);
+            SetPortDataBits(i, DataBits);
+            SetStopBits(i, StopBits);
         }
 
         _sendThread = new Thread(Send);
