@@ -34,22 +34,24 @@ public class Player : IPlayer
         /// Trigger the OnAttack event to notify the attacked block
         OnAttack?.Invoke(this, new PlayerAttackEventArgs(this, Strength, new Position<float>(newX, newY)));
     }
-    
     public void Place(float newX, float newY)
     {
         /// Check if the player has wool in their inventory, and if so, process wool data.
         ///  Trigger the OnPlace event to notify the placed block
-        if(WoolCount > 0){
+        if (WoolCount > 0)
+        {
             OnPlace?.Invoke(this, new PlayerPlaceEventArgs(this, new Position<float>(newX, newY)));
         }
     }
     public void Hurt(int EnemyStrength)
     {
         /// Implement the logic for being hurt
-        if(Health > EnemyStrength){
+        if (Health > EnemyStrength)
+        {
             Health -= EnemyStrength;
         }
-        else{
+        else
+        {
             Health = 0;
             IsAlive = false;
             OnDie?.Invoke(this, new PlayerDieEventArgs(this));
@@ -111,15 +113,17 @@ public class Player : IPlayer
         switch (commodityKind)
         {
             case IPlayer.CommodityKindType.AgilityBoost:
-                int price =(int) Math.Pow(2,ActionPoints);
-                if(EmeraldCount >= Math.Pow(2,ActionPoints)){
-                    EmeraldCount -= (int) Math.Pow(2, ActionPoints);
+                int price = (int)Math.Pow(2, ActionPoints);
+                if (EmeraldCount >= Math.Pow(2, ActionPoints))
+                {
+                    EmeraldCount -= (int)Math.Pow(2, ActionPoints);
                     ActionPoints += 1;
                     return true;
                 }
                 break;
             case IPlayer.CommodityKindType.HealthBoost:
-                if(EmeraldCount >= (20 - MaxHealth)){
+                if (EmeraldCount >= (20 - MaxHealth))
+                {
                     EmeraldCount -= 20 - MaxHealth;
                     MaxHealth += 1;
                     return true;
@@ -128,7 +132,8 @@ public class Player : IPlayer
                 /// You can perform the health boost operation here and update the player's status
                 break;
             case IPlayer.CommodityKindType.HealthPotion:
-                if(EmeraldCount >= 4 && Health < MaxHealth){
+                if (EmeraldCount >= 4 && Health < MaxHealth)
+                {
                     EmeraldCount -= 4;
                     Health += 1;
                     return true;
@@ -137,8 +142,9 @@ public class Player : IPlayer
                 /// You can perform the health potion use operation here and update the player's status
                 break;
             case IPlayer.CommodityKindType.StrengthBoost:
-                if(EmeraldCount >= Math.Pow(2,ActionPoints)){
-                    EmeraldCount -= (int) Math.Pow(2, ActionPoints);
+                if (EmeraldCount >= Math.Pow(2, ActionPoints))
+                {
+                    EmeraldCount -= (int)Math.Pow(2, ActionPoints);
                     Strength += 1;
                     return true;
                 }
@@ -146,7 +152,8 @@ public class Player : IPlayer
                 /// You can perform the strength boost operation here and update the player's status
                 break;
             case IPlayer.CommodityKindType.Wool:
-                if(EmeraldCount >= 1){
+                if (EmeraldCount >= 1)
+                {
                     EmeraldCount -= 1;
                     WoolCount += 1;
                     return true;
