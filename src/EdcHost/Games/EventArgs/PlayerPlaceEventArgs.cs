@@ -8,7 +8,7 @@ public class PlayerPlaceEventArgs : EventArgs
     public IPlayer Player { get; }
 
     /// <summary>
-    /// The position of the player after the movement.
+    /// The position the player place a block.
     /// </summary>
     public IPosition<float> Position { get; }
 
