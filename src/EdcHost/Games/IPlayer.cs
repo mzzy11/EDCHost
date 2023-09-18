@@ -24,18 +24,33 @@ public interface IPlayer
     {
         Attack,
         PlaceBlock,
-        Trade,
+ 
     }
 
     /// <summary>
     /// Triggered when the player moves.
     /// </summary>
     event EventHandler<PlayerMoveEventArgs> OnMove;
+    event EventHandler<PlayerAttackEventArgs> OnAttack;
+    event EventHandler<PlayerPlaceEventArgs> OnPlace;
+    event EventHandler<PlayerDieEventArgs> OnDie;
 
+    public void Move(float newX, float newY);
+    public void Attack(float newX, float newY);
+    public void Place(float newX, float newY);
+    public void Hurt(int EnemyStrength);
+    /// <summary>
+    /// The Id of  the player 
+    /// </summary>
+    public int PlayerId { get; }
     /// <summary>
     /// The count of emeralds the player has.
     /// </summary>
     public int EmeraldCount { get; }
+    /// <summary>
+    /// Whether the player is alive.
+    /// </summary>
+    public bool IsAlive { get; }
     /// <summary>
     /// Whether the player has a bed.
     /// </summary>
@@ -45,18 +60,25 @@ public interface IPlayer
     /// </summary>
     public IPosition<float> SpawnPoint { get; }
     /// <summary>
+    /// The position of the player.
+    /// </summary>
+    public IPosition<float> PlayerPosition { get; }
+    /// <summary>
     /// The count of wool blocks the player has.
     /// </summary>
     public int WoolCount { get; }
-
+    public int Health { get; } // 玩家生命值
+    public int MaxHealth { get; } // 玩家最大生命值
+    public int Strength { get; } // 玩家攻击力
+    public int ActionPoints { get; } // 玩家行动值
     /// <summary>
     /// Performs an action.
     /// </summary>
     /// <param name="actionKind">The action kind.</param>
-    public void PerformAction(ActionKindType actionKind);
+    public void PerformActionPosition(IPlayer.ActionKindType actionKind, float X, float Y);
     /// <summary>
     /// Trades a commodity.
     /// </summary>
     /// <param name="commodityKind">The commodity kind.</param>
-    public void Trade(CommodityKindType commodityKind);
+    public bool Trade(CommodityKindType commodityKind);
 }
