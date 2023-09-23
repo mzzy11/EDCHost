@@ -1,10 +1,16 @@
 using EdcHost.Games;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace EdcHost.Tests.UnitTests.Games;
 
 public class MineTest
 {
+    private readonly ITestOutputHelper output;
+    public MineTest(ITestOutputHelper output)
+    {
+        this.output = output;
+    }
     public class MockPosition : IPosition<float>
     {
         public float X { get; set; }
@@ -94,5 +100,4 @@ public class MineTest
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(()=>{mine.PickUpOre(count);});
         Assert.Equal("No enough ore.", ex.Message);
     }
-
 }
