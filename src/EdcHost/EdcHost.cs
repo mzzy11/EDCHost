@@ -8,19 +8,6 @@ public partial class EdcHost : IEdcHost
     private readonly SlaveServers.ISlaveServer _slaveServer;
     private readonly ViewerServers.IViewerServer _viewerServer;
 
-    public static IEdcHost Create(EdcHostOptions options)
-    {
-        Games.Game game = new();
-        SlaveServers.SlaveServer slaveServer = new(new string[] { }, new int[] { });
-        ViewerServers.ViewerServer viewerServer = new(options.ServerPort);
-
-        return new EdcHost(
-            game: game,
-            slaveServer: slaveServer,
-            viewerServer: viewerServer
-        );
-    }
-
     public EdcHost(Games.IGame game, SlaveServers.ISlaveServer slaveServer, ViewerServers.IViewerServer viewerServer)
     {
         _game = game;
