@@ -42,7 +42,7 @@ public partial class EdcHost : IEdcHost
         return new EdcHost();
     }
 
-    private EdcHost()
+    public EdcHost()
     {
         _game = new Game();
 
