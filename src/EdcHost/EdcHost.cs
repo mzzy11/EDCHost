@@ -1,7 +1,5 @@
 using Serilog;
 
-using EdcHost;
-
 namespace EdcHost;
 
 public partial class EdcHost : IEdcHost
