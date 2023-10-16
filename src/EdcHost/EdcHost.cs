@@ -18,11 +18,6 @@ public partial class EdcHost : IEdcHost
     public readonly int[] DefaultBaudRates = { 19200, 19200 };
 
     /// <summary>
-    /// Default viewer server port.
-    /// </summary>
-    public const int DefaultViewerServerPort = 3001;
-
-    /// <summary>
     /// The game.
     /// </summary>
     private readonly IGame _game;
@@ -37,12 +32,14 @@ public partial class EdcHost : IEdcHost
     /// </summary>
     private readonly IViewerServer _viewerServer;
 
-    public static IEdcHost Create()
+    public static IEdcHost Create(EdcHostOptions options)
     {
-        return new EdcHost();
+        return new EdcHost(
+            viewerServer: new ViewerServer(options.ServerPort)
+        );
     }
 
-    public EdcHost()
+    public EdcHost(IViewerServer viewerServer)
     {
         _game = new Game();
 
@@ -80,7 +77,7 @@ public partial class EdcHost : IEdcHost
         /// Choose ports and baudrates here
         /// </remarks>
         _slaveServer = new SlaveServer(ports, DefaultBaudRates);
-        _viewerServer = new ViewerServer(DefaultViewerServerPort);
+        _viewerServer = viewerServer;
 
         _game.AfterGameStartEvent += HandleAfterGameStartEvent;
         _game.AfterGameTickEvent += HandleAfterGameTickEvent;
