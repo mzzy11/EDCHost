@@ -79,6 +79,10 @@ class Program
         // Configure Serilog
         Log.Logger = loggingLevelString switch
         {
+            "Verbose" => new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.Console()
+                .CreateLogger(),
             "Debug" => new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
