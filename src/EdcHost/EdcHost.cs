@@ -37,7 +37,12 @@ public partial class EdcHost : IEdcHost
     /// </summary>
     private readonly IViewerServer _viewerServer;
 
-    public EdcHost()
+    public static IEdcHost Create()
+    {
+        return new EdcHost();
+    }
+
+    private EdcHost()
     {
         _game = new Game();
 

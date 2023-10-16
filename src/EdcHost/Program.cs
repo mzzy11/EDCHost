@@ -4,9 +4,9 @@ using Serilog;
 
 namespace EdcHost;
 
-internal class Program
+class Program
 {
-    internal static void Main()
+    static void Main()
     {
         // Setup logger using default settings before calling dotenv.
         Log.Logger = new LoggerConfiguration()
@@ -17,8 +17,7 @@ internal class Program
         {
             SetupDotEnv();
             SetupSerilog();
-
-            EdcHost edcHost = new();
+            SetupAndRunEdcHost();
 
         }
         catch (Exception exception)
@@ -27,18 +26,20 @@ internal class Program
         }
     }
 
-    /// <summary>
-    /// Load environment variables from .env file.
-    /// </summary>
-    internal static void SetupDotEnv()
+    static void SetupAndRunEdcHost()
     {
-        DotEnv.Load();
+        IEdcHost edcHost = EdcHost.Create();
     }
 
-    /// <summary>
-    /// Setup Serilog logger.
-    /// </summary>
-    internal static void SetupSerilog()
+    static void SetupDotEnv()
+    {
+        DotEnv.Load(new DotEnvOptions
+        (
+            trimValues: true
+        ));
+    }
+
+    static void SetupSerilog()
     {
         // Get logging level from environment variables
         if (EnvReader.TryGetStringValue("LOGGING_LEVEL", out string? loggingLevelString) == false)
