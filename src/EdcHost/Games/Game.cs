@@ -131,6 +131,7 @@ partial class Game : IGame
         if (IsFinished())
         {
             Judge();
+            CurrentStage = IGame.Stage.Finished;
             return;
         }
 
