@@ -1,6 +1,6 @@
 namespace EdcHost.Games;
 
-public class Player : IPlayer
+class Player : IPlayer
 {
     public int PlayerId { get; private set; }
     public int EmeraldCount { get; private set; }
@@ -19,6 +19,12 @@ public class Player : IPlayer
     public event EventHandler<PlayerAttackEventArgs> OnAttack = delegate { };
     public event EventHandler<PlayerPlaceEventArgs> OnPlace = delegate { };
     public event EventHandler<PlayerDieEventArgs> OnDie = delegate { };
+
+    public void EmeraldAdd(int count)
+    {
+        /// update the player's Emeraldcount
+        EmeraldCount += count;
+    }
 
     public void Move(float newX, float newY)
     {
@@ -57,25 +63,26 @@ public class Player : IPlayer
             OnDie?.Invoke(this, new PlayerDieEventArgs(this));
         }
     }
-    public Player()
+    public void Spawn(int MaxHealth)
     {
-        PlayerId = 1;
-        EmeraldCount = 0;
-        IsAlive = true;
-        HasBed = true;
-
-        /// Initialize SpawnPoint
-        SpawnPoint = new Position<float>(0, 0); /// Initial coordinates can be set as needed
-        PlayerPosition = new Position<float>(0, 0); /// Initial coordinates can be set as needed
-        WoolCount = 0;
-
-        /// Initialize player attributes
-        Health = 20; /// Initial health
-        MaxHealth = 20; /// Initial max health
-        Strength = 1; /// Initial strength
-        ActionPoints = 1; /// Initial action points
+        if (HasBed == true)
+        {
+            IsAlive = true;
+            Health = MaxHealth;
+            SpawnPoint = PlayerPosition;
+        }
     }
-    public Player(int id, float initialX, float initialY, float initialX2, float initialY2)
+    public void DestroyBed()
+    {
+        /// Destroy a player's bed.
+        HasBed = false;
+    }
+    public void DecreaseWoolCount()
+    {
+        /// Decrease wool count by 1.
+        WoolCount -= 1;
+    }
+    public Player(int id = 1, float initialX = 0, float initialY = 0, float initialX2 = 0, float initialY2 = 0)
     {
         PlayerId = id;
         EmeraldCount = 0;
@@ -85,8 +92,8 @@ public class Player : IPlayer
         PlayerPosition = new Position<float>(initialX2, initialY2);
         WoolCount = 0;
 
-        Health = 25; /// Initial health
-        MaxHealth = 25; /// Initial max health
+        Health = 20; /// Initial health
+        MaxHealth = 20; /// Initial max health
         Strength = 1; /// Initial strength
         ActionPoints = 1; /// Initial action points
         ActionPoints = 1;
@@ -122,9 +129,9 @@ public class Player : IPlayer
                 }
                 break;
             case IPlayer.CommodityKindType.HealthBoost:
-                if (EmeraldCount >= (20 - MaxHealth))
+                if (EmeraldCount >= (MaxHealth - 19))
                 {
-                    EmeraldCount -= 20 - MaxHealth;
+                    EmeraldCount -= MaxHealth - 19;
                     MaxHealth += 1;
                     return true;
                 }

@@ -3,13 +3,13 @@ namespace EdcHost.Games;
 /// <summary>
 /// Map represents the map of the game.
 /// </summary>
-public class Map : IMap
+class Map : IMap
 {
 
     /// <summary>
     /// Total count of chunks.
     /// </summary>
-    private const int TotalChunkCount = 64;
+    const int TotalChunkCount = 64;
 
     /// <summary>
     /// Maximum value of x coordinate.
@@ -18,7 +18,7 @@ public class Map : IMap
     /// A valid value of x coordinate must be strictly greater than MaxX.
     /// Equal is not allowed.
     /// </remarks>
-    private const int MaxX = 8;
+    const int MaxX = 8;
 
     /// <summary>
     /// Maximum value of y coordinate.
@@ -27,7 +27,7 @@ public class Map : IMap
     /// A valid value of y coordinate must be strictly greater than MaxY.
     /// Equal is not allowed.
     /// </remarks>
-    private const int MaxY = 8;
+    const int MaxY = 8;
 
     /// <summary>
     /// The list of chunks.
@@ -37,12 +37,16 @@ public class Map : IMap
     /// <summary>
     /// Constructor
     /// </summary>
-    public Map()
+    public Map(IPosition<int>[] spawnPoints)
     {
-        Chunks = new(TotalChunkCount);
+        Chunks = new();
         for (int i = 0; i < TotalChunkCount; i++)
         {
-            Chunks[i] = new Chunk(0, new Position<int>(i / 8, i % 8));
+            Chunks.Add(new Chunk(0, new Position<int>(i / MaxY, i % MaxY)));
+        }
+        foreach (IPosition<int> spawnPoint in spawnPoints)
+        {
+            Chunks[MaxY * spawnPoint.X + spawnPoint.Y] = new Chunk(1, spawnPoint);
         }
     }
 
@@ -57,7 +61,7 @@ public class Map : IMap
         {
             throw new ArgumentException("No such chunk.");
         }
-        return Chunks[8 * position.X + position.Y];
+        return Chunks[MaxY * position.X + position.Y];
     }
 
 }

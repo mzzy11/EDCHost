@@ -6,14 +6,14 @@ namespace EdcHost.ViewerServers;
 public class Updater : IUpdater
 {
     public ICompetitionUpdate CachedMessage { get; private set; } = new CompetitionUpdate();
-    private bool _isRunning = false;
-    public event EventHandler<MessageTransferEventArgs>? SendCaller = null;
-    private readonly Thread _sendThread;
-    private bool _playerUpdate = false;
-    private bool _infoUpdate = false;
-    private bool _cameraUpdate = false;
-    private bool _chunkUpdate = false;
-    private bool _mineUpdate = false;
+    bool _isRunning = false;
+    public event EventHandler<MessageTransferEventArgs>? SendEvent;
+    readonly Thread _sendThread;
+    bool _playerUpdate = false;
+    bool _infoUpdate = false;
+    bool _cameraUpdate = false;
+    bool _chunkUpdate = false;
+    bool _mineUpdate = false;
 
     public Updater()
     {
@@ -21,12 +21,12 @@ public class Updater : IUpdater
         {
             while (_isRunning)
             {
-                Task.Delay(47).Wait();
+                Task.Delay(50).Wait();
 
                 if (!ReadyToSend())
                     continue;
 
-                SendCaller?.Invoke(this, new MessageTransferEventArgs(CachedMessage));
+                SendEvent?.Invoke(this, new MessageTransferEventArgs(CachedMessage));
                 Clear();
             }
         });
@@ -35,11 +35,10 @@ public class Updater : IUpdater
     public void StartUpdate()
     {
         _isRunning = true;
-        Thread.CurrentThread.Name = "SendThread";
         _sendThread.Start();
     }
 
-    public void Clear()
+    void Clear()
     {
         CachedMessage = new CompetitionUpdate();
         _playerUpdate = false;
@@ -49,7 +48,7 @@ public class Updater : IUpdater
         _infoUpdate = false;
     }
 
-    public bool ReadyToSend()
+    bool ReadyToSend()
     {
         return _playerUpdate && _cameraUpdate && _chunkUpdate && _mineUpdate && _infoUpdate;
     }
@@ -82,17 +81,13 @@ public class Updater : IUpdater
         _playerUpdate = true;
     }
 
-    public void UpdateInfo(object[]? infos)
+    public void UpdateInfo(object? info)
     {
-        if (infos == null)
+        if (info == null)
         {
             return;
         }
-        CachedMessage.Info.Clear();
-        foreach (object info in infos)
-        {
-            CachedMessage.Info.Add(info);
-        }
+        CachedMessage.Info = info;
         _infoUpdate = true;
     }
 
