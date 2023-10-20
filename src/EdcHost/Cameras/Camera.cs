@@ -54,7 +54,7 @@ class Camera : ICamera
                         maxLength = currentLength;
                         maxLengthIndex = i;
                     }
-                }
+                    }
             Moments moments = Cv2.Moments(contourList[maxLengthIndex]);
 
                 if ((decimal)moments.M00 >= _cameraOptions.MinArea)
