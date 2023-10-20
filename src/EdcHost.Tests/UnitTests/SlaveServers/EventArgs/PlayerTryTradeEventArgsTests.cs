@@ -10,7 +10,7 @@ public class PlayerTryTradeEventArgsTests
         int expectedID = 2022;
         int expectedItem = 32;
         PlayerTryTradeEventArgs args = new PlayerTryTradeEventArgs(2022, 32);
-        Assert.Equal(expectedID, args.PlayerId);
+        Assert.Equal(expectedID, args.PortName);
         Assert.Equal(expectedItem, args.Item);
         Assert.Equal("PLAYER_TRY_TRADE", args.EventType);
     }

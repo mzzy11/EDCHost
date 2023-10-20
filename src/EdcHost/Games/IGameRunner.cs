@@ -8,6 +8,6 @@ public interface IGameRunner
     }
 
     IGame Game { get; }
-    void Start();
-    void End();
+    Task Start();
+    Task End();
 }
