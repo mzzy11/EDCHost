@@ -99,7 +99,6 @@ public partial class Game : IGame
             mine.GenerateOre(ElapsedTicks);
         }
 
-        CurrentStage = IGame.Stage.Running;
         Winner = null;
 
         _isAllBedsDestroyed = false;
@@ -127,7 +126,7 @@ public partial class Game : IGame
 
     public async Task End()
     {
-        if (CurrentStage != IGame.Stage.Running || CurrentStage != IGame.Stage.Battling)
+        if (CurrentStage != IGame.Stage.Running && CurrentStage != IGame.Stage.Battling)
         {
             throw new InvalidOperationException("the game is not running");
         }
