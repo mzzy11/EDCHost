@@ -38,8 +38,7 @@ class Camera : ICamera
                     _cameraOptions.MaxValue
                 ),
                 dst: Frame
-            );
-        
+                );
             OpenCvSharp.Point[][] contourList = Cv2.FindContoursAsArray(mask, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
             bool isTargetFound = false;
 
@@ -56,7 +55,6 @@ class Camera : ICamera
                         maxLengthIndex = i;
                     }
                 }
-
             Moments moments = Cv2.Moments(contourList[maxLengthIndex]);
 
                 if ((decimal)moments.M00 >= _cameraOptions.MinArea)
