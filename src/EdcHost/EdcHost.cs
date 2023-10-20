@@ -5,12 +5,14 @@ namespace EdcHost;
 partial class EdcHost : IEdcHost
 {
     readonly Games.IGame _game;
+    readonly Games.IGameRunner _gameRunner;
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
 
-    public EdcHost(Games.IGame game, SlaveServers.ISlaveServer slaveServer, ViewerServers.IViewerServer viewerServer)
+    public EdcHost(Games.IGame game, Games.IGameRunner gameRunner, SlaveServers.ISlaveServer slaveServer, ViewerServers.IViewerServer viewerServer)
     {
         _game = game;
+        _gameRunner = gameRunner;
         _slaveServer = slaveServer;
         _viewerServer = viewerServer;
 
@@ -48,6 +50,15 @@ partial class EdcHost : IEdcHost
             Log.Error($"failed to start viewer server: {e}");
         }
 
+        try
+        {
+            _gameRunner.Start();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"failed to start game runner: {e}");
+        }
+
         Log.Information("Started.");
     }
 
@@ -71,6 +82,15 @@ partial class EdcHost : IEdcHost
         catch (Exception e)
         {
             Log.Error($"failed to stop viewer server: {e}");
+        }
+
+        try
+        {
+            _gameRunner.End();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"failed to end game runner: {e}");
         }
 
         Log.Information("Stopped.");

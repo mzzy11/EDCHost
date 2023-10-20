@@ -38,9 +38,6 @@ partial class Game : IGame
     /// </summary>
     public List<IMine> Mines { get; private set; }
 
-    bool _shouldRun = false;
-    readonly Task _tickTask;
-
     public Game()
     {
         var spawnPoints = new IPosition<int>[] { new Position<int>(0, 0), new Position<int>(7, 7) };
@@ -64,8 +61,6 @@ partial class Game : IGame
         GenerateMines();
 
         _isAllBedsDestroyed = false;
-
-        _tickTask = new(Run);
 
         Players.Clear();
 
@@ -104,38 +99,24 @@ partial class Game : IGame
         _isAllBedsDestroyed = false;
     }
 
-    public async Task Start()
+    public void Start()
     {
         if (CurrentStage != IGame.Stage.Ready)
         {
             throw new InvalidOperationException("the game has already started");
         }
 
-        _shouldRun = true;
-
-        _tickTask.Start();
-
         CurrentStage = IGame.Stage.Running;
         AfterGameStartEvent?.Invoke(this, new AfterGameStartEventArgs(this));
-
-        // To suppress warning.
-        await Task.Delay(0);
 
         Serilog.Log.Information("Game started.");
     }
 
-    public async Task End()
+    public void End()
     {
         if (CurrentStage != IGame.Stage.Running && CurrentStage != IGame.Stage.Battling)
         {
             throw new InvalidOperationException("the game is not running");
-        }
-
-        _shouldRun = false;
-
-        while (!_tickTask.IsCompleted)
-        {
-            await Task.Delay(1000 / TicksPerSecondExpected);
         }
 
         CurrentStage = IGame.Stage.Ended;
@@ -143,62 +124,46 @@ partial class Game : IGame
         Serilog.Log.Information("Game stopped.");
     }
 
-    void Run()
+    public void Tick()
     {
-        try
+        ++ElapsedTicks;
+
+        if (IsFinished())
         {
-            while (_shouldRun)
+            Judge();
+            return;
+        }
+
+        if (ElapsedTicks > TickBattlingModeStart && CurrentStage == IGame.Stage.Running)
+        {
+            CurrentStage = IGame.Stage.Battling;
+        }
+
+        if (CurrentStage == IGame.Stage.Battling)
+        {
+            if (_isAllBedsDestroyed == false)
             {
-                Debug.Assert(CurrentStage is IGame.Stage.Running || CurrentStage is IGame.Stage.Battling);
-
-
-                lock (this)
+                for (int i = 0; i < PlayerNum; i++)
                 {
-                    ++ElapsedTicks;
+                    Players[i].DestroyBed();
+                }
+                _isAllBedsDestroyed = true;
+            }
 
-                    if (IsFinished())
-                    {
-                        Judge();
-                        break;
-                    }
-
-                    if (ElapsedTicks > TickBattlingModeStart && CurrentStage == IGame.Stage.Running)
-                    {
-                        CurrentStage = IGame.Stage.Battling;
-                    }
-
-                    if (CurrentStage == IGame.Stage.Battling)
-                    {
-                        if (_isAllBedsDestroyed == false)
-                        {
-                            for (int i = 0; i < PlayerNum; i++)
-                            {
-                                Players[i].DestroyBed();
-                            }
-                            _isAllBedsDestroyed = true;
-                        }
-
-                        if ((ElapsedTicks - TickBattlingModeStart) % TicksPerSecondExpected == 0)
-                        {
-                            for (int i = 0; i < PlayerNum; i++)
-                            {
-                                Players[i].Hurt(1);
-                            }
-                        }
-                    }
-
-                    UpdatePlayerInfo();
-                    UpdateMines();
-
-                    AfterGameTickEvent?.Invoke(
-                        this, new AfterGameTickEventArgs(this, ElapsedTicks));
+            if ((ElapsedTicks - TickBattlingModeStart) % TicksPerSecondExpected == 0)
+            {
+                for (int i = 0; i < PlayerNum; i++)
+                {
+                    Players[i].Hurt(1);
                 }
             }
         }
-        catch (Exception e)
-        {
-            Serilog.Log.Error($"an error occurred when running the game: {e.Message}");
-        }
+
+        UpdatePlayerInfo();
+        UpdateMines();
+
+        AfterGameTickEvent?.Invoke(
+            this, new AfterGameTickEventArgs(this, ElapsedTicks));
     }
 
     void GenerateMines()

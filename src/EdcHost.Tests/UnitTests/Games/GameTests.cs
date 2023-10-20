@@ -21,18 +21,18 @@ public class GameTest
     }
 
     [Fact]
-    public async Task Start_StartedYet_ThrowsCorrectException()
+    public void Start_StartedYet_ThrowsCorrectException()
     {
         var game = IGame.Create();
-        await game.Start();
-        await Assert.ThrowsAsync<InvalidOperationException>(() => game.Start());
+        game.Start();
+        Assert.Throws<InvalidOperationException>(game.Start);
     }
 
     [Fact]
-    public async Task Start_DoNothing_ReturnsCorrectValue()
+    public void Start_DoNothing_ReturnsCorrectValue()
     {
         var game = IGame.Create();
-        await game.Start();
+        game.Start();
         Assert.Equal(0, game.Players[0].PlayerId);
         Assert.Equal(0.4f, game.Players[0].SpawnPoint.X);
         Assert.Equal(0.4f, game.Players[0].PlayerPosition.Y);
@@ -45,7 +45,7 @@ public class GameTest
     }
 
     [Fact]
-    public async Task Start_AfterGameStartEvent_IsRaised()
+    public void Start_AfterGameStartEvent_IsRaised()
     {
         bool eventReceived = false;
         var game = IGame.Create();
@@ -53,7 +53,7 @@ public class GameTest
         {
             eventReceived = true;
         };
-        await game.Start();
+        game.Start();
         Assert.True(eventReceived);
     }
 }

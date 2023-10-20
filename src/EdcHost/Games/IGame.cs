@@ -62,10 +62,12 @@ public interface IGame
     /// <summary>
     /// Starts the game.
     /// </summary>
-    Task Start();
+    void Start();
 
     /// <summary>
     /// Ends the game.
     /// </summary>
-    Task End();
+    void End();
+
+    void Tick();
 }
