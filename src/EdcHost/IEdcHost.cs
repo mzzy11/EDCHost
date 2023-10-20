@@ -5,7 +5,7 @@ namespace EdcHost;
 /// </summary>
 public interface IEdcHost
 {
-    public static IEdcHost Create(EdcHostOptions options)
+    static IEdcHost Create(EdcHostOptions options)
     {
         Games.Game game = new();
         SlaveServers.SlaveServer slaveServer = new(new string[] { }, new int[] { });
@@ -21,10 +21,10 @@ public interface IEdcHost
     /// <summary>
     /// Starts the host.
     /// </summary>
-    public void Start();
+    void Start();
 
     /// <summary>
     /// Stops the host.
     /// </summary>
-    public void Stop();
+    void Stop();
 }

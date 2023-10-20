@@ -4,7 +4,7 @@ using EdcHost.SlaveServers.EventArgs;
 
 namespace EdcHost;
 
-public partial class EdcHost : IEdcHost
+partial class EdcHost : IEdcHost
 {
     private void HandlePlayerTryAttackEvent(object? sender, PlayerTryAttackEventArgs e)
     {

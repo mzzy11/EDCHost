@@ -3,7 +3,7 @@ using EdcHost.SlaveServers;
 
 namespace EdcHost;
 
-public partial class EdcHost : IEdcHost
+partial class EdcHost : IEdcHost
 {
     private void HandleAfterGameStartEvent(object? sender, AfterGameStartEventArgs e)
     {

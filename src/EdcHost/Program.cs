@@ -5,11 +5,11 @@ using Serilog;
 
 namespace EdcHost;
 
-public class Program
+class Program
 {
-    private const int DefaultServerPort = 8080;
+    const int DefaultServerPort = 8080;
 
-    public static void Main()
+    static void Main()
     {
         // Setup logger using default settings before calling dotenv.
         Log.Logger = new LoggerConfiguration()
@@ -29,7 +29,7 @@ public class Program
         }
     }
 
-    public static List<Tuple<int, int>> ParseMineList(string input)
+    static List<Tuple<int, int>> ParseMineList(string input)
     {
         List<Tuple<int, int>> mines = new();
         Regex regex = new(@"\((\d+),(\d+)\)");
@@ -43,7 +43,7 @@ public class Program
         return mines;
     }
 
-    public static void SetupAndRunEdcHost()
+    static void SetupAndRunEdcHost()
     {
         List<Tuple<int, int>> gameDiamondMines = EnvReader.TryGetStringValue("GAME_DIAMOND_MINES", out string? gameDiamondMinesString) ? ParseMineList(gameDiamondMinesString) : new();
         List<Tuple<int, int>> gameGoldMines = EnvReader.TryGetStringValue("GAME_GOLD_MINES", out string? gameGoldMinesString) ? ParseMineList(gameGoldMinesString) : new();
@@ -59,7 +59,7 @@ public class Program
         ));
     }
 
-    public static void SetupDotEnv()
+    static void SetupDotEnv()
     {
         DotEnv.Load(new DotEnvOptions
         (
@@ -67,7 +67,7 @@ public class Program
         ));
     }
 
-    public static void SetupSerilog()
+    static void SetupSerilog()
     {
         // Get logging level from environment variables
         if (EnvReader.TryGetStringValue("LOGGING_LEVEL", out string? loggingLevelString) == false)

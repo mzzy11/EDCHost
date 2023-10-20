@@ -2,7 +2,7 @@ using Serilog;
 
 namespace EdcHost;
 
-public partial class EdcHost : IEdcHost
+partial class EdcHost : IEdcHost
 {
     private readonly Games.IGame _game;
     private readonly SlaveServers.ISlaveServer _slaveServer;

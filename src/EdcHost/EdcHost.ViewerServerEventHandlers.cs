@@ -2,7 +2,7 @@ using EdcHost.ViewerServers.EventArgs;
 
 namespace EdcHost;
 
-public partial class EdcHost : IEdcHost
+partial class EdcHost : IEdcHost
 {
     private void HandleSetPortEvent(object? sender, SetPortEventArgs e)
     {
