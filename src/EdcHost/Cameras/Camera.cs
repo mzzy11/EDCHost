@@ -55,7 +55,7 @@ class Camera : ICamera
                         maxLengthIndex = i;
                     }
                 }
-            Moments moments = Cv2.Moments(contourList[maxLengthIndex]);
+                Moments moments = Cv2.Moments(contourList[maxLengthIndex]);
 
                 if ((decimal)moments.M00 >= _cameraOptions.MinArea)
                 {
