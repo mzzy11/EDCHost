@@ -43,7 +43,7 @@ public partial class Game : IGame
 
     public Game()
     {
-        IPosition<int>[] spawnPoints = new Position<int>[] { new(0, 0), new(7, 7) };
+        var spawnPoints = new IPosition<int>[] { new Position<int>(0, 0), new Position<int>(7, 7) };
         GameMap = new Map(spawnPoints);
 
         Players = new();
