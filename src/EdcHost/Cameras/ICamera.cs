@@ -14,3 +14,4 @@ public interface ICamera
     Image? Image { get; }
     IPosition<int>? TargetPosition { get; }
 }
+
