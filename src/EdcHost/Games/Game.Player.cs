@@ -1,6 +1,6 @@
 namespace EdcHost.Games;
 
-public partial class Game : IGame
+partial class Game : IGame
 {
     const int TicksBeforeRespawn = 300;
 

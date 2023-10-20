@@ -11,7 +11,7 @@ public partial class GamesTests
         IGame.Stage? stage = null;
 
         // Arrange: Create a game.
-        var game = new Game();
+        var game = IGame.Create();
 
         stage = game.CurrentStage;
         Assert.StrictEqual(IGame.Stage.Ready, stage);

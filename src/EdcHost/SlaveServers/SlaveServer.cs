@@ -1,7 +1,6 @@
 using System.IO.Ports;
 
 using EdcHost.SlaveServers.EventArgs;
-using Fleck;
 using Serilog;
 
 namespace EdcHost.SlaveServers;

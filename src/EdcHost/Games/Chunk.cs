@@ -1,6 +1,6 @@
 namespace EdcHost.Games;
 
-public class Chunk : IChunk
+class Chunk : IChunk
 {
     const int MaxHeight = 8;
 

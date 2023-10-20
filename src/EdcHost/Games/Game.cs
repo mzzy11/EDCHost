@@ -5,7 +5,7 @@ namespace EdcHost.Games;
 /// <summary>
 /// Game handles the game logic.
 /// </summary>
-public partial class Game : IGame
+partial class Game : IGame
 {
     const int TickBattlingModeStart = 12000;
     public const int TicksPerSecondExpected = 20;

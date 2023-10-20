@@ -3,7 +3,7 @@ namespace EdcHost.Games;
 /// <summary>
 /// Map represents the map of the game.
 /// </summary>
-public class Map : IMap
+class Map : IMap
 {
 
     /// <summary>

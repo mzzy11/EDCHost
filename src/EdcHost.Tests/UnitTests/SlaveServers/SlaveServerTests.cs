@@ -1,5 +1,4 @@
 using EdcHost.SlaveServers;
-using EdcHost.SlaveServers.EventArgs;
 using Xunit;
 
 namespace EdcHost.Tests.UnitTests.SlaveServers;

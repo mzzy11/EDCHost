@@ -1,5 +1,4 @@
 using EdcHost.Games;
-using Moq;
 using Xunit;
 
 namespace EdcHost.Tests.UnitTests.Games;
@@ -9,7 +8,7 @@ public class GameTest
     [Fact]
     public void Game_DoNothing_PublicMembersCorrectlyInitialized()
     {
-        Game game = new Game();
+        IGame game = IGame.Create();
         Assert.Equal(IGame.Stage.Ready, game.CurrentStage);
         Assert.Null(game.Winner);
         Assert.Equal(0, game.ElapsedTicks);
@@ -24,7 +23,7 @@ public class GameTest
     [Fact]
     public async Task Start_StartedYet_ThrowsCorrectException()
     {
-        Game game = new();
+        var game = IGame.Create();
         await game.Start();
         await Assert.ThrowsAsync<InvalidOperationException>(() => game.Start());
     }
@@ -32,7 +31,7 @@ public class GameTest
     [Fact]
     public async Task Start_DoNothing_ReturnsCorrectValue()
     {
-        Game game = new Game();
+        var game = IGame.Create();
         await game.Start();
         Assert.Equal(0, game.Players[0].PlayerId);
         Assert.Equal(0.4f, game.Players[0].SpawnPoint.X);
@@ -49,7 +48,7 @@ public class GameTest
     public async Task Start_AfterGameStartEvent_IsRaised()
     {
         bool eventReceived = false;
-        Game game = new Game();
+        var game = IGame.Create();
         game.AfterGameStartEvent += (sender, args) =>
         {
             eventReceived = true;
