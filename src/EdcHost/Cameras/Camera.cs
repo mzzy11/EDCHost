@@ -3,7 +3,7 @@ using OpenCvSharp;
 
 namespace EdcHost.Cameras;
 
-public class Camera : ICamera
+class Camera : ICamera
 {
     public Image? Image { get; } = null;
     public IPosition<int>? TargetPosition { get; } = null;
