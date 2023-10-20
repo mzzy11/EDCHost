@@ -16,7 +16,7 @@ namespace EdcHost.ViewerServers;
 public class ViewerServer : IViewerServer
 {
     readonly WebSocketServer _webSocketServer;
-    readonly ILogger _logger = Log.Logger.ForContext<ViewerServer>();
+    readonly ILogger _logger = Log.Logger.ForContext("Component", "ViewerServers");
     IWebSocketConnection? _socket = null;
     public IUpdater CompetitionUpdater { get; } = new Updater();
     public IGameController Controller { get; } = new GameController();
@@ -45,6 +45,8 @@ public class ViewerServer : IViewerServer
     /// </summary>
     public void Start()
     {
+        _logger.Information("Starting...");
+
         CompetitionUpdater.SendEvent += (sender, args) => Send(args.Message);
 
         Controller.GetHostConfigurationEvent += (sender, args) => Send(args.Message);
@@ -54,17 +56,18 @@ public class ViewerServer : IViewerServer
 
         Controller.GetHostConfigurationEvent += (sender, args) => Send(args.Message);
 
-        _logger.Information("Server started.");
+        _logger.Information("Started.");
     }
     /// <summary>
     /// Stops the server.
     /// </summary>
     public void Stop()
     {
+        _logger.Information("Stopping...");
         _webSocketServer.Dispose();
         _socket?.Close();
         CompetitionUpdater.End();
-        _logger.Information("Server stopped.");
+        _logger.Information("Stopped.");
     }
 
     /// <summary>

@@ -6,15 +6,15 @@ partial class EdcHost : IEdcHost
 {
     void HandleSetPortEvent(object? sender, SetPortEventArgs e)
     {
-        Serilog.Log.Information("[Update]");
-        Serilog.Log.Information($"Player {e.PlayerId}:");
-        Serilog.Log.Information($"Port: {e.PortName} BaudRate: {e.BaudRate}");
+        _logger.Information("[Update]");
+        _logger.Information($"Player {e.PlayerId}:");
+        _logger.Information($"Port: {e.PortName} BaudRate: {e.BaudRate}");
     }
 
     void HandleSetCameraEvent(object? sender, SetCameraEventArgs e)
     {
-        Serilog.Log.Information("[Update]");
-        Serilog.Log.Information($"Player {e.PlayerId}:");
-        Serilog.Log.Information($"Camera: {e.CameraConfiguration}");
+        _logger.Information("[Update]");
+        _logger.Information($"Player {e.PlayerId}:");
+        _logger.Information($"Camera: {e.CameraConfiguration}");
     }
 }

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Linq;
 using EdcHost.Games;
 using EdcHost.SlaveServers;
 using EdcHost.SlaveServers.EventArgs;
@@ -10,48 +12,60 @@ partial class EdcHost : IEdcHost
     {
         try
         {
-            IPosition<float> current = _game.Players[e.PlayerId].PlayerPosition;
+            string portName = e.PortName;
+
+            int? playerId = _playerIdToPortName
+                .Where(kvp => kvp.Value == portName)
+                .Select(kvp => (int?)kvp.Key)
+                .FirstOrDefault((int?)null);
+
+            if (playerId is null)
+            {
+                return;
+            }
+
+            IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
             IPosition<float>? target = null;
             switch ((Directions)e.TargetChunk)
             {
                 case Directions.Up:
                     target = new Position<float>(current.X, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.Down:
                     target = new Position<float>(current.X, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.Left:
                     target = new Position<float>(current.X - 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.Right:
                     target = new Position<float>(current.X + 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.UpLeft:
                     target = new Position<float>(current.X - 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.UpRight:
                     target = new Position<float>(current.X + 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.DownLeft:
                     target = new Position<float>(current.X - 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 case Directions.DownRight:
                     target = new Position<float>(current.X + 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
+                    _game.Players[playerId.Value].Attack(target.X, target.Y);
                     break;
 
                 default:
@@ -70,48 +84,60 @@ partial class EdcHost : IEdcHost
     {
         try
         {
-            IPosition<float> current = _game.Players[e.PlayerId].PlayerPosition;
+            string portName = e.PortName;
+
+            int? playerId = _playerIdToPortName
+                .Where(kvp => kvp.Value == portName)
+                .Select(kvp => (int?)kvp.Key)
+                .FirstOrDefault((int?)null);
+
+            if (playerId is null)
+            {
+                return;
+            }
+
+            IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
             IPosition<float>? target = null;
             switch ((Directions)e.TargetChunk)
             {
                 case Directions.Up:
                     target = new Position<float>(current.X, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.Down:
                     target = new Position<float>(current.X, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.Left:
                     target = new Position<float>(current.X - 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.Right:
                     target = new Position<float>(current.X + 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.UpLeft:
                     target = new Position<float>(current.X - 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.UpRight:
                     target = new Position<float>(current.X + 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.DownLeft:
                     target = new Position<float>(current.X - 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 case Directions.DownRight:
                     target = new Position<float>(current.X + 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
+                    _game.Players[playerId.Value].Place(target.X, target.Y);
                     break;
 
                 default:

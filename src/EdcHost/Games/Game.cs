@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Serilog;
 
 namespace EdcHost.Games;
 
@@ -37,6 +38,8 @@ partial class Game : IGame
     /// All mines.
     /// </summary>
     public List<IMine> Mines { get; private set; }
+
+    readonly ILogger _logger = Log.Logger.ForContext("Component", "Games");
 
     public Game()
     {
@@ -101,6 +104,8 @@ partial class Game : IGame
 
     public void Start()
     {
+        _logger.Information("Starting...");
+
         if (CurrentStage != IGame.Stage.Ready)
         {
             throw new InvalidOperationException("the game has already started");
@@ -109,11 +114,13 @@ partial class Game : IGame
         CurrentStage = IGame.Stage.Running;
         AfterGameStartEvent?.Invoke(this, new AfterGameStartEventArgs(this));
 
-        Serilog.Log.Information("Game started.");
+        _logger.Information("Started.");
     }
 
     public void End()
     {
+        _logger.Information("Ending...");
+
         if (CurrentStage != IGame.Stage.Running && CurrentStage != IGame.Stage.Battling)
         {
             throw new InvalidOperationException("the game is not running");
@@ -121,7 +128,7 @@ partial class Game : IGame
 
         CurrentStage = IGame.Stage.Ended;
 
-        Serilog.Log.Information("Game stopped.");
+        _logger.Information("Ended.");
     }
 
     public void Tick()

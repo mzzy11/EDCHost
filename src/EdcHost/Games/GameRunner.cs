@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace EdcHost.Games;
 
 class GameRunner : IGameRunner
@@ -7,13 +9,14 @@ class GameRunner : IGameRunner
     public IGame Game { get; }
 
     bool _shouldRun = false;
+    Task? _task = null;
 
     public GameRunner(IGame game)
     {
         Game = game;
     }
 
-    public void Start()
+    public async Task Start()
     {
         if (Game.CurrentStage is not IGame.Stage.Ready)
         {
@@ -24,17 +27,22 @@ class GameRunner : IGameRunner
 
         Game.Start();
 
-        Task.Run(Run);
+        _task = Run();
+
+        await Task.Delay(0);
     }
 
-    public void End()
+    public async Task End()
     {
         if (Game.CurrentStage is not IGame.Stage.Running && Game.CurrentStage is not IGame.Stage.Battling)
         {
             throw new InvalidOperationException("game is not running");
         }
 
+        Debug.Assert(_task is not null);
+
         _shouldRun = false;
+        await _task;
     }
 
     async Task Run()

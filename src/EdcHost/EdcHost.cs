@@ -6,6 +6,8 @@ partial class EdcHost : IEdcHost
 {
     readonly Games.IGame _game;
     readonly Games.IGameRunner _gameRunner;
+    readonly ILogger _logger = Log.ForContext("Component", "Program");
+    readonly Dictionary<int, string> _playerIdToPortName = new();
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
 
@@ -30,7 +32,7 @@ partial class EdcHost : IEdcHost
 
     public void Start()
     {
-        Log.Information("Starting...");
+        _logger.Information("Starting...");
 
         try
         {
@@ -38,7 +40,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception e)
         {
-            Log.Error($"failed to start slave server: {e}");
+            _logger.Error($"failed to start slave server: {e}");
         }
 
         try
@@ -47,7 +49,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception e)
         {
-            Log.Error($"failed to start viewer server: {e}");
+            _logger.Error($"failed to start viewer server: {e}");
         }
 
         try
@@ -56,15 +58,15 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception e)
         {
-            Log.Error($"failed to start game runner: {e}");
+            _logger.Error($"failed to start game runner: {e}");
         }
 
-        Log.Information("Started.");
+        _logger.Information("Started.");
     }
 
     public void Stop()
     {
-        Log.Information("Stopping...");
+        _logger.Information("Stopping...");
 
         try
         {
@@ -72,7 +74,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception e)
         {
-            Log.Error($"failed to stop slave server: {e}");
+            _logger.Error($"failed to stop slave server: {e}");
         }
 
         try
@@ -81,7 +83,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception e)
         {
-            Log.Error($"failed to stop viewer server: {e}");
+            _logger.Error($"failed to stop viewer server: {e}");
         }
 
         try
@@ -90,9 +92,9 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception e)
         {
-            Log.Error($"failed to end game runner: {e}");
+            _logger.Error($"failed to end game runner: {e}");
         }
 
-        Log.Information("Stopped.");
+        _logger.Information("Stopped.");
     }
 }
