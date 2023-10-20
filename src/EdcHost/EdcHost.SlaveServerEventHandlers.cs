@@ -1,8 +1,8 @@
+using System.Diagnostics;
+using System.Linq;
 using EdcHost.Games;
 using EdcHost.SlaveServers;
 using EdcHost.SlaveServers.EventArgs;
-using System.Diagnostics;
-using System.Linq;
 
 namespace EdcHost;
 
