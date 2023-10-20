@@ -7,7 +7,7 @@ namespace EdcHost.Games;
 /// </summary>
 public partial class Game : IGame
 {
-    private const int TickBattlingModeStart = 12000;
+    const int TickBattlingModeStart = 12000;
     public const int TicksPerSecondExpected = 20;
 
     /// <summary>
@@ -38,8 +38,8 @@ public partial class Game : IGame
     /// </summary>
     public List<IMine> Mines { get; private set; }
 
-    private bool _shouldRun = false;
-    private readonly Task _tickTask;
+    bool _shouldRun = false;
+    readonly Task _tickTask;
 
     public Game()
     {
@@ -143,7 +143,7 @@ public partial class Game : IGame
         Serilog.Log.Information("Game stopped.");
     }
 
-    private void Run()
+    void Run()
     {
         try
         {
@@ -201,12 +201,12 @@ public partial class Game : IGame
         }
     }
 
-    private void GenerateMines()
+    void GenerateMines()
     {
         //TODO: Generate mines according to game rule
     }
 
-    private void UpdatePlayerInfo()
+    void UpdatePlayerInfo()
     {
         for (int i = 0; i < PlayerNum; i++)
         {
@@ -243,7 +243,7 @@ public partial class Game : IGame
     /// <summary>
     /// Update mines.
     /// </summary>
-    private void UpdateMines()
+    void UpdateMines()
     {
         foreach (IMine mine in Mines)
         {
@@ -284,7 +284,7 @@ public partial class Game : IGame
     /// Whether the game is finished or not.
     /// </summary>
     /// <returns>True if finished, false otherwise.</returns>
-    private bool IsFinished()
+    bool IsFinished()
     {
         for (int i = 0; i < PlayerNum; i++)
         {
@@ -299,7 +299,7 @@ public partial class Game : IGame
     /// <summary>
     /// Judge the game. Choose a winner or report there is no winner.
     /// </summary>
-    private void Judge()
+    void Judge()
     {
         int remainingPlayers = 0;
         for (int i = 0; i < PlayerNum; i++)

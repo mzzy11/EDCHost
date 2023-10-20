@@ -21,9 +21,9 @@ namespace EdcHost.ViewerServers;
 /// </summary>
 public class ViewerServer : IViewerServer
 {
-    private readonly WebSocketServer _webSocketServer;
-    private readonly ILogger _logger = Log.Logger.ForContext<ViewerServer>();
-    private IWebSocketConnection? _socket = null;
+    readonly WebSocketServer _webSocketServer;
+    readonly ILogger _logger = Log.Logger.ForContext<ViewerServer>();
+    IWebSocketConnection? _socket = null;
     public IUpdater CompetitionUpdater { get; } = new Updater();
     public IGameController Controller { get; } = new GameController();
     public event EventHandler<SetPortEventArgs>? SetPortEvent;
@@ -98,7 +98,7 @@ public class ViewerServer : IViewerServer
     /// <summary>
     /// Starts the WebSocket server.
     /// </summary>
-    private void WebSocketServerStart()
+    void WebSocketServerStart()
     {
         _webSocketServer.Start(socket =>
         {
@@ -156,7 +156,7 @@ public class ViewerServer : IViewerServer
     /// </summary>
     /// <param name="text"></param>
     /// <exception cref="InvalidDataException"></exception>
-    private void DeserializeMessage(string text)
+    void DeserializeMessage(string text)
     {
         IMessage message = JsonSerializer.Deserialize<Message>(text)!;
         switch (message.MessageType)

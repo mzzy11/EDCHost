@@ -5,12 +5,12 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    private void HandleAfterGameStartEvent(object? sender, AfterGameStartEventArgs e)
+    void HandleAfterGameStartEvent(object? sender, AfterGameStartEventArgs e)
     {
         Serilog.Log.Information("Game started.");
     }
 
-    private void HandleAfterGameTickEvent(object? sender, AfterGameTickEventArgs e)
+    void HandleAfterGameTickEvent(object? sender, AfterGameTickEventArgs e)
     {
         try
         {
@@ -48,7 +48,7 @@ partial class EdcHost : IEdcHost
         }
     }
 
-    private void HandleAfterJudgementEvent(object? sender, AfterJudgementEventArgs e)
+    void HandleAfterJudgementEvent(object? sender, AfterJudgementEventArgs e)
     {
         if (e.Winner is null)
         {

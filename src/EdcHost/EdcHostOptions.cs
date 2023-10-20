@@ -2,7 +2,7 @@ namespace EdcHost;
 
 public class EdcHostOptions
 {
-    private const int DefaultServerPort = 8080;
+    const int DefaultServerPort = 8080;
 
     public List<Tuple<int, int>> GameDiamondMines { get; }
     public List<Tuple<int, int>> GameGoldMines { get; }

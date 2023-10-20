@@ -10,13 +10,13 @@ public class SlaveServer : ISlaveServer
 {
     public const int PLAYER_NUM = 2;
     public static readonly int[] BaudRateList = { 9600, 19200, 38400, 57600, 115200 };
-    private readonly SerialPort[] _serialPorts;
-    private readonly Thread _sendThread;
-    private readonly Thread _receiveThread;
-    private bool _isRunning = false;
-    private readonly IPacket?[] _packetsToSend = { null, null };
-    private readonly IPacketFromSlave[] _packetsReceived = new IPacketFromSlave[PLAYER_NUM];
-    private readonly ILogger _logger = Log.Logger.ForContext<SlaveServer>();
+    readonly SerialPort[] _serialPorts;
+    readonly Thread _sendThread;
+    readonly Thread _receiveThread;
+    bool _isRunning = false;
+    readonly IPacket?[] _packetsToSend = { null, null };
+    readonly IPacketFromSlave[] _packetsReceived = new IPacketFromSlave[PLAYER_NUM];
+    readonly ILogger _logger = Log.Logger.ForContext<SlaveServer>();
     public event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
     public event EventHandler<PlayerTryUseEventArgs>? PlayerTryUseEvent;
     public event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
@@ -103,7 +103,7 @@ public class SlaveServer : ISlaveServer
         }
     }
 
-    private void SetPortName(int id, string portName)
+    void SetPortName(int id, string portName)
     {
         string[] ports = SerialPort.GetPortNames();
         if (ports.Contains(portName))
@@ -116,7 +116,7 @@ public class SlaveServer : ISlaveServer
         }
     }
 
-    private void SetPortBaudRate(int id, int baudRate)
+    void SetPortBaudRate(int id, int baudRate)
     {
         foreach (int availableRate in BaudRateList)
         {
@@ -130,12 +130,12 @@ public class SlaveServer : ISlaveServer
             "Baud rate must be one of the following: " + string.Join(", ", BaudRateList));
     }
 
-    private void SetPortParity(int id, Parity parity)
+    void SetPortParity(int id, Parity parity)
     {
         _serialPorts[id].Parity = parity;
     }
 
-    private void SetPortDataBits(int id, int dataBits)
+    void SetPortDataBits(int id, int dataBits)
     {
         if (dataBits >= 5 && dataBits <= 8)
         {
@@ -147,12 +147,12 @@ public class SlaveServer : ISlaveServer
         }
     }
 
-    private void SetStopBits(int id, StopBits stopBits)
+    void SetStopBits(int id, StopBits stopBits)
     {
         _serialPorts[id].StopBits = stopBits;
     }
 
-    private void PerformAction(int id, IPacketFromSlave packet)
+    void PerformAction(int id, IPacketFromSlave packet)
     {
         switch (packet.ActionType)
         {

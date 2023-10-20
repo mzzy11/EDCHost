@@ -4,9 +4,9 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    private readonly Games.IGame _game;
-    private readonly SlaveServers.ISlaveServer _slaveServer;
-    private readonly ViewerServers.IViewerServer _viewerServer;
+    readonly Games.IGame _game;
+    readonly SlaveServers.ISlaveServer _slaveServer;
+    readonly ViewerServers.IViewerServer _viewerServer;
 
     public EdcHost(Games.IGame game, SlaveServers.ISlaveServer slaveServer, ViewerServers.IViewerServer viewerServer)
     {

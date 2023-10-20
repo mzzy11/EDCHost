@@ -10,8 +10,8 @@ namespace EdcHost.Tests.UnitTests.ViewerServers.Messages;
 
 public class HostConfigurationFromClientTests
 {
-    private const string MessageTypeTest = "testType";
-    private const string TokenTest = "testToken";
+    const string MessageTypeTest = "testType";
+    const string TokenTest = "testToken";
 
     [Fact]
     public void Constructor_SetsProperties()

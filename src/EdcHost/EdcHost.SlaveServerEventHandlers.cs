@@ -6,7 +6,7 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    private void HandlePlayerTryAttackEvent(object? sender, PlayerTryAttackEventArgs e)
+    void HandlePlayerTryAttackEvent(object? sender, PlayerTryAttackEventArgs e)
     {
         try
         {
@@ -66,7 +66,7 @@ partial class EdcHost : IEdcHost
         }
     }
 
-    private void HandlePlayerTryUseEvent(object? sender, PlayerTryUseEventArgs e)
+    void HandlePlayerTryUseEvent(object? sender, PlayerTryUseEventArgs e)
     {
         try
         {
@@ -126,7 +126,7 @@ partial class EdcHost : IEdcHost
         }
     }
 
-    private void HandlePlayerTryTradeEvent(object? sender, PlayerTryTradeEventArgs e)
+    void HandlePlayerTryTradeEvent(object? sender, PlayerTryTradeEventArgs e)
     {
         try
         {
