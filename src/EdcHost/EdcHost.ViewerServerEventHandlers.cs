@@ -44,7 +44,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception exception)
         {
-            _logger.Error($"Failde to set port: {exception}");
+            _logger.Error($"Failed to set port: {exception}");
         }
     }
 
