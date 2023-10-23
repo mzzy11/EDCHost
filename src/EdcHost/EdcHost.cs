@@ -8,6 +8,7 @@ partial class EdcHost : IEdcHost
     readonly Games.IGameRunner _gameRunner;
     readonly ILogger _logger = Log.ForContext("Component", "Program");
     readonly Dictionary<int, string> _playerIdToPortName = new();
+    readonly Dictionary<int, int> _playerIdToCameraId = new();
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
 
