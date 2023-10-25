@@ -15,29 +15,20 @@ namespace EdcHost.ViewerServers;
 /// </summary>
 public class ViewerServer : IViewerServer
 {
-    readonly WebSocketServer _webSocketServer;
     readonly ILogger _logger = Log.Logger.ForContext("Component", "ViewerServers");
-    IWebSocketConnection? _socket = null;
     public IUpdater CompetitionUpdater { get; } = new Updater();
     public IGameController Controller { get; } = new GameController();
     public event EventHandler<SetPortEventArgs>? SetPortEvent;
     public event EventHandler<SetCameraEventArgs>? SetCameraEvent;
+    
+    IWebSocketConnection? _socket = null;
+    readonly IWebSocketServer _webSocketServer;
 
-    public ViewerServer(int port)
+    public ViewerServer(IWebSocketServer webSocketServer, IUpdater updater, IGameController controller)
     {
-        //_webSocketServer = new WebSocketServer("ws://localhost:" + port)
-        _webSocketServer = new WebSocketServer("ws://127.0.0.1:" + port)
-        {
-            RestartAfterListenError = true
-        };
-    }
-
-    public ViewerServer()
-    {
-        _webSocketServer = new WebSocketServer("ws://localhost:11451")
-        {
-            RestartAfterListenError = true
-        };
+        _webSocketServer = webSocketServer;
+        CompetitionUpdater = updater;
+        Controller = controller;
     }
 
     /// <summary>
