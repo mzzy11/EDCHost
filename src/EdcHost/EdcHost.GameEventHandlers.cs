@@ -52,7 +52,7 @@ partial class EdcHost : IEdcHost
 
             // Send packet to the viewer
             List<CompetitionUpdate.Event> currentEvents = new();
-            while (!this._playerEventQueue.IsEmpty)
+            while (!_playerEventQueue.IsEmpty)
             {
                 currentEvents.Add(new CompetitionUpdate.Event()
                 {
@@ -151,11 +151,11 @@ partial class EdcHost : IEdcHost
     void HandlePlayerAttackEvent(object? sender, Games.PlayerAttackEventArgs e)
     {
         // Store the event info to the queue
-        this._playerEventQueue.Enqueue(e);
+        _playerEventQueue.Enqueue(e);
     }
     void HandlePlayerPlaceEvent(object? sender, Games.PlayerPlaceEventArgs e)
     {
         // Store the event info to the queue
-        this._playerEventQueue.Enqueue(e);
+        _playerEventQueue.Enqueue(e);
     }
 }

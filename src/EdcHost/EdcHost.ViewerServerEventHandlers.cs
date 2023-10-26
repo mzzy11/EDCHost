@@ -11,36 +11,29 @@ partial class EdcHost : IEdcHost
             if (_playerIdToPortName.Any(kvp => kvp.Value == e.PortName))
             {
                 _logger.Error($"Port name {e.PortName} is taken by a player.");
+                return;
             }
 
             if (_playerIdToPortName.ContainsKey(e.PlayerId) == false)
             {
-                _slaveServer.AddPort(
-                    portName: e.PortName,
-                    baudRate: e.BaudRate,
-                    parity: System.IO.Ports.Parity.None,
-                    dataBits: 8,
-                    stopBits: System.IO.Ports.StopBits.None
+                _slaveServer.OpenPort(
+                    portName: e.PortName
                 );
                 _playerIdToPortName.Add(e.PlayerId, e.PortName);
             }
             else
             {
                 string oldPortName = _playerIdToPortName[e.PlayerId];
-                _slaveServer.AddPort(
-                    portName: e.PortName,
-                    baudRate: e.BaudRate,
-                    parity: System.IO.Ports.Parity.None,
-                    dataBits: 8,
-                    stopBits: System.IO.Ports.StopBits.None
+                _slaveServer.OpenPort(
+                    portName: e.PortName
                 );
                 _playerIdToPortName[e.PlayerId] = e.PortName;
-                _slaveServer.RemovePort(oldPortName);
+                _slaveServer.ClosePort(oldPortName);
             }
 
             _logger.Information("[Update]");
             _logger.Information($"Player {e.PlayerId}:");
-            _logger.Information($"Port: {e.PortName} BaudRate: {e.BaudRate}");
+            _logger.Information($"Port: {e.PortName}");
         }
         catch (Exception exception)
         {
