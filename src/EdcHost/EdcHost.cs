@@ -1,5 +1,5 @@
-using Serilog;
 using System.Collections.Concurrent;
+using Serilog;
 
 namespace EdcHost;
 
