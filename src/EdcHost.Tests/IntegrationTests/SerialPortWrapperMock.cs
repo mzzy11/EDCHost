@@ -5,13 +5,26 @@ namespace EdcHost.Tests.IntegrationTests;
 class SerialPortWrapperMock : ISerialPortWrapper
 {
     public bool IsOpen = false;
-    public List<byte> ReadBuffer = new();
     public List<byte> WriteBuffer = new();
+    public void MockReceive(byte[] bytes) {
+        AfterReceive?.Invoke(this, new ISerialPortWrapper.AfterReceiveEventArgs(PortName, bytes));
+    }
 
-    public int BytesToRead => ReadBuffer.Count;
+    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs>? AfterReceive;
+
+    public string PortName {get;}
+
+    public SerialPortWrapperMock(string portName)
+    {
+        PortName = portName;
+    }
+
     public void Close()
     {
         IsOpen = false;
+    }
+    public void Dispose()
+    {
     }
     public void Open()
     {
@@ -22,34 +35,14 @@ class SerialPortWrapperMock : ISerialPortWrapper
 
         IsOpen = true;
     }
-    public void Read(byte[] buffer, int offset, int count)
+    public void Send(byte[] bytes)
     {
         if (!IsOpen)
         {
             throw new InvalidOperationException();
-        }
-
-        if (count > buffer.Length - offset)
-        {
-            throw new ArgumentException();
-        }
-
-        Array.Copy(ReadBuffer.ToArray(), 0, buffer, offset, count);
-        ReadBuffer.Clear();
-    }
-    public void Write(byte[] buffer, int offset, int count)
-    {
-        if (!IsOpen)
-        {
-            throw new InvalidOperationException();
-        }
-
-        if (count > buffer.Length - offset)
-        {
-            throw new ArgumentException();
         }
 
         WriteBuffer.Clear();
-        WriteBuffer.AddRange(buffer.Skip(offset).Take(count));
+        WriteBuffer.AddRange(bytes);
     }
 }

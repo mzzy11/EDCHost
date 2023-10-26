@@ -9,7 +9,7 @@ class SerialPortHubMock : ISerialPortHub
     {
         if (!SerialPorts.ContainsKey(portName))
         {
-            SerialPorts.Add(portName, new SerialPortWrapperMock());
+            SerialPorts.Add(portName, new SerialPortWrapperMock(portName));
         }
 
         return SerialPorts[portName];

@@ -6,7 +6,7 @@ namespace EdcHost.Tests.IntegrationTests;
 public partial class SlaveServerTests
 {
     [Fact]
-    public async Task Simple()
+    public void Simple()
     {
         const int HostToSlaveBytesCount = 98;
         const int HostToSlaveDataBytesCount = 93;
@@ -16,7 +16,7 @@ public partial class SlaveServerTests
         const string PortName = "COM1";
 
         // Arrange
-        SerialPortWrapperMock serialPortWrapperMock = new();
+        SerialPortWrapperMock serialPortWrapperMock = new(PortName);
         SerialPortHubMock serialPortHubMock = new()
         {
             SerialPorts = {
@@ -30,7 +30,6 @@ public partial class SlaveServerTests
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.False(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Empty(serialPortWrapperMock.WriteBuffer);
 
         // Act
@@ -38,7 +37,6 @@ public partial class SlaveServerTests
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Empty(serialPortWrapperMock.WriteBuffer);
 
         // Act
@@ -46,11 +44,9 @@ public partial class SlaveServerTests
             PortName, 0, 0, Enumerable.Repeat<int>(0, ChunkCount).ToList(), false, false,
             0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0
             );
-        await Task.Delay(10);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Equal(HostToSlaveBytesCount, serialPortWrapperMock.WriteBuffer.Count);
 
         List<byte> writeBuffer = serialPortWrapperMock.WriteBuffer;
@@ -90,19 +86,17 @@ public partial class SlaveServerTests
         };
 
         byte[] readBufferBytes = new byte[SlaveToHostBytesCount];
+        readBufferBytes[5] = (byte)0x00;
+        readBufferBytes[6] = (byte)0x00;
+        // Headers should be generated after data bytes are set.
         readBufferBytes[0] = (byte)0x55;
         readBufferBytes[1] = (byte)0xAA;
         BitConverter.GetBytes((short)SlaveToHostDataBytesCount).CopyTo(readBufferBytes, 2);
         readBufferBytes[4] = CalculateChecksum(readBufferBytes.ToArray()[5..SlaveToHostBytesCount]);
-        readBufferBytes[5] = (byte)0x00;
-        readBufferBytes[6] = (byte)0x00;
-        serialPortWrapperMock.ReadBuffer.Clear();
-        serialPortWrapperMock.ReadBuffer.AddRange(readBufferBytes);
-        await Task.Delay(10);
+        serialPortWrapperMock.MockReceive(readBufferBytes);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Equal(HostToSlaveBytesCount, serialPortWrapperMock.WriteBuffer.Count);
         Assert.True(isPlayerTryAttackEventRaised);
 
@@ -112,22 +106,21 @@ public partial class SlaveServerTests
         {
             Assert.Equal(PortName, e.PortName);
             Assert.Equal(0, e.TargetChunkId);
+            isPlayerTryPlaceBlockEventRaised = true;
         };
 
         readBufferBytes = new byte[SlaveToHostBytesCount];
+        readBufferBytes[5] = (byte)0x01;
+        readBufferBytes[6] = (byte)0x00;
+        // Headers should be generated after data bytes are set.
         readBufferBytes[0] = (byte)0x55;
         readBufferBytes[1] = (byte)0xAA;
         BitConverter.GetBytes((short)SlaveToHostDataBytesCount).CopyTo(readBufferBytes, 2);
         readBufferBytes[4] = CalculateChecksum(readBufferBytes.ToArray()[5..SlaveToHostBytesCount]);
-        readBufferBytes[5] = (byte)0x01;
-        readBufferBytes[6] = (byte)0x00;
-        serialPortWrapperMock.ReadBuffer.Clear();
-        serialPortWrapperMock.ReadBuffer.AddRange(readBufferBytes);
-        await Task.Delay(10);
+        serialPortWrapperMock.MockReceive(readBufferBytes);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Equal(HostToSlaveBytesCount, serialPortWrapperMock.WriteBuffer.Count);
         Assert.True(isPlayerTryPlaceBlockEventRaised);
 
@@ -137,22 +130,21 @@ public partial class SlaveServerTests
         {
             Assert.Equal(PortName, e.PortName);
             Assert.Equal(0, e.Item);
+            isPlayerTryTradeEventRaised = true;
         };
 
         readBufferBytes = new byte[SlaveToHostBytesCount];
+        readBufferBytes[5] = (byte)0x02;
+        readBufferBytes[6] = (byte)0x00;
+        // Headers should be generated after data bytes are set.
         readBufferBytes[0] = (byte)0x55;
         readBufferBytes[1] = (byte)0xAA;
         BitConverter.GetBytes((short)SlaveToHostDataBytesCount).CopyTo(readBufferBytes, 2);
         readBufferBytes[4] = CalculateChecksum(readBufferBytes.ToArray()[5..SlaveToHostBytesCount]);
-        readBufferBytes[5] = (byte)0x02;
-        readBufferBytes[6] = (byte)0x00;
-        serialPortWrapperMock.ReadBuffer.Clear();
-        serialPortWrapperMock.ReadBuffer.AddRange(readBufferBytes);
-        await Task.Delay(10);
+        serialPortWrapperMock.MockReceive(readBufferBytes);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Equal(HostToSlaveBytesCount, serialPortWrapperMock.WriteBuffer.Count);
         Assert.True(isPlayerTryTradeEventRaised);
 
@@ -161,7 +153,6 @@ public partial class SlaveServerTests
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.False(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Equal(HostToSlaveBytesCount, serialPortWrapperMock.WriteBuffer.Count);
 
         // Act
@@ -169,7 +160,6 @@ public partial class SlaveServerTests
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.False(serialPortWrapperMock.IsOpen);
-        Assert.Empty(serialPortWrapperMock.ReadBuffer);
         Assert.Equal(HostToSlaveBytesCount, serialPortWrapperMock.WriteBuffer.Count);
     }
 
