@@ -1,5 +1,3 @@
-using EdcHost.SlaveServers;
-using Microsoft.VisualBasic.FileIO;
 using Serilog;
 
 namespace EdcHost.SlaveServers;
@@ -10,6 +8,8 @@ public class SlaveServer : ISlaveServer
     public event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
     public event EventHandler<PlayerTryPlaceBlockEventArgs>? PlayerTryPlaceBlockEvent;
     public event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
+
+    public List<string> AvailablePortNames => _serialPortHub.PortNames;
 
     bool _isRunning = false;
     readonly ILogger _logger = Log.Logger.ForContext("Component", "SlaveServers");

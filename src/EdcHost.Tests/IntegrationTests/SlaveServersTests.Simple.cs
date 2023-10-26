@@ -61,7 +61,7 @@ public partial class SlaveServerTests
         Assert.Equal(0, BitConverter.ToInt32(writeBuffer.ToArray(), 6));
         for (int i = 0; i < 64; ++i)
         {
-            Assert.Equal((byte)0x00, BitConverter.ToInt32(writeBuffer.ToArray(), 10 + i));
+            Assert.Equal((byte)0x00, writeBuffer[10 + i]);
         }
         Assert.Equal((byte)0x00, writeBuffer[74]);
         Assert.Equal((byte)0x00, writeBuffer[75]);

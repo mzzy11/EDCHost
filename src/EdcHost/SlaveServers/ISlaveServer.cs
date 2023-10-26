@@ -1,5 +1,3 @@
-using EdcHost.SlaveServers;
-
 namespace EdcHost.SlaveServers;
 
 /// <summary>
@@ -17,6 +15,11 @@ public interface ISlaveServer
     event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
     event EventHandler<PlayerTryPlaceBlockEventArgs>? PlayerTryPlaceBlockEvent;
     event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
+
+    /// <summary>
+    /// Gets the available port names.
+    /// </summary>
+    List<string> AvailablePortNames { get; }
 
     /// <summary>
     /// Starts the server.
