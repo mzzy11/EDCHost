@@ -20,8 +20,8 @@ public class ViewerServer : IViewerServer
 
     readonly ILogger _logger = Log.Logger.ForContext("Component", "ViewerServers");
     public IGameController Controller { get; } = new GameController();
-    public event EventHandler<SetPortEventArgs>? SetPortEvent;
-    public event EventHandler<SetCameraEventArgs>? SetCameraEvent;
+    public event EventHandler<SetPortEventArgs> SetPortEvent;
+    public event EventHandler<SetCameraEventArgs> SetCameraEvent;
 
     IWebSocketConnection? _socket = null;
     readonly IWebSocketServer _webSocketServer;

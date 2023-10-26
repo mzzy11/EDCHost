@@ -6,13 +6,14 @@ class SerialPortWrapperMock : ISerialPortWrapper
 {
     public bool IsOpen = false;
     public List<byte> WriteBuffer = new();
-    public void MockReceive(byte[] bytes) {
+    public void MockReceive(byte[] bytes)
+    {
         AfterReceive?.Invoke(this, new ISerialPortWrapper.AfterReceiveEventArgs(PortName, bytes));
     }
 
-    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs>? AfterReceive;
+    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs> AfterReceive;
 
-    public string PortName {get;}
+    public string PortName { get; }
 
     public SerialPortWrapperMock(string portName)
     {
