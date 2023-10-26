@@ -7,7 +7,7 @@ public interface IGameController
     public event EventHandler? StartGameEvent;
     public event EventHandler? EndGameEvent;
     public event EventHandler? ResetGameEvent;
-    public event EventHandler<MessageTransferEventArgs> GetHostConfigurationEvent;
+    public event EventHandler<MessageTransferEventArgs>? GetHostConfigurationEvent;
 
     /// <summary>
     /// Starts the game.

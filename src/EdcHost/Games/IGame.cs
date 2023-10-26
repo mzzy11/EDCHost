@@ -27,9 +27,9 @@ public interface IGame
         Ended,
     }
 
-    event EventHandler<AfterGameStartEventArgs> AfterGameStartEvent;
-    event EventHandler<AfterGameTickEventArgs> AfterGameTickEvent;
-    event EventHandler<AfterJudgementEventArgs> AfterJudgementEvent;
+    event EventHandler<AfterGameStartEventArgs>? AfterGameStartEvent;
+    event EventHandler<AfterGameTickEventArgs>? AfterGameTickEvent;
+    event EventHandler<AfterJudgementEventArgs>? AfterJudgementEvent;
 
     /// <summary>
     /// Current stage of the game.

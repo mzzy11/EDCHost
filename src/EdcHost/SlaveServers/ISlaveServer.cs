@@ -12,9 +12,9 @@ public interface ISlaveServer
         return new SlaveServer(serialPortHub);
     }
 
-    event EventHandler<PlayerTryAttackEventArgs> PlayerTryAttackEvent;
-    event EventHandler<PlayerTryPlaceBlockEventArgs> PlayerTryPlaceBlockEvent;
-    event EventHandler<PlayerTryTradeEventArgs> PlayerTryTradeEvent;
+    event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
+    event EventHandler<PlayerTryPlaceBlockEventArgs>? PlayerTryPlaceBlockEvent;
+    event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
 
     /// <summary>
     /// Gets the available port names.

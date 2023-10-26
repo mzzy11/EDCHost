@@ -5,9 +5,9 @@ namespace EdcHost.SlaveServers;
 public class SlaveServer : ISlaveServer
 {
 
-    public event EventHandler<PlayerTryAttackEventArgs> PlayerTryAttackEvent;
-    public event EventHandler<PlayerTryPlaceBlockEventArgs> PlayerTryPlaceBlockEvent;
-    public event EventHandler<PlayerTryTradeEventArgs> PlayerTryTradeEvent;
+    public event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
+    public event EventHandler<PlayerTryPlaceBlockEventArgs>? PlayerTryPlaceBlockEvent;
+    public event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
 
     public List<string> AvailablePortNames => _serialPortHub.PortNames;
 
@@ -40,7 +40,7 @@ public class SlaveServer : ISlaveServer
 
     public void ClosePort(string portName)
     {
-        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ??
+        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ?? 
             throw new ArgumentException($"port name does not exist: {portName}");
 
         serialPort.Close();
@@ -52,7 +52,7 @@ public class SlaveServer : ISlaveServer
         double positionOpponentY, int agility, int health, int maxHealth, int strength,
         int emeraldCount, int woolCount)
     {
-        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ??
+        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ?? 
             throw new ArgumentException($"port name does not exist: {portName}");
 
         IPacket packet = new PacketFromHost(gameStage, elapsedTime, heightOfChunks,
