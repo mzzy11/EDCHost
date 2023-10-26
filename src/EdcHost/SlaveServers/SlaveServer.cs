@@ -28,18 +28,19 @@ public class SlaveServer : ISlaveServer
     }
 
     public event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
-    public event EventHandler<PlayerTryUseEventArgs>? PlayerTryUseEvent;
+    public event EventHandler<PlayerTryPlaceBlockEventArgs>? PlayerTryPlaceBlockEvent;
     public event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
 
     readonly ILogger _logger = Log.Logger.ForContext("Component", "SlaveServers");
     readonly ConcurrentDictionary<string, PortComponentBundle> _portComponentBundles = new();
     readonly ISerialPortHub _serialPortHub;
 
-    public SlaveServer(ISerialPortHub serialPortHub) {
+    public SlaveServer(ISerialPortHub serialPortHub)
+    {
         _serialPortHub = serialPortHub;
     }
 
-    public void AddPort(string portName)
+    public void OpenPort(string portName)
     {
         if (_portComponentBundles.Keys.Any(portName.Equals))
         {
@@ -61,7 +62,7 @@ public class SlaveServer : ISlaveServer
             taskForReceiving, packetsToSend, packetsReceived));
     }
 
-    public void RemovePort(string portName)
+    public void ClosePort(string portName)
     {
         if (!_portComponentBundles.Keys.Any(portName.Equals))
         {
@@ -127,24 +128,15 @@ public class SlaveServer : ISlaveServer
         switch (packet.ActionType)
         {
             case (int)ActionKind.Attack:
-                if (Enum.IsDefined(typeof(DirectionKind), packet.Param))
-                {
-                    PlayerTryAttackEvent?.Invoke(this, new PlayerTryAttackEventArgs(portName, packet.Param));
-                }
+                PlayerTryAttackEvent?.Invoke(this, new PlayerTryAttackEventArgs(portName, packet.Param));
                 break;
 
             case (int)ActionKind.Use:
-                if (Enum.IsDefined(typeof(DirectionKind), packet.Param))
-                {
-                    PlayerTryUseEvent?.Invoke(this, new PlayerTryUseEventArgs(portName, packet.Param));
-                }
+                PlayerTryPlaceBlockEvent?.Invoke(this, new PlayerTryPlaceBlockEventArgs(portName, packet.Param));
                 break;
 
             case (int)ActionKind.Trade:
-                if (Enum.IsDefined(typeof(ItemKind), packet.Param))
-                {
-                    PlayerTryTradeEvent?.Invoke(this, new PlayerTryTradeEventArgs(portName, packet.Param));
-                }
+                PlayerTryTradeEvent?.Invoke(this, new PlayerTryTradeEventArgs(portName, packet.Param));
                 break;
 
             default:

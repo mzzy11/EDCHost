@@ -23,10 +23,10 @@ public partial class SlaveServerTests
         slaveServer.Start();
 
         // Act 2
-        slaveServer.AddPort("COM1");
+        slaveServer.OpenPort("COM1");
 
         // Act 3
-        slaveServer.RemovePort("COM1");
+        slaveServer.ClosePort("COM1");
 
         // Act 4
         slaveServer.Stop();

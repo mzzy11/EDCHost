@@ -2,13 +2,14 @@ namespace EdcHost.SlaveServers;
 
 public class PacketFromSlave : IPacketFromSlave
 {
-    const int PACKET_LENGTH = 10;
     public int ActionType { get; private set; }
     public int Param { get; private set; }
 
     public PacketFromSlave(byte[] bytes)
     {
-        // TODO: add a deserializer
+        int currentIndex = 0;
+        ActionType = Convert.ToInt32(bytes[currentIndex++]);
+        Param = Convert.ToInt32(bytes[currentIndex]);
     }
 
     public byte[] ToBytes()

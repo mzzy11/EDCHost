@@ -4,9 +4,6 @@ namespace EdcHost.SlaveServers;
 
 public class PacketFromHost : IPacketFromHost
 {
-    const int Chunk_MaxHeight = 8;
-    const int Chunk_MinHeight = 0;
-    const int PACKET_LENGTH = 100;
     public int GameStage { get; private set; }
     public int ElapsedTime { get; private set; }
     public List<int> HeightOfChunks { get; private set; } = new List<int>();
@@ -46,17 +43,13 @@ public class PacketFromHost : IPacketFromHost
         EmeraldCount = emeraldCount;
         WoolCount = woolCount;
     }
-    public static bool PositionIsInvalid(float PositionT)
-    {
-        return (PositionT > 7 || PositionT < 0);
-    }
 
     public byte[] ToBytes()
     {
         int datalength = (
            1 +                  //GameStage
            4 +                  //ElapsedTime
-           1 * 64 +               //HeightOfChunk
+           1 * HeightOfChunks.Count + //HeightOfChunk
            1 +                  //HasBed
            1 +                  //HasBedOpponet
            4 * 4 +                // Position 
@@ -78,7 +71,6 @@ public class PacketFromHost : IPacketFromHost
         //HeightOfChunks
         for (int i = 0; i < HeightOfChunks.Count(); i++)
         {
-            if (HeightOfChunks[i] > Chunk_MaxHeight || HeightOfChunks[i] < Chunk_MinHeight) throw new ArgumentException("The HeightOfChunks is incorrect");
             data[currentIndex] = Convert.ToByte(HeightOfChunks[i]);
             currentIndex++;
         }
@@ -92,28 +84,24 @@ public class PacketFromHost : IPacketFromHost
         currentIndex++;
 
         //Position
-        if (PositionIsInvalid(PositionX)) throw new ArgumentException("The PositionX is incorrect");
         byte[] temp = BitConverter.GetBytes(PositionX);    //convert float to 4 bytes
         for (int i = 0; i < temp.Length; i++)
         {
             data[currentIndex] = temp[i];
             currentIndex++;
         }
-        if (PositionIsInvalid(PositionY)) throw new ArgumentException("The PositionY is incorrect");
         temp = BitConverter.GetBytes(PositionY);
         for (int i = 0; i < 4; i++)
         {
             data[currentIndex] = temp[i];
             currentIndex++;
         }
-        if (PositionIsInvalid(PositionOpponentX)) throw new ArgumentException("The PositionOpponentX is incorrect");
         temp = BitConverter.GetBytes(PositionOpponentX);
         for (int i = 0; i < 4; i++)
         {
             data[currentIndex] = temp[i];
             currentIndex++;
         }
-        if (PositionIsInvalid(PositionOpponentY)) throw new ArgumentException("The PositionOpponentY is incorrect");
         temp = BitConverter.GetBytes(PositionOpponentY);
         for (int i = 0; i < 4; i++)
         {

@@ -4,6 +4,9 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
+    const int _mapWidth = 10;
+    const int _mapHeight = 10;
+
     readonly Games.IGame _game;
     readonly Games.IGameRunner _gameRunner;
     readonly ILogger _logger = Log.ForContext("Component", "Program");
@@ -24,7 +27,7 @@ partial class EdcHost : IEdcHost
 
         _slaveServer.PlayerTryAttackEvent += HandlePlayerTryAttackEvent;
         _slaveServer.PlayerTryTradeEvent += HandlePlayerTryTradeEvent;
-        _slaveServer.PlayerTryUseEvent += HandlePlayerTryUseEvent;
+        _slaveServer.PlayerTryPlaceBlockEvent += HandlePlayerTryPlaceBlockEvent;
 
         _viewerServer.SetCameraEvent += HandleSetCameraEvent;
         _viewerServer.SetPortEvent += HandleSetPortEvent;
