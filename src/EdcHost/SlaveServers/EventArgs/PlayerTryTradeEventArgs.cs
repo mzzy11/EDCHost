@@ -1,4 +1,4 @@
-namespace EdcHost.SlaveServers.EventArgs;
+namespace EdcHost.SlaveServers;
 
 public class PlayerTryTradeEventArgs : System.EventArgs
 {

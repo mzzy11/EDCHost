@@ -1,4 +1,4 @@
-using EdcHost.SlaveServers.EventArgs;
+using EdcHost.SlaveServers;
 
 namespace EdcHost.SlaveServers;
 

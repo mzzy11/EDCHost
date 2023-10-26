@@ -1,4 +1,4 @@
-using EdcHost.SlaveServers.EventArgs;
+using EdcHost.SlaveServers;
 using Microsoft.VisualBasic.FileIO;
 using Serilog;
 
