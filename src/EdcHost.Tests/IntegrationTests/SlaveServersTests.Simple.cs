@@ -46,7 +46,7 @@ public partial class SlaveServerTests
             PortName, 0, 0, Enumerable.Repeat<int>(0, ChunkCount).ToList(), false, false,
             0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0
             );
-        await Task.Delay(1);
+        await Task.Delay(10);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
@@ -96,8 +96,9 @@ public partial class SlaveServerTests
         readBufferBytes[4] = CalculateChecksum(readBufferBytes.ToArray()[5..SlaveToHostBytesCount]);
         readBufferBytes[5] = (byte)0x00;
         readBufferBytes[6] = (byte)0x00;
-        serialPortWrapperMock.ReadBuffer = readBufferBytes.ToList();
-        await Task.Delay(1);
+        serialPortWrapperMock.ReadBuffer.Clear();
+        serialPortWrapperMock.ReadBuffer.AddRange(readBufferBytes);
+        await Task.Delay(10);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
@@ -120,8 +121,9 @@ public partial class SlaveServerTests
         readBufferBytes[4] = CalculateChecksum(readBufferBytes.ToArray()[5..SlaveToHostBytesCount]);
         readBufferBytes[5] = (byte)0x01;
         readBufferBytes[6] = (byte)0x00;
-        serialPortWrapperMock.ReadBuffer = readBufferBytes.ToList();
-        await Task.Delay(1);
+        serialPortWrapperMock.ReadBuffer.Clear();
+        serialPortWrapperMock.ReadBuffer.AddRange(readBufferBytes);
+        await Task.Delay(10);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
@@ -144,8 +146,9 @@ public partial class SlaveServerTests
         readBufferBytes[4] = CalculateChecksum(readBufferBytes.ToArray()[5..SlaveToHostBytesCount]);
         readBufferBytes[5] = (byte)0x02;
         readBufferBytes[6] = (byte)0x00;
-        serialPortWrapperMock.ReadBuffer = readBufferBytes.ToList();
-        await Task.Delay(1);
+        serialPortWrapperMock.ReadBuffer.Clear();
+        serialPortWrapperMock.ReadBuffer.AddRange(readBufferBytes);
+        await Task.Delay(10);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);
