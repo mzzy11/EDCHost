@@ -40,7 +40,7 @@ partial class Game : IGame
 
     int AttackTickInterval(IPlayer player)
     {
-        return TicksPerSecondExpected * (int)Math.Max(8.5 - 0.25 * player.ActionPoints, 0.5);
+        return (int)(Math.Max(8.5 - 0.25 * player.ActionPoints, 0.5) * TicksPerSecondExpected);
     }
 
 }
