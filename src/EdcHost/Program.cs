@@ -21,7 +21,7 @@ class Program
         try
         {
             SetupDotEnv();
-
+            
             List<Tuple<int, int>> gameDiamondMines = EnvReader.TryGetStringValue("GAME_DIAMOND_MINES", out string? gameDiamondMinesString) ? ParseMineList(gameDiamondMinesString) : new();
             List<Tuple<int, int>> gameGoldMines = EnvReader.TryGetStringValue("GAME_GOLD_MINES", out string? gameGoldMinesString) ? ParseMineList(gameGoldMinesString) : new();
             List<Tuple<int, int>> gameIronMines = EnvReader.TryGetStringValue("GAME_IRON_MINES", out string? gameIronMinesString) ? ParseMineList(gameIronMinesString) : new();

@@ -1,4 +1,5 @@
 using Serilog;
+using System.Collections.Concurrent;
 
 namespace EdcHost;
 
@@ -13,6 +14,10 @@ partial class EdcHost : IEdcHost
     readonly Dictionary<int, string> _playerIdToPortName = new();
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
+    /// <summary>
+    /// store the player event for every tick in order to transfer to the viewerServer
+    /// </summary>
+    private ConcurrentQueue<EventArgs> _playerEventQueue = new();
 
     public EdcHost(Games.IGame game, Games.IGameRunner gameRunner, SlaveServers.ISlaveServer slaveServer, ViewerServers.IViewerServer viewerServer)
     {
@@ -24,6 +29,13 @@ partial class EdcHost : IEdcHost
         _game.AfterGameStartEvent += HandleAfterGameStartEvent;
         _game.AfterGameTickEvent += HandleAfterGameTickEvent;
         _game.AfterJudgementEvent += HandleAfterJudgementEvent;
+
+        for (int i = 0; i < _game.Players.Count; i++)
+        {
+            _game.Players[i].OnAttack += HandlePlayerAttackEvent;
+            _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
+            // TODO: Add OnDig and OnPickUp Event Handlers
+        }
 
         _slaveServer.PlayerTryAttackEvent += HandlePlayerTryAttackEvent;
         _slaveServer.PlayerTryTradeEvent += HandlePlayerTryTradeEvent;
@@ -58,16 +70,11 @@ partial class EdcHost : IEdcHost
             _logger.Error($"failed to start viewer server: {e}");
         }
 
-        try
-        {
-            _gameRunner.Start();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start game runner: {e}");
-        }
-
         _logger.Information("Started.");
+
+        // Main thread sleeps to guarantee that the program is running
+        Thread.Sleep(Timeout.Infinite);
+
     }
 
     public void Stop()
@@ -90,15 +97,6 @@ partial class EdcHost : IEdcHost
         catch (Exception e)
         {
             _logger.Error($"failed to stop viewer server: {e}");
-        }
-
-        try
-        {
-            _gameRunner.End();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to end game runner: {e}");
         }
 
         _logger.Information("Stopped.");

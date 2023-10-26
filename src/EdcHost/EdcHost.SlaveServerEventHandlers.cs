@@ -9,6 +9,9 @@ partial class EdcHost : IEdcHost
     {
         try
         {
+            // Store the event info to the queue
+            this._playerEventQueue.Enqueue(e);
+
             string portName = e.PortName;
 
             int? playerId = _playerIdToPortName
@@ -34,6 +37,9 @@ partial class EdcHost : IEdcHost
     {
         try
         {
+            // Store the event info to the queue
+            this._playerEventQueue.Enqueue(e);
+
             string portName = e.PortName;
 
             int? playerId = _playerIdToPortName
@@ -59,6 +65,9 @@ partial class EdcHost : IEdcHost
     {
         try
         {
+            // Store the event info to the queue
+            this._playerEventQueue.Enqueue(e);
+
             string portName = e.PortName;
 
             int? playerId = _playerIdToPortName

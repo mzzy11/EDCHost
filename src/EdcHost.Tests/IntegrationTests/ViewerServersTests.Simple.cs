@@ -12,10 +12,10 @@ public partial class ViewerServerTests
         // Arrange
         var webSocketServerMock = new Mock<Fleck.IWebSocketServer>();
 
-        var updaterMock = new Mock<IUpdater>();
+        // var updaterMock = new Mock<IUpdater>();
         var gameControllerMock = new Mock<IGameController>();
 
-        IViewerServer viewerServer = new ViewerServer(webSocketServerMock.Object, updaterMock.Object, gameControllerMock.Object);
+        IViewerServer viewerServer = new ViewerServer(webSocketServerMock.Object, gameControllerMock.Object);
 
         // Act 1
         viewerServer.Start();
