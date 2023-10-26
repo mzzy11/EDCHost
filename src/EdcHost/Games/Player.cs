@@ -29,6 +29,10 @@ class Player : IPlayer
     public event EventHandler<PlayerPlaceEventArgs> OnPlace = delegate { };
     public event EventHandler<PlayerDieEventArgs> OnDie = delegate { };
 
+    // TODO: Implement the event
+    // public event EventHandler<PlayerDigEventArgs> OnDig = delegate { };
+    // public event EventHandler<PlayerPickUpEventArgs> OnPickUp = delegate { };
+
     public void EmeraldAdd(int count)
     {
         /// update the player's Emeraldcount
