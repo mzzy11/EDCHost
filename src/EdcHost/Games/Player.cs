@@ -1,7 +1,15 @@
+using OpenCvSharp.ML;
+
 namespace EdcHost.Games;
 
 class Player : IPlayer
 {
+    const int InitialEmeraldCount = 0;
+    const int InitialWoolCount = 8;
+    const int InitialHealth = 20;
+    const int InitialMaxHealth = 20;
+    const int InitialStrength = 1;
+    const int InitialAgility = 0;
     public int PlayerId { get; private set; }
     public int EmeraldCount { get; private set; }
     public bool HasBed { get; private set; }
@@ -70,7 +78,9 @@ class Player : IPlayer
         {
             IsAlive = true;
             Health = MaxHealth;
-            SpawnPoint = PlayerPosition;
+            /// <remarks>
+            /// SpawnPoint should not change.
+            /// </remarks>
         }
     }
     public void DestroyBed()
@@ -91,18 +101,19 @@ class Player : IPlayer
     public Player(int id = 1, float initialX = 0, float initialY = 0, float initialX2 = 0, float initialY2 = 0)
     {
         PlayerId = id;
-        EmeraldCount = 0;
         IsAlive = true;
         HasBed = true;
         HasBedOpponent = true;
         SpawnPoint = new Position<float>(initialX, initialY);
         PlayerPosition = new Position<float>(initialX2, initialY2);
-        WoolCount = 0;
 
-        Health = 20; /// Initial health
-        MaxHealth = 20; /// Initial max health
-        Strength = 1; /// Initial strength
-        ActionPoints = 1; /// Initial action points
+        EmeraldCount = InitialEmeraldCount;
+        WoolCount = InitialWoolCount;
+
+        Health = InitialHealth; /// Initial health
+        MaxHealth = InitialMaxHealth; /// Initial max health
+        Strength = InitialStrength; /// Initial strength
+        ActionPoints = InitialAgility; /// Initial action points
     }
     public void PerformActionPosition(IPlayer.ActionKindType actionKind, float X, float Y)
     {
@@ -123,59 +134,63 @@ class Player : IPlayer
     }
     public bool Trade(IPlayer.CommodityKindType commodityKind)
     {
+        int price = commodityKind switch
+        {
+            IPlayer.CommodityKindType.AgilityBoost => 32,
+            IPlayer.CommodityKindType.HealthBoost => 32,
+            IPlayer.CommodityKindType.StrengthBoost => 64,
+            IPlayer.CommodityKindType.Wool => 2,
+            IPlayer.CommodityKindType.HealthPotion => 4,
+            _ => throw new ArgumentOutOfRangeException(
+                $"No commodity {commodityKind}."
+            )
+        };
+
+        if (EmeraldCount < price)
+        {
+            Serilog.Log.Warning(
+                $"Failed to trade: Player {PlayerId} doesn't have enough emerald."
+            );
+            return false;
+        }
+
         switch (commodityKind)
         {
             case IPlayer.CommodityKindType.AgilityBoost:
-                int price = (int)Math.Pow(2, ActionPoints);
-                if (EmeraldCount >= Math.Pow(2, ActionPoints))
-                {
-                    EmeraldCount -= (int)Math.Pow(2, ActionPoints);
-                    ActionPoints += 1;
-                    return true;
-                }
-                break;
+                EmeraldCount -= price;
+                ActionPoints += 1;
+                return true;
             case IPlayer.CommodityKindType.HealthBoost:
-                if (EmeraldCount >= (MaxHealth - 19))
-                {
-                    EmeraldCount -= MaxHealth - 19;
-                    MaxHealth += 1;
-                    return true;
-                }
-                /// Implement the logic for health boost
-                /// You can perform the health boost operation here and update the player's status
-                break;
+                EmeraldCount -= price;
+                MaxHealth += 3;
+                Health += 3;
+                return true;
             case IPlayer.CommodityKindType.HealthPotion:
-                if (EmeraldCount >= 4 && Health < MaxHealth)
+                EmeraldCount -= price;
+                if (Health < MaxHealth)
                 {
-                    EmeraldCount -= 4;
                     Health += 1;
-                    return true;
                 }
-                /// Implement the logic for health potion
-                /// You can perform the health potion use operation here and update the player's status
-                break;
+                return true;
             case IPlayer.CommodityKindType.StrengthBoost:
-                if (EmeraldCount >= Math.Pow(2, ActionPoints))
-                {
-                    EmeraldCount -= (int)Math.Pow(2, ActionPoints);
-                    Strength += 1;
-                    return true;
-                }
-                /// Implement the logic for strength boost
-                /// You can perform the strength boost operation here and update the player's status
-                break;
+                EmeraldCount -= price;
+                Strength += 1;
+                return true;
             case IPlayer.CommodityKindType.Wool:
-                if (EmeraldCount >= 1)
+                if (WoolCount >= Game.MaximumItemCount)
                 {
-                    EmeraldCount -= 1;
-                    WoolCount += 1;
-                    return true;
+                    Serilog.Log.Warning(
+                        $"Failed to trade: Player {PlayerId} cannot hold more wools."
+                    );
+                    return false;
                 }
-                break;
+                EmeraldCount -= price;
+                WoolCount += 1;
+                return true;
             default:
-                /// Handle unknown commodity types
-                break;
+                throw new ArgumentOutOfRangeException(
+                    $"No commodity {commodityKind}."
+                );
         }
-        return false;
     }
 }

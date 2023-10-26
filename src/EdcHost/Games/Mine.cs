@@ -22,14 +22,7 @@ class Mine : IMine
 
     public int AccumulateOreInterval
     {
-        get => OreKind switch
-        {
-            IMine.OreKindType.IronIngot => 20,
-            IMine.OreKindType.GoldIngot => 80,
-            IMine.OreKindType.Diamond => 320,
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(OreKind), $"No ore kind {OreKind}")
-        };
+        get => 10 * Game.TicksPerSecondExpected;
     }
 
     /// <summary>
