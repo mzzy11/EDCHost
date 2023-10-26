@@ -24,8 +24,10 @@ class SerialPortWrapper : ISerialPortWrapper
 
     public int BytesToRead => _serialPort.BytesToRead;
 
-    public void Close() {
-        if (!_isOpen){
+    public void Close()
+    {
+        if (!_isOpen)
+        {
             throw new InvalidOperationException("port is not open");
         }
 
@@ -42,12 +44,15 @@ class SerialPortWrapper : ISerialPortWrapper
         _taskForReceiving.Dispose();
     }
 
-    public void Dispose() {
+    public void Dispose()
+    {
         _serialPort.Dispose();
     }
 
-    public void Open() {
-        if (_isOpen){
+    public void Open()
+    {
+        if (_isOpen)
+        {
             throw new InvalidOperationException("port is already open");
         }
 
@@ -58,20 +63,26 @@ class SerialPortWrapper : ISerialPortWrapper
         _taskForSending = Task.Run(TaskForSendingFunc);
     }
 
-    public void Send(byte[] bytes) {
-        if (!_isOpen){
+    public void Send(byte[] bytes)
+    {
+        if (!_isOpen)
+        {
             throw new InvalidOperationException("port is not open");
         }
 
         _queueOfBytesToSend.Enqueue(bytes);
     }
 
-    private async Task TaskForReceivingFunc() {
-        while (_isOpen) {
+    private async Task TaskForReceivingFunc()
+    {
+        while (_isOpen)
+        {
             await Task.Delay(0);
 
-            try {
-                if (_serialPort.BytesToRead == 0) {
+            try
+            {
+                if (_serialPort.BytesToRead == 0)
+                {
                     continue;
                 }
 
@@ -80,7 +91,8 @@ class SerialPortWrapper : ISerialPortWrapper
 
                 AfterReceive?.Invoke(this, new(_serialPort.PortName, bytes));
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 _logger.Error(e, "error while sending bytes");
             }
         }
@@ -92,13 +104,15 @@ class SerialPortWrapper : ISerialPortWrapper
         {
             await Task.Delay(0);
 
-            try {
+            try
+            {
                 if (_queueOfBytesToSend.TryDequeue(out byte[]? bytes))
                 {
                     _serialPort.Write(bytes, 0, bytes.Length);
                 }
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 _logger.Error(e, "error while sending bytes");
             }
         }
