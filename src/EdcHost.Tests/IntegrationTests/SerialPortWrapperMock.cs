@@ -11,7 +11,7 @@ class SerialPortWrapperMock : ISerialPortWrapper
         AfterReceive?.Invoke(this, new ISerialPortWrapper.AfterReceiveEventArgs(PortName, bytes));
     }
 
-    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs>? AfterReceive;
+    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs> AfterReceive;
 
     public string PortName { get; }
 

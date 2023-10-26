@@ -14,8 +14,8 @@ public interface IViewerServer
         return new ViewerServer(webSocketServer, new GameController());
     }
     IGameController Controller { get; }
-    public event EventHandler<SetPortEventArgs>? SetPortEvent;
-    public event EventHandler<SetCameraEventArgs>? SetCameraEvent;
+    public event EventHandler<SetPortEventArgs> SetPortEvent;
+    public event EventHandler<SetCameraEventArgs> SetCameraEvent;
     /// <summary>
     /// Starts the server.
     /// </summary>

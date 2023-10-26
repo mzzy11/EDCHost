@@ -6,7 +6,7 @@ namespace EdcHost.SlaveServers;
 
 class SerialPortWrapper : ISerialPortWrapper
 {
-    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs>? AfterReceive;
+    public event EventHandler<ISerialPortWrapper.AfterReceiveEventArgs> AfterReceive;
 
     public string PortName => _serialPort.PortName;
 
