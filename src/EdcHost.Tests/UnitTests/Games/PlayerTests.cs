@@ -188,6 +188,11 @@ public class PlayerTests
         {
             event_triggered = true;
         };
+        for (int i = 1; i <= Expected_Initial_WoolCount; i++)
+        {
+            player.DecreaseWoolCount();
+            Assert.Equal(Expected_Initial_WoolCount - i, player.WoolCount);
+        }
         player.Place(0, 0);
         Assert.False(event_triggered);
     }
@@ -254,9 +259,9 @@ public class PlayerTests
         IPlayer player = IPlayer.Create();
         player.EmeraldAdd(2);
         player.Trade(IPlayer.CommodityKindType.Wool);
-        Assert.Equal(1, player.WoolCount);
+        Assert.Equal(Expected_Initial_WoolCount + 1, player.WoolCount);
         player.DecreaseWoolCount();
-        Assert.Equal(0, player.WoolCount);
+        Assert.Equal(Expected_Initial_WoolCount, player.WoolCount);
     }
     [Fact]
     public void PerformActionPosition_Attack_CheckEvent()
@@ -279,6 +284,10 @@ public class PlayerTests
         {
             event_triggered = true;
         };
+        while (player.WoolCount > 0)
+        {
+            player.DecreaseWoolCount();
+        }
         player.PerformActionPosition(IPlayer.ActionKindType.PlaceBlock, 0, 0);
         Assert.False(event_triggered);
 
