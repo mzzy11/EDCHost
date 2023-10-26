@@ -7,8 +7,6 @@ public interface IEdcHost
 {
     class EdcHostOptions
     {
-        const int DefaultServerPort = 8080;
-
         public List<Tuple<int, int>> GameDiamondMines { get; }
         public List<Tuple<int, int>> GameGoldMines { get; }
         public List<Tuple<int, int>> GameIronMines { get; }
