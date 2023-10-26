@@ -21,6 +21,7 @@ class Program
         {
             SetupDotEnv();
             SetupSerilog();
+
             SetupAndRunEdcHost();
 
         }
@@ -135,5 +136,7 @@ class Program
                     break;
             }
         };
+
+        Log.Information($"logging level set to {loggingLevelString}");
     }
 }

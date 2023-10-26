@@ -20,6 +20,34 @@ public class PacketFromHost : IPacketFromHost
     public int EmeraldCount { get; private set; }
     public int WoolCount { get; private set; }
 
+    public PacketFromHost(byte[] bytes)
+    {
+        int currentIndex = 0;
+        GameStage = Convert.ToInt32(bytes[currentIndex++]);
+        ElapsedTime = BitConverter.ToInt32(bytes, currentIndex);
+        currentIndex += 4;
+        for (int i = 0; i < 64; i++)
+        {
+            HeightOfChunks.Add(Convert.ToInt32(bytes[currentIndex++]));
+        }
+        HasBed = Convert.ToBoolean(bytes[currentIndex++]);
+        HasBedOpponent = Convert.ToBoolean(bytes[currentIndex++]);
+        PositionX = BitConverter.ToSingle(bytes, currentIndex);
+        currentIndex += 4;
+        PositionY = BitConverter.ToSingle(bytes, currentIndex);
+        currentIndex += 4;
+        PositionOpponentX = BitConverter.ToSingle(bytes, currentIndex);
+        currentIndex += 4;
+        PositionOpponentY = BitConverter.ToSingle(bytes, currentIndex);
+        currentIndex += 4;
+        Agility = Convert.ToInt32(bytes[currentIndex++]);
+        Health = Convert.ToInt32(bytes[currentIndex++]);
+        MaxHealth = Convert.ToInt32(bytes[currentIndex++]);
+        Strength = Convert.ToInt32(bytes[currentIndex++]);
+        EmeraldCount = Convert.ToInt32(bytes[currentIndex++]);
+        WoolCount = Convert.ToInt32(bytes[currentIndex++]);
+    }
+
     public PacketFromHost(
         int gameStage, int elapsedTime, List<int> heightOfChunks, bool hasBed, bool hasBedOpponent,
         float positionX, float positionY, float positionOpponentX, float positionOpponentY,
@@ -62,11 +90,8 @@ public class PacketFromHost : IPacketFromHost
         data[currentIndex++] = Convert.ToByte(GameStage);
 
         //ElapsedTime
-        if (ElapsedTime >= 10000 || ElapsedTime < 0) throw new ArgumentException("The ElapsedTime is incorrect");
-        data[currentIndex++] = Convert.ToByte(ElapsedTime % 10);         //*1
-        data[currentIndex++] = Convert.ToByte(ElapsedTime % 100 / 10);     //*10
-        data[currentIndex++] = Convert.ToByte(ElapsedTime % 1000 / 100);   //*100
-        data[currentIndex++] = Convert.ToByte(ElapsedTime / 1000);       //*1000
+        BitConverter.GetBytes(ElapsedTime).CopyTo(data, currentIndex);
+        currentIndex += 4;
 
         //HeightOfChunks
         for (int i = 0; i < HeightOfChunks.Count(); i++)
@@ -84,7 +109,7 @@ public class PacketFromHost : IPacketFromHost
         currentIndex++;
 
         //Position
-        byte[] temp = BitConverter.GetBytes(PositionX);    //convert float to 4 bytes
+        byte[] temp = BitConverter.GetBytes((float)PositionX);    //convert float to 4 bytes
         for (int i = 0; i < temp.Length; i++)
         {
             data[currentIndex] = temp[i];

@@ -1,6 +1,7 @@
 namespace EdcHost.SlaveServers;
 
-public interface ISerialPortWrapper {
+public interface ISerialPortWrapper
+{
     int BytesToRead { get; }
     void Close();
     void Open();

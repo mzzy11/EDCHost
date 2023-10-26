@@ -20,7 +20,7 @@ public class ViewerServer : IViewerServer
     public IGameController Controller { get; } = new GameController();
     public event EventHandler<SetPortEventArgs>? SetPortEvent;
     public event EventHandler<SetCameraEventArgs>? SetCameraEvent;
-    
+
     IWebSocketConnection? _socket = null;
     readonly IWebSocketServer _webSocketServer;
 

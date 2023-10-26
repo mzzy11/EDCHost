@@ -11,7 +11,7 @@ public class SlaveServer : ISlaveServer
         public ConcurrentQueue<IPacketFromHost> PacketsToSend;
         public ConcurrentQueue<IPacketFromSlave> PacketsReceived;
         public ISerialPortWrapper SerialPort;
-        public bool ShouldRun = false;
+        public bool ShouldRun = true;
         public Task TaskForSending;
         public Task TaskForReceiving;
 
@@ -48,18 +48,20 @@ public class SlaveServer : ISlaveServer
         }
 
         ISerialPortWrapper serialPort = _serialPortHub.Get(portName);
+        serialPort.Open();
 
         ConcurrentQueue<IPacketFromHost> packetsToSend = new();
         ConcurrentQueue<IPacketFromSlave> packetsReceived = new();
-
         Task taskForSending = new(() => SendTaskFunc(portName));
         Task taskForReceiving = new(() => ReceiveTaskFunc(portName));
 
+        var portComponentBundle = new PortComponentBundle(serialPort, taskForSending,
+            taskForReceiving, packetsToSend, packetsReceived);
+
+        _portComponentBundles.TryAdd(portName, portComponentBundle);
+
         taskForSending.Start();
         taskForReceiving.Start();
-
-        _portComponentBundles.TryAdd(portName, new PortComponentBundle(serialPort, taskForSending,
-            taskForReceiving, packetsToSend, packetsReceived));
     }
 
     public void ClosePort(string portName)
@@ -77,8 +79,8 @@ public class SlaveServer : ISlaveServer
     }
 
     public void Publish(string portName, int gameStage, int elapsedTime, List<int> heightOfChunks,
-        bool hasBed, bool hasBedOpponent, float positionX, float positionY, float positionOpponentX,
-        float positionOpponentY, int agility, int health, int maxHealth, int strength,
+        bool hasBed, bool hasBedOpponent, double positionX, double positionY, double positionOpponentX,
+        double positionOpponentY, int agility, int health, int maxHealth, int strength,
         int emeraldCount, int woolCount)
     {
         if (!_portComponentBundles.Keys.Any(portName.Equals))
@@ -87,7 +89,7 @@ public class SlaveServer : ISlaveServer
         }
 
         _portComponentBundles[portName].PacketsToSend.Enqueue(new PacketFromHost(gameStage, elapsedTime, heightOfChunks,
-            hasBed, hasBedOpponent, positionX, positionY, positionOpponentX, positionOpponentY, agility, health, maxHealth, strength,
+            hasBed, hasBedOpponent, (float)positionX, (float)positionY, (float)positionOpponentX, (float)positionOpponentY, agility, health, maxHealth, strength,
             emeraldCount, woolCount));
     }
 
@@ -95,14 +97,7 @@ public class SlaveServer : ISlaveServer
     {
         _logger.Information("Starting...");
 
-        foreach (PortComponentBundle portComponentBundle in _portComponentBundles.Values)
-        {
-            portComponentBundle.ShouldRun = true;
-
-            portComponentBundle.SerialPort.Open();
-            portComponentBundle.TaskForSending.Start();
-            portComponentBundle.TaskForReceiving.Start();
-        }
+        // Do nothing.
 
         _logger.Information("Started.");
     }
@@ -114,11 +109,12 @@ public class SlaveServer : ISlaveServer
         foreach (PortComponentBundle portComponentBundle in _portComponentBundles.Values)
         {
             portComponentBundle.ShouldRun = false;
-
             portComponentBundle.TaskForSending.Wait();
             portComponentBundle.TaskForReceiving.Wait();
             portComponentBundle.SerialPort.Close();
         }
+
+        _portComponentBundles.Clear();
 
         _logger.Information("Stopped.");
     }

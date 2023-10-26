@@ -1,5 +1,6 @@
 namespace EdcHost.SlaveServers;
 
-public interface ISerialPortHub {
+public interface ISerialPortHub
+{
     ISerialPortWrapper Get(string portName);
 }

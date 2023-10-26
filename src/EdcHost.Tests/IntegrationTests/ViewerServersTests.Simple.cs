@@ -1,8 +1,6 @@
-using Xunit;
-
-using Moq;
-
 using EdcHost.ViewerServers;
+using Moq;
+using Xunit;
 
 namespace EdcHost.Tests.IntegrationTests;
 

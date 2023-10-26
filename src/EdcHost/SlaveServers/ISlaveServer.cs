@@ -33,7 +33,7 @@ public interface ISlaveServer
     void ClosePort(string portName);
 
     void Publish(string portName, int gameStage, int elapsedTime, List<int> heightOfChunks,
-        bool hasBed, bool hasBedOpponent, float positionX, float positionY, float positionOpponentX,
-        float positionOpponentY, int agility, int health, int maxHealth, int strength,
+        bool hasBed, bool hasBedOpponent, double positionX, double positionY, double positionOpponentX,
+        double positionOpponentY, int agility, int health, int maxHealth, int strength,
         int emeraldCount, int woolCount);
 }

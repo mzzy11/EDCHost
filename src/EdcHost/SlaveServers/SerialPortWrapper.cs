@@ -2,10 +2,12 @@ using System.IO.Ports;
 
 namespace EdcHost.SlaveServers;
 
-class SerialPortWrapper: ISerialPortWrapper {
+class SerialPortWrapper : ISerialPortWrapper
+{
     readonly SerialPort _serialPort;
 
-    public SerialPortWrapper(string portName) {
+    public SerialPortWrapper(string portName)
+    {
         _serialPort = new(portName: portName);
     }
 
