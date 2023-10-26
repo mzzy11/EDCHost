@@ -1,5 +1,3 @@
-using OpenCvSharp.ML;
-
 namespace EdcHost.Games;
 
 class Player : IPlayer
