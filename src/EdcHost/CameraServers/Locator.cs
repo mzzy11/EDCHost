@@ -9,7 +9,7 @@ namespace EdcHost.CameraServers;
 
 public class Locator : ILocator
 {
-    public Mat? Mask { get; private set; }
+    public Mat? Mask { get; private set; } = null;
 
     readonly RecognitionOptions _options;
 
@@ -27,6 +27,11 @@ public class Locator : ILocator
         {
             Mask?.Dispose();
             Mask = mask.Clone();
+        }
+        else
+        {
+            Mask?.Dispose();
+            Mask = null;
         }
 
         Tuple<float, float>? location = GetLocation(mask);
