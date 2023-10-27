@@ -45,6 +45,8 @@ class SerialPortWrapper : ISerialPortWrapper
     public void Dispose()
     {
         _serialPort.Dispose();
+        _taskForReceiving?.Dispose();
+        _taskForSending?.Dispose();
     }
 
     public void Open()

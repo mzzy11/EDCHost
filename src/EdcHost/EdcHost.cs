@@ -5,30 +5,30 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    const int _mapWidth = 8;
-    const int _mapHeight = 8;
+    const int MapHeight = 8;
+    const int MapWidth = 8;
 
     readonly Games.IGame _game;
     readonly Games.IGameRunner _gameRunner;
     readonly ILogger _logger = Log.ForContext("Component", "Program");
     readonly Dictionary<int, string> _playerIdToPortName = new();
-    readonly Dictionary<int, int> _playerIdToCameraId = new();
+    readonly Dictionary<int, int> _playerIdToCameraIndex = new();
+    readonly CameraServers.ICameraServer _cameraServer;
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
-    /// <summary>
-    /// store the player event for every tick in order to transfer to the viewerServer
-    /// </summary>
     private readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
 
     public EdcHost(
         Games.IGame game,
         Games.IGameRunner gameRunner,
+        CameraServers.ICameraServer cameraServer,
         SlaveServers.ISlaveServer slaveServer,
         ViewerServers.IViewerServer viewerServer
     )
     {
         _game = game;
         _gameRunner = gameRunner;
+        _cameraServer = cameraServer;
         _slaveServer = slaveServer;
         _viewerServer = viewerServer;
 
@@ -60,6 +60,15 @@ partial class EdcHost : IEdcHost
 
         try
         {
+            _cameraServer.Start();
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"failed to start camera server: {e}");
+        }
+
+        try
+        {
             _slaveServer.Start();
             // _slaveServer.OpenPort("COM1");
             // _playerIdToPortName.Add(0, "COM1");
@@ -79,15 +88,20 @@ partial class EdcHost : IEdcHost
         }
 
         _logger.Information("Started.");
-
-        // Main thread sleeps to guarantee that the program is running
-        Thread.Sleep(Timeout.Infinite);
-
     }
 
     public void Stop()
     {
         _logger.Information("Stopping...");
+
+        try
+        {
+            _cameraServer.Stop();
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"failed to stop camera server: {e}");
+        }
 
         try
         {

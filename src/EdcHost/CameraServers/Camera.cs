@@ -47,13 +47,7 @@ public class Camera : ICamera
     public void Dispose()
     {
         _capture.Dispose();
-
-        _taskCancellationTokenSource?.Cancel();
-        _task?.Wait();
         _task?.Dispose();
-
-        _task = null;
-        _taskCancellationTokenSource = null;
 
         GC.SuppressFinalize(this);
     }

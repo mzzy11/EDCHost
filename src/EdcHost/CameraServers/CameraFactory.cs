@@ -32,7 +32,7 @@ public class CameraFactory : ICameraFactory
         return new Camera(cameraIndex, locator);
     }
 
-    static bool TestCamera(int cameraIndex)
+    static bool IsCameraAvailable(int cameraIndex)
     {
         using VideoCapture capture = new(cameraIndex);
 
@@ -60,7 +60,7 @@ public class CameraFactory : ICameraFactory
             int notWorkingCount = 0;
             while (notWorkingCount <= MaxNotWorkingCount)
             {
-                if (TestCamera(index))
+                if (IsCameraAvailable(index))
                 {
                     cameraIndexes.Add(index);
                 }

@@ -21,8 +21,23 @@ public class SlaveServer : ISlaveServer
         _serialPortHub = serialPortHub;
     }
 
+    public void Dispose()
+    {
+        foreach (ISerialPortWrapper serialPort in _serialPorts)
+        {
+            serialPort.Dispose();
+        }
+
+        GC.SuppressFinalize(this);
+    }
+
     public void OpenPort(string portName)
     {
+        if (_isRunning is false)
+        {
+            throw new InvalidOperationException("not running");
+        }
+
         if (_serialPorts.Any(x => x.PortName.Equals(portName)))
         {
             throw new ArgumentException($"port name already exists: {portName}");
@@ -40,10 +55,16 @@ public class SlaveServer : ISlaveServer
 
     public void ClosePort(string portName)
     {
+        if (_isRunning is false)
+        {
+            throw new InvalidOperationException("not running");
+        }
+
         ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ??
             throw new ArgumentException($"port name does not exist: {portName}");
 
         serialPort.Close();
+        serialPort.Dispose();
         _serialPorts.Remove(serialPort);
     }
 
@@ -52,6 +73,11 @@ public class SlaveServer : ISlaveServer
         double positionOpponentY, int agility, int health, int maxHealth, int strength,
         int emeraldCount, int woolCount)
     {
+        if (_isRunning is false)
+        {
+            throw new InvalidOperationException("not running");
+        }
+
         ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ??
             throw new ArgumentException($"port name does not exist: {portName}");
 
@@ -64,7 +90,7 @@ public class SlaveServer : ISlaveServer
 
     public void Start()
     {
-        if (_isRunning)
+        if (_isRunning is true)
         {
             throw new InvalidOperationException("already running");
         }
@@ -78,7 +104,7 @@ public class SlaveServer : ISlaveServer
 
     public void Stop()
     {
-        if (!_isRunning)
+        if (_isRunning is false)
         {
             throw new InvalidOperationException("not running");
         }
@@ -87,6 +113,7 @@ public class SlaveServer : ISlaveServer
 
         foreach (ISerialPortWrapper serialPort in _serialPorts)
         {
+            serialPort.Close();
             serialPort.Dispose();
         }
         _serialPorts.Clear();

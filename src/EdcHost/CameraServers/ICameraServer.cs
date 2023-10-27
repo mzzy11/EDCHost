@@ -2,7 +2,14 @@ namespace EdcHost.CameraServers;
 
 public interface ICameraServer : IDisposable
 {
+    static ICameraServer Create()
+    {
+        return new CameraServer(new CameraFactory(), new Locator());
+    }
+
     List<int> AvailableCameraIndexes { get; }
+
+    RecognitionOptions Options { get; set; }
 
     void CloseCamera(int cameraIndex);
 

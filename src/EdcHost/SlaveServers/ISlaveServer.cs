@@ -3,7 +3,7 @@ namespace EdcHost.SlaveServers;
 /// <summary>
 /// SlaveServer handles the communication with the slaves via UART.
 /// </summary>
-public interface ISlaveServer
+public interface ISlaveServer : IDisposable
 {
     static ISlaveServer Create()
     {

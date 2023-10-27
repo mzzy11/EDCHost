@@ -29,12 +29,14 @@ public interface IEdcHost
             ironMines: options.GameIronMines
         );
         var gameRunner = Games.IGameRunner.Create(game);
+        CameraServers.ICameraServer cameraServer = CameraServers.ICameraServer.Create();
         SlaveServers.ISlaveServer slaveServer = SlaveServers.ISlaveServer.Create();
         ViewerServers.IViewerServer viewerServer = ViewerServers.IViewerServer.Create(options.ServerPort);
 
         return new EdcHost(
             game: game,
             gameRunner: gameRunner,
+            cameraServer: cameraServer,
             slaveServer: slaveServer,
             viewerServer: viewerServer
         );
