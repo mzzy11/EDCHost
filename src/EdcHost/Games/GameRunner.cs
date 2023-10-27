@@ -6,6 +6,8 @@ class GameRunner : IGameRunner
 {
     const int TicksPerSecondExpected = 20;
 
+    public bool IsRunning => _shouldRun;
+    
     public IGame Game { get; }
 
     bool _shouldRun = false;
@@ -76,12 +78,5 @@ class GameRunner : IGameRunner
         {
             Serilog.Log.Error($"an error occurred when running the game: {e.Message}");
         }
-    }
-
-    public void Dispose()
-    {
-        _task?.Dispose();
-
-        GC.SuppressFinalize(this);
     }
 }

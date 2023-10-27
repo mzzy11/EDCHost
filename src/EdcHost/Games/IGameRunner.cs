@@ -1,6 +1,6 @@
 namespace EdcHost.Games;
 
-public interface IGameRunner : IDisposable
+public interface IGameRunner
 {
     static IGameRunner Create(IGame game)
     {
@@ -10,4 +10,6 @@ public interface IGameRunner : IDisposable
     IGame Game { get; }
     void Start();
     void End();
+
+    bool IsRunning { get; }
 }

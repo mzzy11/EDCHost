@@ -1,4 +1,5 @@
 using EdcHost.ViewerServers.EventArgs;
+using ErrorMessage = EdcHost.ViewerServers.Messages.Error;
 
 namespace EdcHost;
 
@@ -59,7 +60,11 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception exception)
         {
-            _logger.Error($"Failed to start game: {exception}");
+            string message = $"Failed to start game: {exception}";
+            _logger.Error(message);
+
+            // Send ERROR packet to the viewer
+            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
         }
     }
 
@@ -68,18 +73,15 @@ partial class EdcHost : IEdcHost
         try
         {
             _gameRunner.End();
-            _gameRunner.Dispose();
 
-            _game = Games.IGame.Create(
-                diamondMines: _options.GameDiamondMines,
-                goldMines: _options.GameGoldMines,
-                ironMines: _options.GameIronMines
-            );
-            _gameRunner = Games.IGameRunner.Create(_game);
         }
         catch (Exception exception)
         {
-            _logger.Error($"Failed to stop game: {exception}");
+            string message = $"Failed to stop game: {exception}";
+            _logger.Error(message);
+
+            // Send ERROR packet to the viewer
+            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
         }
     }
 
@@ -87,11 +89,36 @@ partial class EdcHost : IEdcHost
     {
         try
         {
-            //TODO: Reset game
+            if (_gameRunner.IsRunning)
+            {
+                _gameRunner.End();
+            }
+
+            _game = Games.IGame.Create(
+                diamondMines: _options.GameDiamondMines,
+                goldMines: _options.GameGoldMines,
+                ironMines: _options.GameIronMines
+            );
+            _gameRunner = Games.IGameRunner.Create(_game);
+
+            _game.AfterGameStartEvent += HandleAfterGameStartEvent;
+            _game.AfterGameTickEvent += HandleAfterGameTickEvent;
+            _game.AfterJudgementEvent += HandleAfterJudgementEvent;
+
+            for (int i = 0; i < _game.Players.Count; i++)
+            {
+                _game.Players[i].OnAttack += HandlePlayerAttackEvent;
+                _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
+                _game.Players[i].OnDig += HandlePlayerDigEvent;
+            }
         }
         catch (Exception exception)
         {
-            _logger.Error($"Failed to reset game: {exception}");
+            string message = $"Failed to reset game: {exception}";
+            _logger.Error(message);
+
+            // Send ERROR packet to the viewer
+            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
         }
     }
 }
