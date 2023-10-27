@@ -4,22 +4,11 @@ namespace EdcHost.CameraServers;
 
 public class CameraFactory : ICameraFactory
 {
-    const int MaxNotWorkingCount = 10;
-    readonly Task _task;
-    readonly CancellationTokenSource _taskCancellationTokenSource;
-
     public List<int> CameraIndexes { get; } = new();
 
     public CameraFactory()
     {
-        _task = Task.Run(TaskForCameraIndexesFunc);
-        _taskCancellationTokenSource = new();
-    }
-
-    ~CameraFactory()
-    {
-        _taskCancellationTokenSource.Cancel();
-        _task.Wait();
+        Scan();
     }
 
     public ICamera Create(int cameraIndex, ILocator locator)
@@ -51,29 +40,23 @@ public class CameraFactory : ICameraFactory
         return true;
     }
 
-    void TaskForCameraIndexesFunc()
+    public void Scan()
     {
-        while (_taskCancellationTokenSource.Token.IsCancellationRequested is false)
+        List<int> cameraIndexes = new();
+        int index = 0;
+        while (true)
         {
-            List<int> cameraIndexes = new();
-            int index = 0;
-            int notWorkingCount = 0;
-            while (notWorkingCount <= MaxNotWorkingCount)
+            if (IsCameraAvailable(index))
             {
-                if (IsCameraAvailable(index))
-                {
-                    cameraIndexes.Add(index);
-                }
-                else
-                {
-                    ++notWorkingCount;
-                }
-
+                cameraIndexes.Add(index);
                 ++index;
+                continue;
             }
 
-            CameraIndexes.Clear();
-            CameraIndexes.AddRange(cameraIndexes);
+            break;
         }
+
+        CameraIndexes.Clear();
+        CameraIndexes.AddRange(cameraIndexes);
     }
 }

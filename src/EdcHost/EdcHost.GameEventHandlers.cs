@@ -66,14 +66,14 @@ partial class EdcHost : IEdcHost
             foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
             {
                 CameraServers.ICamera camera = _cameraServer.GetCamera(cameraIndex);
-                if (camera.IsOpened && camera.JpegData is not null)
+                if (camera.IsOpened)
                 {
                     cameraInfoList.Add(new CompetitionUpdate.Camera()
                     {
                         cameraId = cameraIndex,
                         height = camera.Height,
                         width = camera.Width,
-                        frameData = Convert.ToBase64String(camera.JpegData)
+                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[]{})
                     });
                 }
             }

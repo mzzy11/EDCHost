@@ -82,7 +82,7 @@ public class Camera : ICamera
 
         while (!_taskCancellationTokenSource?.Token.IsCancellationRequested ?? false)
         {
-            await Task.Delay(0);
+            await Task.Delay(10);
 
             using Mat frame = _capture.QueryFrame();
 

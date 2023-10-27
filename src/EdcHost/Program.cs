@@ -129,10 +129,6 @@ class Program
             }
         };
 
-        // Configure Emgu.CV logging
-        // Suppress all
-        Emgu.CV.CvInvoke.LogLevel = Emgu.CV.CvEnum.LogLevel.Silent;
-
         Log.Information($"logging level set to {loggingLevelString}");
     }
 }
