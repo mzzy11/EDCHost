@@ -1,8 +1,9 @@
+using Emgu.CV;
+using Emgu.CV.Structure;
+
 using EdcHost.Games;
-using EdcHost.SlaveServers;
-using EdcHost.ViewerServers;
+
 using CompetitionUpdate = EdcHost.ViewerServers.Messages.CompetitionUpdate;
-using EdcHost.CamerasServers;
 
 namespace EdcHost;
 
@@ -63,21 +64,18 @@ partial class EdcHost : IEdcHost
             // Black image for test
             int defaultImageWidth = 640;
             int defaultImageHeight = 480;
-            using (SixLabors.ImageSharp.Image<Rgba32> blackImage = new SixLabors.ImageSharp.Image<Rgba32>(defaultImageWidth, defaultImageHeight))
+
+            // Fill it in black
+            using Mat demoImage = new(defaultImageHeight, defaultImageWidth, Emgu.CV.CvEnum.DepthType.Cv8U, 3);
+
+            byte[] jpegData = demoImage.ToImage<Bgr, byte>().ToJpegData();
+            string base64Image = Convert.ToBase64String(jpegData);
+
+            // Send packet to the viewer
+            _viewerServer.Publish(new CompetitionUpdate()
             {
-                // Fill it in black
-                blackImage.Mutate(ctx => ctx.BackgroundColor(Color.Black));
-
-                // Quality of jpg
-                int jpegQuality = 50;
-
-                string? base64Image = ImageCompressionAndBase64.CompressImageToBase64(blackImage, jpegQuality);
-
-                // Send packet to the viewer
-                _viewerServer.Publish(new CompetitionUpdate()
-                {
-                    // TODO: Add cameras
-                    cameras = new List<CompetitionUpdate.Camera>(){
+                // TODO: Add cameras
+                cameras = new List<CompetitionUpdate.Camera>(){
                     new CompetitionUpdate.Camera()
                     {
                         cameraId = 0,
@@ -94,74 +92,72 @@ partial class EdcHost : IEdcHost
                     }
                 },
 
-                    chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
+                chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
+                {
+                    chunkId = chunk.Position != null ? chunk.Position.X + chunk.Position.Y * 8 : -1,
+                    height = chunk.Height,
+                    position = chunk.Position != null ? new CompetitionUpdate.Chunk.Position()
                     {
-                        chunkId = chunk.Position != null ? chunk.Position.X + chunk.Position.Y * 8 : -1,
-                        height = chunk.Height,
-                        position = chunk.Position != null ? new CompetitionUpdate.Chunk.Position()
-                        {
-                            x = chunk.Position.X,
-                            y = chunk.Position.Y
-                        } : null
-                    }).ToList(),
+                        x = chunk.Position.X,
+                        y = chunk.Position.Y
+                    } : null
+                }).ToList(),
 
-                    // TODO: Add events
-                    events = currentEvents,
+                // TODO: Add events
+                events = currentEvents,
 
-                    info = new CompetitionUpdate.Info()
+                info = new CompetitionUpdate.Info()
+                {
+                    // TODO: Add 'switch'
+                    stage = (CompetitionUpdate.Info.Stage)(e.Game.CurrentStage),
+                    elapsedTicks = e.Game.ElapsedTicks
+                },
+
+                mines = e.Game.Mines.Select(mine => new CompetitionUpdate.Mine()
+                {
+                    // TODO: Add 'MineId'
+                    mineId = (int)(mine.OreKind), // error
+
+                    accumulatedOreCount = mine.AccumulatedOreCount,
+                    oreType = (CompetitionUpdate.Mine.OreType)mine.OreKind,
+                    position = new CompetitionUpdate.Mine.Position()
                     {
-                        // TODO: Add 'switch'
-                        stage = (CompetitionUpdate.Info.Stage)(e.Game.CurrentStage),
-                        elapsedTicks = e.Game.ElapsedTicks
+                        x = mine.Position.X,
+                        y = mine.Position.Y
+                    }
+                }).ToList(),
+
+                players = e.Game.Players.Select(player => new CompetitionUpdate.Player()
+                {
+                    playerId = (player.PlayerId),
+
+                    // TODO: Find the correspondence between the camera and the player 
+                    cameraId = player.PlayerId,
+
+                    attributes = new()
+                    {
+                        agility = player.ActionPoints,
+                        strength = player.Strength,
+                        maxHealth = player.MaxHealth
                     },
-
-                    mines = e.Game.Mines.Select(mine => new CompetitionUpdate.Mine()
+                    health = player.Health,
+                    homePosition = new CompetitionUpdate.Player.HomePosition()
                     {
-                        // TODO: Add 'MineId'
-                        mineId = (int)(mine.OreKind), // error
-
-                        accumulatedOreCount = mine.AccumulatedOreCount,
-                        oreType = (CompetitionUpdate.Mine.OreType)mine.OreKind,
-                        position = new CompetitionUpdate.Mine.Position()
-                        {
-                            x = mine.Position.X,
-                            y = mine.Position.Y
-                        }
-                    }).ToList(),
-
-                    players = e.Game.Players.Select(player => new CompetitionUpdate.Player()
+                        x = player.SpawnPoint.X,
+                        y = player.SpawnPoint.Y,
+                    },
+                    inventory = new CompetitionUpdate.Player.Inventory()
                     {
-                        playerId = (player.PlayerId),
-                        
-                        // TODO: Find the correspondence between the camera and the player 
-                        cameraId = player.PlayerId,
-
-                        attributes = new()
-                        {
-                            agility = player.ActionPoints,
-                            strength = player.Strength,
-                            maxHealth = player.MaxHealth
-                        },
-                        health = player.Health,
-                        homePosition = new CompetitionUpdate.Player.HomePosition()
-                        {
-                            x = player.SpawnPoint.X,
-                            y = player.SpawnPoint.Y,
-                        },
-                        inventory = new CompetitionUpdate.Player.Inventory()
-                        {
-                            emerald = player.EmeraldCount,
-                            wool = player.WoolCount
-                        },
-                        position = new CompetitionUpdate.Player.Position()
-                        {
-                            x = player.PlayerPosition.X,
-                            y = player.PlayerPosition.Y
-                        }
-                    }).ToList()
-                });
-
-            }
+                        emerald = player.EmeraldCount,
+                        wool = player.WoolCount
+                    },
+                    position = new CompetitionUpdate.Player.Position()
+                    {
+                        x = player.PlayerPosition.X,
+                        y = player.PlayerPosition.Y
+                    }
+                }).ToList()
+            });
         }
         catch (Exception exception)
         {

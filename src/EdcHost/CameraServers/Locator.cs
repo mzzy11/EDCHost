@@ -48,13 +48,13 @@ public class Locator : ILocator
     Tuple<float, float> GetCalibratedLocation(Tuple<float, float> pixelLocation)
     {
         using Mat transform = CvInvoke.GetPerspectiveTransform(
-            src: new System.Drawing.PointF[] {
+            src: new PointF[] {
                 new(_options.TopLeftX, _options.TopLeftY),
                 new(_options.TopRightX, _options.TopRightY),
                 new(_options.BottomRightX, _options.BottomRightY),
                 new(_options.BottomLeftX, _options.BottomLeftY),
             },
-            dest: new System.Drawing.PointF[] {
+            dest: new PointF[] {
                 new(0, 0),
                 new(1, 0),
                 new(1, 1),
@@ -62,8 +62,8 @@ public class Locator : ILocator
             }
         );
 
-        System.Drawing.PointF[] transformed = CvInvoke.PerspectiveTransform(
-            src: new System.Drawing.PointF[] { new(pixelLocation.Item1, pixelLocation.Item2) },
+        PointF[] transformed = CvInvoke.PerspectiveTransform(
+            src: new PointF[] { new(pixelLocation.Item1, pixelLocation.Item2) },
             mat: transform
         );
 

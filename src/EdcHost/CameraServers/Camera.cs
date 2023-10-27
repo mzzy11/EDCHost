@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Drawing;
 using Emgu.CV;
 using Emgu.CV.Structure;
 
