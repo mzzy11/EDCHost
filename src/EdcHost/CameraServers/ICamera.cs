@@ -4,9 +4,11 @@ namespace EdcHost.CameraServers;
 
 public interface ICamera : IDisposable
 {
-    System.Drawing.Image? Frame { get; }
+    int CameraIndex { get; }
+    byte[]? JpegData { get; }
     Tuple<float, float>? TargetPosition { get; }
+    Tuple<float, float>? TargetPositionNotCalibrated { get; }
 
-    void Open();
     void Close();
+    void Open();
 }

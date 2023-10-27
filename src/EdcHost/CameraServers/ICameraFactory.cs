@@ -1,8 +1,8 @@
 namespace EdcHost.CameraServers;
 
-public interface ICameraHub
+public interface ICameraFactory
 {
     List<int> CameraIndexes { get; }
 
-    ICamera Get(int cameraIndex);
+    ICamera Create(int cameraIndex);
 }
