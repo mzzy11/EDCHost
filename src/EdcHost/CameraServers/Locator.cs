@@ -123,7 +123,7 @@ public class Locator : ILocator
         );
 
         // Find the largest contour.
-        int largestContourIndex = 0;
+        int? largestContourIndex = null;
         double largestContourArea = 0;
         for (int i = 0; i < contours.Size; i++)
         {
@@ -135,6 +135,12 @@ public class Locator : ILocator
             }
         }
 
+        // Return null if no contours were found.
+        if (largestContourIndex is null)
+        {
+            return null;
+        }
+
         // Return null if no area is large enough.
         if (largestContourArea / (mask.Height * mask.Width) < Options.MinArea)
         {
@@ -142,7 +148,7 @@ public class Locator : ILocator
         }
 
         // Find the center of the largest contour.
-        using VectorOfPoint largestContour = contours[largestContourIndex];
+        using VectorOfPoint largestContour = contours[largestContourIndex.Value];
         using Moments moments = CvInvoke.Moments(largestContour);
         float centerX = (float)(moments.M10 / moments.M00);
         float centerY = (float)(moments.M01 / moments.M00);

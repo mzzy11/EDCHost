@@ -43,7 +43,7 @@ public class CameraFactory : ICameraFactory
 
         using Mat frame = capture.QueryFrame();
 
-        if (frame.IsEmpty)
+        if (frame?.IsEmpty ?? true)
         {
             return false;
         }
@@ -71,6 +71,9 @@ public class CameraFactory : ICameraFactory
 
                 ++index;
             }
+
+            CameraIndexes.Clear();
+            CameraIndexes.AddRange(cameraIndexes);
         }
     }
 }

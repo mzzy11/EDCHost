@@ -25,8 +25,12 @@ public class Camera : ICamera
     public Camera(int cameraIndex, ILocator locator)
     {
         CameraIndex = cameraIndex;
+
         _capture = new(cameraIndex);
         _locator = locator;
+
+        _taskCancellationTokenSource = new();
+        _task = Task.Run(TaskForCapturingFunc);
     }
 
     public void Close()
@@ -66,8 +70,8 @@ public class Camera : ICamera
 
         _capture = new(CameraIndex);
 
-        _task = Task.Run(TaskForCapturingFunc);
         _taskCancellationTokenSource = new();
+        _task = Task.Run(TaskForCapturingFunc);
     }
 
     async Task TaskForCapturingFunc()
@@ -81,6 +85,11 @@ public class Camera : ICamera
             await Task.Delay(0);
 
             using Mat frame = _capture.QueryFrame();
+
+            if (frame is null)
+            {
+                continue;
+            }
 
             ILocator.RecognitionResult? recognitionResult = _locator.Locate(frame);
 
