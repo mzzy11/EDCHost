@@ -30,6 +30,7 @@ class Program
 
         SetupAndRunEdcHost(gameDiamondMines, gameGoldMines, gameIronMines, serverPort);
 
+        // Wait forever
         Task.Delay(-1).Wait();
     }
 
@@ -49,13 +50,14 @@ class Program
 
     static void SetupAndRunEdcHost(List<Tuple<int, int>> gameDiamondMines, List<Tuple<int, int>> gameGoldMines, List<Tuple<int, int>> gameIronMines, int serverPort)
     {
-        IEdcHost edcHost = IEdcHost.Create(new IEdcHost.EdcHostOptions
-        (
-            gameDiamondMines: gameDiamondMines,
-            gameGoldMines: gameGoldMines,
-            gameIronMines: gameIronMines,
-            serverPort: serverPort
-        ));
+        EdcHostOptions options = new()
+        {
+            GameDiamondMines = gameDiamondMines,
+            GameGoldMines = gameGoldMines,
+            GameIronMines = gameIronMines,
+            ServerPort = serverPort
+        };
+        IEdcHost edcHost = new EdcHost(options);
 
         edcHost.Start();
     }
@@ -130,7 +132,6 @@ class Program
         // Configure Emgu.CV logging
         // Suppress all
         Emgu.CV.CvInvoke.LogLevel = Emgu.CV.CvEnum.LogLevel.Silent;
-
 
         Log.Information($"logging level set to {loggingLevelString}");
     }

@@ -8,29 +8,31 @@ partial class EdcHost : IEdcHost
     const int MapHeight = 8;
     const int MapWidth = 8;
 
-    readonly Games.IGame _game;
-    readonly Games.IGameRunner _gameRunner;
     readonly ILogger _logger = Log.ForContext("Component", "Program");
     readonly Dictionary<int, string> _playerIdToPortName = new();
     readonly Dictionary<int, int> _playerIdToCameraIndex = new();
     readonly CameraServers.ICameraServer _cameraServer;
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
-    private readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
+    readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
+    readonly EdcHostOptions _options;
 
-    public EdcHost(
-        Games.IGame game,
-        Games.IGameRunner gameRunner,
-        CameraServers.ICameraServer cameraServer,
-        SlaveServers.ISlaveServer slaveServer,
-        ViewerServers.IViewerServer viewerServer
-    )
+    Games.IGame _game;
+    Games.IGameRunner _gameRunner;
+
+    public EdcHost(EdcHostOptions options)
     {
-        _game = game;
-        _gameRunner = gameRunner;
-        _cameraServer = cameraServer;
-        _slaveServer = slaveServer;
-        _viewerServer = viewerServer;
+        _options = options;
+
+        _game = Games.IGame.Create(
+            diamondMines: _options.GameDiamondMines,
+            goldMines: _options.GameGoldMines,
+            ironMines: _options.GameIronMines
+        );
+        _gameRunner = Games.IGameRunner.Create(_game);
+        _cameraServer = CameraServers.ICameraServer.Create();
+        _slaveServer = SlaveServers.ISlaveServer.Create();
+        _viewerServer = ViewerServers.IViewerServer.Create(_options.ServerPort);
 
         _game.AfterGameStartEvent += HandleAfterGameStartEvent;
         _game.AfterGameTickEvent += HandleAfterGameTickEvent;

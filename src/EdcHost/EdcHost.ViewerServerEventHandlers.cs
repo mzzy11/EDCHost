@@ -44,7 +44,7 @@ partial class EdcHost : IEdcHost
     void HandleSetCameraEvent(object? sender, SetCameraEventArgs e)
     {
         //TODO: Set camera
-        
+
 
         _logger.Information("[Update]");
         _logger.Information($"Player {e.PlayerId}:");
@@ -68,6 +68,14 @@ partial class EdcHost : IEdcHost
         try
         {
             _gameRunner.End();
+            _gameRunner.Dispose();
+
+            _game = Games.IGame.Create(
+                diamondMines: _options.GameDiamondMines,
+                goldMines: _options.GameGoldMines,
+                ironMines: _options.GameIronMines
+            );
+            _gameRunner = Games.IGameRunner.Create(_game);
         }
         catch (Exception exception)
         {
