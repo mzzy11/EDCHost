@@ -11,10 +11,12 @@ public class Camera : ICamera
     readonly ILogger _logger = Log.Logger.ForContext("Component", "CameraServers");
 
     public int CameraIndex { get; private set; }
+    public int Height => _capture.Height;
     public bool IsOpened => _capture.IsOpened;
     public byte[]? JpegData { get; private set; }
     public Tuple<float, float>? TargetPosition { get; private set; }
     public Tuple<float, float>? TargetPositionNotCalibrated { get; private set; }
+    public int Width => _capture.Width;
 
     VideoCapture _capture;
     Task? _task = null;
