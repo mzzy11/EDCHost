@@ -271,6 +271,9 @@ public record CompetitionUpdate : IMessage
         [JsonPropertyName("playerId")]
         public int playerId { get; init; }
 
+        [JsonPropertyName("cameraId")]
+        public int cameraId { get; init; }
+
         [JsonPropertyName("attributes")]
         public Attributes? attributes { get; init; }
 

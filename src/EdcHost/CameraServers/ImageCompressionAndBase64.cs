@@ -1,9 +1,9 @@
 using SixLabors.ImageSharp.Formats.Jpeg;
 
-namespace EdcHost.Cameras;
+namespace EdcHost.CamerasServers;
 public class ImageCompressionAndBase64
 {
-    public static string? CompressImageToBase64(Image image, long quality)
+    public static string? CompressImageToBase64(SixLabors.ImageSharp.Image image, long quality)
     {
         try
         {

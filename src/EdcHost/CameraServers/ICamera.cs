@@ -4,7 +4,7 @@ namespace EdcHost.CameraServers;
 
 public interface ICamera : IDisposable
 {
-    Image? Frame { get; }
+    System.Drawing.Image? Frame { get; }
     Tuple<float, float>? TargetPosition { get; }
 
     void Open();

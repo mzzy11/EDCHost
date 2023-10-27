@@ -2,12 +2,7 @@ using EdcHost.Games;
 using EdcHost.SlaveServers;
 using EdcHost.ViewerServers;
 using CompetitionUpdate = EdcHost.ViewerServers.Messages.CompetitionUpdate;
-using EdcHost.Cameras;
-using System;
-using System.IO;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
+using EdcHost.CamerasServers;
 
 namespace EdcHost;
 
@@ -64,19 +59,20 @@ partial class EdcHost : IEdcHost
 
                 });
             }
-            // Black image for default
+
+            // Black image for test
             int defaultImageWidth = 640;
             int defaultImageHeight = 480;
-            using (Image<Rgba32> blackImage = new Image<Rgba32>(defaultImageWidth, defaultImageHeight))
+            using (SixLabors.ImageSharp.Image<Rgba32> blackImage = new SixLabors.ImageSharp.Image<Rgba32>(defaultImageWidth, defaultImageHeight))
             {
                 // Fill it in black
                 blackImage.Mutate(ctx => ctx.BackgroundColor(Color.Black));
 
                 // Quality of jpg
-                int jpegQuality = 50; 
+                int jpegQuality = 50;
 
                 string? base64Image = ImageCompressionAndBase64.CompressImageToBase64(blackImage, jpegQuality);
-                
+
                 // Send packet to the viewer
                 _viewerServer.Publish(new CompetitionUpdate()
                 {
@@ -136,6 +132,10 @@ partial class EdcHost : IEdcHost
                     players = e.Game.Players.Select(player => new CompetitionUpdate.Player()
                     {
                         playerId = (player.PlayerId),
+                        
+                        // TODO: Find the correspondence between the camera and the player 
+                        cameraId = player.PlayerId,
+
                         attributes = new()
                         {
                             agility = player.ActionPoints,
