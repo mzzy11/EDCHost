@@ -1,6 +1,6 @@
 namespace EdcHost.CameraServers;
 
-public record CameraOptions
+public record RecognitionOptions
 {
     public float TopLeftX { get; init; }
     public float TopLeftY { get; init; }
