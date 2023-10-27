@@ -70,12 +70,6 @@ partial class Game : IGame
                 Action rejected.");
             return;
         }
-        if (IsAdjacent(ToIntPosition(e.Player.PlayerPosition), ToIntPosition(e.Position)) == false)
-        {
-            _logger.Warning(@$"Position ({e.Position.X}, {e.Position.Y})
-                is not adjacent to player {e.Player.PlayerId}. Action rejected.");
-            return;
-        }
 
         bool attacked = false;
         for (int i = 0; i < PlayerNum; i++)

@@ -9,5 +9,5 @@ public interface ICompetitionUpdate : IMessage
     public List<object> Mines { get; }
     public List<object> Players { get; }
 
-    
+
 }

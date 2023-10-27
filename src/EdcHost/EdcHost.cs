@@ -1,25 +1,31 @@
-using Serilog;
 using System.Collections.Concurrent;
+using Serilog;
 
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    const int _mapWidth = 10;
-    const int _mapHeight = 10;
+    const int _mapWidth = 8;
+    const int _mapHeight = 8;
 
     readonly Games.IGame _game;
     readonly Games.IGameRunner _gameRunner;
     readonly ILogger _logger = Log.ForContext("Component", "Program");
     readonly Dictionary<int, string> _playerIdToPortName = new();
+    readonly Dictionary<int, int> _playerIdToCameraId = new();
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
     /// <summary>
     /// store the player event for every tick in order to transfer to the viewerServer
     /// </summary>
-    private ConcurrentQueue<EventArgs> _playerEventQueue = new();
+    private readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
 
-    public EdcHost(Games.IGame game, Games.IGameRunner gameRunner, SlaveServers.ISlaveServer slaveServer, ViewerServers.IViewerServer viewerServer)
+    public EdcHost(
+        Games.IGame game,
+        Games.IGameRunner gameRunner,
+        SlaveServers.ISlaveServer slaveServer,
+        ViewerServers.IViewerServer viewerServer
+    )
     {
         _game = game;
         _gameRunner = gameRunner;

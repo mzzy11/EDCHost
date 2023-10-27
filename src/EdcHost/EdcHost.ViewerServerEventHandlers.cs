@@ -8,15 +8,36 @@ partial class EdcHost : IEdcHost
     {
         try
         {
-            //TODO: Update port
+            if (_playerIdToPortName.Any(kvp => kvp.Value == e.PortName))
+            {
+                _logger.Error($"Port name {e.PortName} is taken by a player.");
+                return;
+            }
 
-            Serilog.Log.Information("[Update]");
-            Serilog.Log.Information($"Player {e.PlayerId}:");
-            Serilog.Log.Information($"Port: {e.PortName} BaudRate: {e.BaudRate}");
+            if (_playerIdToPortName.ContainsKey(e.PlayerId) == false)
+            {
+                _slaveServer.OpenPort(
+                    portName: e.PortName
+                );
+                _playerIdToPortName.Add(e.PlayerId, e.PortName);
+            }
+            else
+            {
+                string oldPortName = _playerIdToPortName[e.PlayerId];
+                _slaveServer.OpenPort(
+                    portName: e.PortName
+                );
+                _playerIdToPortName[e.PlayerId] = e.PortName;
+                _slaveServer.ClosePort(oldPortName);
+            }
+
+            _logger.Information("[Update]");
+            _logger.Information($"Player {e.PlayerId}:");
+            _logger.Information($"Port: {e.PortName}");
         }
         catch (Exception exception)
         {
-            Serilog.Log.Error($"Failde to set port: {exception}");
+            _logger.Error($"Failed to set port: {exception}");
         }
     }
 
@@ -24,9 +45,9 @@ partial class EdcHost : IEdcHost
     {
         //TODO: Set camera
 
-        Serilog.Log.Information("[Update]");
-        Serilog.Log.Information($"Player {e.PlayerId}:");
-        Serilog.Log.Information($"Camera: {e.CameraConfiguration}");
+        _logger.Information("[Update]");
+        _logger.Information($"Player {e.PlayerId}:");
+        _logger.Information($"Camera: {e.CameraConfiguration}");
     }
 
     private void HandleStartGameEvent(object? sender, EventArgs e)
@@ -37,7 +58,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception exception)
         {
-            Serilog.Log.Error($"Failed to start game: {exception}");
+            _logger.Error($"Failed to start game: {exception}");
         }
     }
 
@@ -49,7 +70,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception exception)
         {
-            Serilog.Log.Error($"Failed to stop game: {exception}");
+            _logger.Error($"Failed to stop game: {exception}");
         }
     }
 
@@ -61,7 +82,7 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception exception)
         {
-            Serilog.Log.Error($"Failed to reset game: {exception}");
+            _logger.Error($"Failed to reset game: {exception}");
         }
     }
 }

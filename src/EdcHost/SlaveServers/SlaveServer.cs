@@ -40,7 +40,7 @@ public class SlaveServer : ISlaveServer
 
     public void ClosePort(string portName)
     {
-        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ?? 
+        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ??
             throw new ArgumentException($"port name does not exist: {portName}");
 
         serialPort.Close();
@@ -52,7 +52,7 @@ public class SlaveServer : ISlaveServer
         double positionOpponentY, int agility, int health, int maxHealth, int strength,
         int emeraldCount, int woolCount)
     {
-        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ?? 
+        ISerialPortWrapper? serialPort = _serialPorts.Find(x => x.PortName.Equals(portName)) ??
             throw new ArgumentException($"port name does not exist: {portName}");
 
         IPacket packet = new PacketFromHost(gameStage, elapsedTime, heightOfChunks,
