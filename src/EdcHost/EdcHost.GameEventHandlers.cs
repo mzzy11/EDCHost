@@ -61,36 +61,37 @@ partial class EdcHost : IEdcHost
                 });
             }
 
-            // Black image for test
-            int defaultImageWidth = 640;
-            int defaultImageHeight = 480;
+            // // Black image for test
+            // int defaultImageWidth = 640;
+            // int defaultImageHeight = 480;
 
-            // Fill it in black
-            using Mat demoImage = new(defaultImageHeight, defaultImageWidth, Emgu.CV.CvEnum.DepthType.Cv8U, 3);
+            // // Fill it in black
+            // using Mat demoImage = new(defaultImageHeight, defaultImageWidth, Emgu.CV.CvEnum.DepthType.Cv8U, 3);
 
-            byte[] jpegData = demoImage.ToImage<Bgr, byte>().ToJpegData();
-            string base64Image = Convert.ToBase64String(jpegData);
+            // byte[] jpegData = demoImage.ToImage<Bgr, byte>().ToJpegData();
+            // string base64Image = Convert.ToBase64String(jpegData);
+
+            List<CompetitionUpdate.Camera> cameraInfoList = new();
+            foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
+            {
+                CameraServers.ICamera camera = _cameraServer.GetCamera(cameraIndex);
+                if (camera.IsOpened && camera.JpegData is not null)
+                {
+                    cameraInfoList.Add(new CompetitionUpdate.Camera()
+                    {
+                        cameraId = cameraIndex,
+                        height = 480,
+                        width = 640,
+                        frameData = Convert.ToBase64String(camera.JpegData)
+                    });
+                }
+            }
 
             // Send packet to the viewer
             _viewerServer.Publish(new CompetitionUpdate()
             {
                 // TODO: Add cameras
-                cameras = new List<CompetitionUpdate.Camera>(){
-                    new CompetitionUpdate.Camera()
-                    {
-                        cameraId = 0,
-                        height = defaultImageHeight,
-                        width = defaultImageWidth,
-                        frameData = base64Image,
-                    },
-                    new CompetitionUpdate.Camera()
-                    {
-                        cameraId = 1,
-                        height = defaultImageHeight,
-                        width = defaultImageWidth,
-                        frameData = base64Image,
-                    }
-                },
+                cameras = cameraInfoList,
 
                 chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
                 {
