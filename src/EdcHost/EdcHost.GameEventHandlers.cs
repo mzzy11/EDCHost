@@ -2,6 +2,7 @@ using EdcHost.Games;
 using EdcHost.SlaveServers;
 using EdcHost.ViewerServers;
 using CompetitionUpdate = EdcHost.ViewerServers.Messages.CompetitionUpdate;
+using System.Drawing;
 
 namespace EdcHost;
 
@@ -50,7 +51,6 @@ partial class EdcHost : IEdcHost
                 );
             }
 
-            // Send packet to the viewer
             List<CompetitionUpdate.Event> currentEvents = new();
             while (!_playerEventQueue.IsEmpty)
             {
@@ -59,11 +59,38 @@ partial class EdcHost : IEdcHost
 
                 });
             }
+            // Black image for default
+            int defaultImageWidth = 640;
+            int defaultImageHeight = 480;
+            // Create a bitmap
+            Bitmap blackImage = new Bitmap(defaultImageWidth, defaultImageHeight);
+            // Fill it in black
+            using (Graphics g = Graphics.FromImage(blackImage))
+            {
+                g.Clear(Color.Black);
+            }
+            blackImage.
 
+            // Send packet to the viewer
             _viewerServer.Publish(new CompetitionUpdate()
             {
                 // TODO: Add cameras
-                cameras = new List<CompetitionUpdate.Camera>(),
+                cameras = new List<CompetitionUpdate.Camera>(){
+                    new CompetitionUpdate.Camera()
+                    {
+                        cameraId = 0,
+                        height = 480,
+                        width = 640,
+                        frameData = null,
+                    },
+                    new CompetitionUpdate.Camera()
+                    {
+                        cameraId = 1,
+                        height = 480,
+                        width = 640,
+                        frameData = null,
+                    }
+                },
 
                 chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
                 {

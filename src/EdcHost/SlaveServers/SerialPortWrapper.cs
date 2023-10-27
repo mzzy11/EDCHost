@@ -10,7 +10,6 @@ class SerialPortWrapper : ISerialPortWrapper
 
     public string PortName => _serialPort.PortName;
 
-    bool _isOpen = false;
     readonly Serilog.ILogger _logger = Serilog.Log.Logger.ForContext("Component", "SlaveServers");
     readonly ConcurrentQueue<byte[]> _queueOfBytesToSend = new();
     readonly SerialPort _serialPort;
@@ -26,7 +25,7 @@ class SerialPortWrapper : ISerialPortWrapper
 
     public void Close()
     {
-        if (!_isOpen)
+        if (!_serialPort.IsOpen)
         {
             throw new InvalidOperationException("port is not open");
         }
@@ -34,11 +33,10 @@ class SerialPortWrapper : ISerialPortWrapper
         Debug.Assert(_taskForReceiving != null);
         Debug.Assert(_taskForSending != null);
 
-        _isOpen = false;
+        _serialPort.Close();
 
         _taskForReceiving.Wait();
         _taskForSending.Wait();
-        _serialPort.Close();
 
         _taskForSending.Dispose();
         _taskForReceiving.Dispose();
@@ -51,21 +49,20 @@ class SerialPortWrapper : ISerialPortWrapper
 
     public void Open()
     {
-        if (_isOpen)
+        if (_serialPort.IsOpen)
         {
             throw new InvalidOperationException("port is already open");
         }
 
-        _isOpen = true;
-
         _serialPort.Open();
+
         _taskForReceiving = Task.Run(TaskForReceivingFunc);
         _taskForSending = Task.Run(TaskForSendingFunc);
     }
 
     public void Send(byte[] bytes)
     {
-        if (!_isOpen)
+        if (!_serialPort.IsOpen)
         {
             throw new InvalidOperationException("port is not open");
         }
@@ -75,7 +72,7 @@ class SerialPortWrapper : ISerialPortWrapper
 
     private async Task TaskForReceivingFunc()
     {
-        while (_isOpen)
+        while (_serialPort.IsOpen)
         {
             await Task.Delay(0);
 
@@ -100,7 +97,7 @@ class SerialPortWrapper : ISerialPortWrapper
 
     private async Task TaskForSendingFunc()
     {
-        while (_isOpen)
+        while (_serialPort.IsOpen)
         {
             await Task.Delay(0);
 
