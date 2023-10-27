@@ -61,6 +61,8 @@ partial class EdcHost : IEdcHost
         try
         {
             _slaveServer.Start();
+            _slaveServer.OpenPort("COM1");
+            _playerIdToPortName.Add(0, "COM1");
         }
         catch (Exception e)
         {
