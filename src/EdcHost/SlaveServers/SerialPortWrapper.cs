@@ -33,9 +33,10 @@ class SerialPortWrapper : ISerialPortWrapper
         Debug.Assert(_taskForReceiving != null);
         Debug.Assert(_taskForSending != null);
 
+        _serialPort.Close();
+
         _taskForReceiving.Wait();
         _taskForSending.Wait();
-        _serialPort.Close();
 
         _taskForSending.Dispose();
         _taskForReceiving.Dispose();
@@ -54,6 +55,7 @@ class SerialPortWrapper : ISerialPortWrapper
         }
 
         _serialPort.Open();
+
         _taskForReceiving = Task.Run(TaskForReceivingFunc);
         _taskForSending = Task.Run(TaskForSendingFunc);
     }
