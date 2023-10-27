@@ -16,7 +16,7 @@ class GameRunner : IGameRunner
         Game = game;
     }
 
-    public async Task Start()
+    public void Start()
     {
         if (Game.CurrentStage is not IGame.Stage.Ready)
         {
@@ -28,11 +28,9 @@ class GameRunner : IGameRunner
         Game.Start();
 
         _task = Run();
-
-        await Task.Delay(0);
     }
 
-    public async Task End()
+    public void End()
     {
         if (Game.CurrentStage is not IGame.Stage.Running && Game.CurrentStage is not IGame.Stage.Battling)
         {
@@ -42,7 +40,7 @@ class GameRunner : IGameRunner
         Debug.Assert(_task is not null);
 
         _shouldRun = false;
-        await _task;
+        _task.Wait();
     }
 
     async Task Run()
@@ -78,5 +76,12 @@ class GameRunner : IGameRunner
         {
             Serilog.Log.Error($"an error occurred when running the game: {e.Message}");
         }
+    }
+
+    public void Dispose()
+    {
+        _task?.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }
