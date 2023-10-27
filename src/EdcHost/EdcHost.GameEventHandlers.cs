@@ -52,15 +52,6 @@ partial class EdcHost : IEdcHost
                 );
             }
 
-            List<CompetitionUpdate.Event> currentEvents = new();
-            while (!_playerEventQueue.IsEmpty)
-            {
-                currentEvents.Add(new CompetitionUpdate.Event()
-                {
-
-                });
-            }
-
             // // Black image for test
             // int defaultImageWidth = 640;
             // int defaultImageHeight = 480;
@@ -80,17 +71,57 @@ partial class EdcHost : IEdcHost
                     cameraInfoList.Add(new CompetitionUpdate.Camera()
                     {
                         cameraId = cameraIndex,
-                        height = 480,
-                        width = 640,
+                        height = camera.Height,
+                        width = camera.Width,
                         frameData = Convert.ToBase64String(camera.JpegData)
                     });
                 }
             }
 
+
+            // Events for this tick;
+            List<CompetitionUpdate.Event> currentEvents = new();
+            while (!_playerEventQueue.IsEmpty)
+            {
+                if (_playerEventQueue.TryDequeue(out EventArgs? playerEvent) && playerEvent is not null)
+                {
+                    CompetitionUpdate.Event currentEvent = new CompetitionUpdate.Event();
+                    switch (playerEvent)
+                    {
+                        case PlayerDigEventArgs digEvent:
+                            currentEvent.playerDigEvent = new()
+                            {
+                                playerId = digEvent.Player.PlayerId,
+                                targetChunk = digEvent.TargetChunk
+                            };
+                            break;
+                        case PlayerPickUpEventArgs pickUpEvent:
+                            currentEvent.playerPickUpEvent = new()
+                            {
+                                playerId = pickUpEvent.Player.PlayerId,
+                                itemCount = pickUpEvent.ItemCount,
+                                itemType = (CompetitionUpdate.Event.PlayerPickUpEvent.ItemType)pickUpEvent.MineType
+                            };
+                            break;
+                        case PlayerPlaceEventArgs placeEvent:
+                            currentEvent.playerPlaceBlockEvent = new()
+                            {
+                                playerId = placeEvent.Player.PlayerId
+                                // TODO: finish the event param
+                            };
+                            break;
+                        // TODO: finish other cases
+                        default:
+                            break;
+                    }
+                    currentEvents.Add(currentEvent);
+                }
+            }
+
+
             // Send packet to the viewer
             _viewerServer.Publish(new CompetitionUpdate()
             {
-                // TODO: Add cameras
                 cameras = cameraInfoList,
 
                 chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
@@ -104,21 +135,25 @@ partial class EdcHost : IEdcHost
                     } : null
                 }).ToList(),
 
-                // TODO: Add events
                 events = currentEvents,
 
                 info = new CompetitionUpdate.Info()
                 {
-                    // TODO: Add 'switch'
-                    stage = (CompetitionUpdate.Info.Stage)(e.Game.CurrentStage),
+                    stage = e.Game.CurrentStage switch
+                    {
+                        IGame.Stage.Ready => CompetitionUpdate.Info.Stage.Ready,
+                        IGame.Stage.Running => CompetitionUpdate.Info.Stage.Running,
+                        IGame.Stage.Ended => CompetitionUpdate.Info.Stage.Ended,
+                        IGame.Stage.Finished => CompetitionUpdate.Info.Stage.Finished,
+                        IGame.Stage.Battling => CompetitionUpdate.Info.Stage.Battling,
+                        _ => throw new NotImplementedException($"{e.Game.CurrentStage} is not implemented")
+                    },
                     elapsedTicks = e.Game.ElapsedTicks
                 },
 
                 mines = e.Game.Mines.Select(mine => new CompetitionUpdate.Mine()
                 {
-                    // TODO: Add 'MineId'
-                    mineId = (int)(mine.OreKind), // error
-
+                    mineId = mine.MineId.ToString(),
                     accumulatedOreCount = mine.AccumulatedOreCount,
                     oreType = (CompetitionUpdate.Mine.OreType)mine.OreKind,
                     position = new CompetitionUpdate.Mine.Position()
@@ -181,7 +216,11 @@ partial class EdcHost : IEdcHost
 
         _gameRunner.End();
     }
-
+    void HandlePlayerDigEvent(object? sender, Games.PlayerDigEventArgs e)
+    {
+        // Store the event info to the queue
+        _playerEventQueue.Enqueue(e);
+    }
     void HandlePlayerAttackEvent(object? sender, Games.PlayerAttackEventArgs e)
     {
         // Store the event info to the queue

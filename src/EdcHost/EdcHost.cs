@@ -40,7 +40,7 @@ partial class EdcHost : IEdcHost
         {
             _game.Players[i].OnAttack += HandlePlayerAttackEvent;
             _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
-            // TODO: Add OnDig and OnPickUp Event Handlers
+            _game.Players[i].OnDig += HandlePlayerDigEvent;
         }
 
         _slaveServer.PlayerTryAttackEvent += HandlePlayerTryAttackEvent;

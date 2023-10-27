@@ -44,6 +44,7 @@ partial class EdcHost : IEdcHost
     void HandleSetCameraEvent(object? sender, SetCameraEventArgs e)
     {
         //TODO: Set camera
+        
 
         _logger.Information("[Update]");
         _logger.Information($"Player {e.PlayerId}:");

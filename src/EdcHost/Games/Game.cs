@@ -270,6 +270,9 @@ partial class Game : IGame
                     int collectedOre = Math.Min(capacity / value, mine.AccumulatedOreCount);
 
                     Players[i].EmeraldAdd(collectedOre * value);
+                    // Invoke the event
+                    Players[i].PickUpEventInvoker(mine.OreKind, collectedOre);
+
                     mine.PickUpOre(collectedOre);
                 }
             }
