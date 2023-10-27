@@ -39,7 +39,9 @@ public interface IPlayer
     event EventHandler<PlayerAttackEventArgs> OnAttack;
     event EventHandler<PlayerPlaceEventArgs> OnPlace;
     event EventHandler<PlayerDieEventArgs> OnDie;
-
+    event EventHandler<PlayerDigEventArgs> OnDig;
+    event EventHandler<PlayerPickUpEventArgs> OnPickUp;
+    
     void EmeraldAdd(int count);
     void Move(float newX, float newY);
     void Attack(float newX, float newY);
