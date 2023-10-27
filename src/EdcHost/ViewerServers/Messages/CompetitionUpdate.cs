@@ -32,7 +32,7 @@ public record CompetitionUpdate : IMessage
         public int cameraId { get; init; }
 
         [JsonPropertyName("frameData")]
-        public byte[]? frameData { get; init; }
+        public string? frameData { get; init; }
 
         [JsonPropertyName("height")]
         public int height { get; init; }
