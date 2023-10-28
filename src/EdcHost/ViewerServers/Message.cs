@@ -8,5 +8,6 @@ public record Message
     [JsonPropertyName("messageType")]
     public virtual string MessageType { get; init; } = "";
 
+    [JsonIgnore]
     public string Json => JsonSerializer.Serialize((object)this);
 }

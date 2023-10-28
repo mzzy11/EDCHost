@@ -40,8 +40,7 @@ public class CameraServer : ICameraServer
             throw new InvalidOperationException("not running");
         }
 
-        ICamera? camera = _cameras.Find(x => x.CameraIndex == cameraIndex) ??
-            throw new ArgumentException($"camera index does not exist: {cameraIndex}");
+        ICamera? camera = _cameras.Find(x => x.CameraIndex == cameraIndex);
 
         return camera;
     }

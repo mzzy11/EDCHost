@@ -182,11 +182,7 @@ public class ViewerServer : IViewerServer
 
             socket.OnError = exception =>
             {
-#if DEBUG
-                _logger.Error(exception, "Socket error."); // Even in DEBUG, we don't throw the exception.
-#else
                 _logger.Error("Socket error.");
-#endif
 
                 // Close the socket.
                 socket.Close();
