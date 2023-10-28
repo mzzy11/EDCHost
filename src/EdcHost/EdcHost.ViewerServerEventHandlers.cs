@@ -1,5 +1,4 @@
 using System.Reflection.Metadata;
-
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
@@ -23,6 +22,9 @@ partial class EdcHost : IEdcHost
                         HandleResetGame();
                         break;
 
+                    case "GET_HOST_CONFIGURATION":
+                        HandleGetHostConfiguration();
+                        break;
                     default:
                         _logger.Warning($"Invalid command: {message.Command}.");
                         break;
@@ -75,6 +77,77 @@ partial class EdcHost : IEdcHost
         }
     }
 
+    void HandleGetHostConfiguration()
+    {
+        ViewerServers.HostConfigurationFromClientMessage configMessage = new ViewerServers.HostConfigurationFromClientMessage()
+        {
+            Players = _game.Players.Select((player, playerIndex) =>
+                {
+                    int? cameraIndex = _playerHardwareInfo[playerIndex].CameraIndex;
+
+
+                    CameraServers.ICamera? camera = null;
+                    if (cameraIndex is not null)
+                    {
+                        camera = _cameraServer.GetCamera(cameraIndex.Value);
+                    }
+
+                    string? portName = _playerHardwareInfo[playerIndex].PortName;
+                    int baudRate = _playerHardwareInfo[playerIndex].BaudRate;
+
+                    return new ViewerServers.HostConfigurationFromClientMessage.PlayerType()
+                    {
+                        Camera = cameraIndex == null ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType()
+                        {
+                            CameraId = cameraIndex!.Value,
+
+                            Recognition = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.RecognitionType()
+                            {
+                                HueCenter = camera!.Locator.Options.HueCenter,
+                                HueRange = camera!.Locator.Options.HueRange,
+                                SaturationCenter = camera!.Locator.Options.SaturationCenter,
+                                SaturationRange = camera!.Locator.Options.SaturationRange,
+                                ValueCenter = camera!.Locator.Options.ValueCenter,
+                                ValueRange = camera!.Locator.Options.ValueRange,
+                                MinArea = camera!.Locator.Options.MinArea,
+                                ShowMask = camera!.Locator.Options.ShowMask
+                            },
+
+                            Calibration = camera!.Locator.Options.Calibrate == false ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType()
+                            {
+                                TopLeft = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.TopLeftX,
+                                    Y = camera!.Locator.Options.TopLeftY
+                                },
+                                TopRight = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.TopRightX,
+                                    Y = camera!.Locator.Options.TopRightY
+                                },
+                                BottomLeft = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.BottomLeftX,
+                                    Y = camera!.Locator.Options.BottomLeftY
+                                },
+                                BottomRight = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.BottomRightX,
+                                    Y = camera!.Locator.Options.BottomRightY
+                                }
+                            }
+                        },
+                        SerialPort = portName == null ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.SerialPortType()
+                        {
+                            PortName = portName,
+                            BaudRate = baudRate,
+                        }
+                    };
+                }
+            ).ToList()
+        };
+    }
+
     void HandleUpdateConfiguration(ViewerServers.HostConfigurationFromClientMessage message)
     {
         foreach (ViewerServers.HostConfigurationFromClientMessage.PlayerType player in message.Players)
@@ -122,6 +195,7 @@ partial class EdcHost : IEdcHost
             if (player.SerialPort is not null)
             {
                 playerHardwareInfo.PortName = player.SerialPort.PortName;
+                playerHardwareInfo.BaudRate = player.SerialPort.BaudRate;
 
                 _slaveServer.OpenPort(
                     portName: player.SerialPort.PortName,
