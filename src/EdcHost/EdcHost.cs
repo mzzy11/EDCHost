@@ -63,7 +63,7 @@ partial class EdcHost : IEdcHost
         try
         {
             _cameraServer.Start();
-            while (_cameraServer.AvailableCameraIndexes.Count == 0)
+            while (_cameraServer.AvailableCameraIndexes.Count==0)
             {
             }
             _cameraServer.OpenCamera(_cameraServer.AvailableCameraIndexes[0]);

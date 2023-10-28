@@ -73,7 +73,7 @@ partial class EdcHost : IEdcHost
                         cameraId = cameraIndex,
                         height = camera.Height,
                         width = camera.Width,
-                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[] { })
+                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[]{})
                     });
                 }
             }
@@ -167,7 +167,7 @@ partial class EdcHost : IEdcHost
                 {
                     playerId = (player.PlayerId),
 
-                    // TODO: Find the correspondence between the camera and the player
+                    // TODO: Find the correspondence between the camera and the player 
                     cameraId = player.PlayerId,
 
                     attributes = new()
