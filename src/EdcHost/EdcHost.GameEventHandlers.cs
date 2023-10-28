@@ -1,8 +1,6 @@
+using EdcHost.Games;
 using Emgu.CV;
 using Emgu.CV.Structure;
-
-using EdcHost.Games;
-
 using CompetitionUpdate = EdcHost.ViewerServers.Messages.CompetitionUpdate;
 
 namespace EdcHost;
@@ -73,7 +71,7 @@ partial class EdcHost : IEdcHost
                         cameraId = cameraIndex,
                         height = camera.Height,
                         width = camera.Width,
-                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[]{})
+                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[] { })
                     });
                 }
             }

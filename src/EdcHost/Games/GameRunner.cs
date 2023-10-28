@@ -6,11 +6,10 @@ class GameRunner : IGameRunner
 {
     const int TicksPerSecondExpected = 20;
 
-    public bool IsRunning => _shouldRun;
-    
+    public bool IsRunning { get; private set; } = false;
+
     public IGame Game { get; }
 
-    bool _shouldRun = false;
     Task? _task = null;
 
     public GameRunner(IGame game)
@@ -25,7 +24,7 @@ class GameRunner : IGameRunner
             throw new InvalidOperationException("game is not ready");
         }
 
-        _shouldRun = true;
+        IsRunning = true;
 
         Game.Start();
 
@@ -41,7 +40,7 @@ class GameRunner : IGameRunner
 
         Debug.Assert(_task is not null);
 
-        _shouldRun = false;
+        IsRunning = false;
         _task.Wait();
     }
 
@@ -51,7 +50,7 @@ class GameRunner : IGameRunner
         {
             DateTime lastTickStartTime = DateTime.Now;
 
-            while (_shouldRun)
+            while (IsRunning)
             {
                 if (Game.CurrentStage is not IGame.Stage.Running && Game.CurrentStage is not IGame.Stage.Battling)
                 {
