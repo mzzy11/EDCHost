@@ -18,25 +18,20 @@ class Program
             .WriteTo.Console()
             .CreateLogger();
 
-        try
-        {
-            SetupDotEnv();
+        SetupDotEnv();
 
-            List<Tuple<int, int>> gameDiamondMines = EnvReader.TryGetStringValue("GAME_DIAMOND_MINES", out string? gameDiamondMinesString) ? ParseMineList(gameDiamondMinesString) : new();
-            List<Tuple<int, int>> gameGoldMines = EnvReader.TryGetStringValue("GAME_GOLD_MINES", out string? gameGoldMinesString) ? ParseMineList(gameGoldMinesString) : new();
-            List<Tuple<int, int>> gameIronMines = EnvReader.TryGetStringValue("GAME_IRON_MINES", out string? gameIronMinesString) ? ParseMineList(gameIronMinesString) : new();
-            string loggingLevel = EnvReader.TryGetStringValue("LOGGING_LEVEL", out loggingLevel) ? loggingLevel : DefaultLoggingLevel;
-            int serverPort = EnvReader.TryGetIntValue("SERVER_PORT", out serverPort) ? serverPort : DefaultServerPort;
+        List<Tuple<int, int>> gameDiamondMines = EnvReader.TryGetStringValue("GAME_DIAMOND_MINES", out string? gameDiamondMinesString) ? ParseMineList(gameDiamondMinesString) : new();
+        List<Tuple<int, int>> gameGoldMines = EnvReader.TryGetStringValue("GAME_GOLD_MINES", out string? gameGoldMinesString) ? ParseMineList(gameGoldMinesString) : new();
+        List<Tuple<int, int>> gameIronMines = EnvReader.TryGetStringValue("GAME_IRON_MINES", out string? gameIronMinesString) ? ParseMineList(gameIronMinesString) : new();
+        string loggingLevel = EnvReader.TryGetStringValue("LOGGING_LEVEL", out loggingLevel) ? loggingLevel : DefaultLoggingLevel;
+        int serverPort = EnvReader.TryGetIntValue("SERVER_PORT", out serverPort) ? serverPort : DefaultServerPort;
 
-            SetupSerilog(loggingLevel);
+        SetupLogging(loggingLevel);
 
-            SetupAndRunEdcHost(gameDiamondMines, gameGoldMines, gameIronMines, serverPort);
+        SetupAndRunEdcHost(gameDiamondMines, gameGoldMines, gameIronMines, serverPort);
 
-        }
-        catch (Exception exception)
-        {
-            Log.Fatal(exception, "encountered an unhandled exception");
-        }
+        // Wait forever
+        Task.Delay(-1).Wait();
     }
 
     static List<Tuple<int, int>> ParseMineList(string input)
@@ -55,13 +50,14 @@ class Program
 
     static void SetupAndRunEdcHost(List<Tuple<int, int>> gameDiamondMines, List<Tuple<int, int>> gameGoldMines, List<Tuple<int, int>> gameIronMines, int serverPort)
     {
-        IEdcHost edcHost = IEdcHost.Create(new IEdcHost.EdcHostOptions
-        (
-            gameDiamondMines: gameDiamondMines,
-            gameGoldMines: gameGoldMines,
-            gameIronMines: gameIronMines,
-            serverPort: serverPort
-        ));
+        EdcHostOptions options = new()
+        {
+            GameDiamondMines = gameDiamondMines,
+            GameGoldMines = gameGoldMines,
+            GameIronMines = gameIronMines,
+            ServerPort = serverPort
+        };
+        IEdcHost edcHost = new EdcHost(options);
 
         edcHost.Start();
     }
@@ -74,7 +70,7 @@ class Program
         ));
     }
 
-    static void SetupSerilog(string loggingLevelString)
+    static void SetupLogging(string loggingLevelString)
     {
         // Configure Serilog
         Log.Logger = loggingLevelString switch

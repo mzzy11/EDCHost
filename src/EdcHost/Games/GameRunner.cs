@@ -6,6 +6,8 @@ class GameRunner : IGameRunner
 {
     const int TicksPerSecondExpected = 20;
 
+    public bool IsRunning => _shouldRun;
+    
     public IGame Game { get; }
 
     bool _shouldRun = false;
@@ -16,7 +18,7 @@ class GameRunner : IGameRunner
         Game = game;
     }
 
-    public async Task Start()
+    public void Start()
     {
         if (Game.CurrentStage is not IGame.Stage.Ready)
         {
@@ -28,11 +30,9 @@ class GameRunner : IGameRunner
         Game.Start();
 
         _task = Run();
-
-        await Task.Delay(0);
     }
 
-    public async Task End()
+    public void End()
     {
         if (Game.CurrentStage is not IGame.Stage.Running && Game.CurrentStage is not IGame.Stage.Battling)
         {
@@ -42,7 +42,7 @@ class GameRunner : IGameRunner
         Debug.Assert(_task is not null);
 
         _shouldRun = false;
-        await _task;
+        _task.Wait();
     }
 
     async Task Run()

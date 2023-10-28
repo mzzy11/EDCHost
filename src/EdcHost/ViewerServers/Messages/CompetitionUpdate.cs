@@ -32,7 +32,7 @@ public record CompetitionUpdate : IMessage
         public int cameraId { get; init; }
 
         [JsonPropertyName("frameData")]
-        public byte[]? frameData { get; init; }
+        public string? frameData { get; init; }
 
         [JsonPropertyName("height")]
         public int height { get; init; }
@@ -67,22 +67,22 @@ public record CompetitionUpdate : IMessage
     public record Event
     {
         [JsonPropertyName("PlayerAttackEvent")]
-        public PlayerAttackEvent? playerAttackEvent { get; init; }
+        public PlayerAttackEvent? playerAttackEvent { get; set; }
 
         [JsonPropertyName("PlayerDigEvent")]
-        public PlayerDigEvent? playerDigEvent { get; init; }
+        public PlayerDigEvent? playerDigEvent { get; set; }
 
         [JsonPropertyName("PlayerPickUpEvent")]
-        public PlayerPickUpEvent? playerPickUpEvent { get; init; }
+        public PlayerPickUpEvent? playerPickUpEvent { get; set; }
 
         [JsonPropertyName("PlayerPlaceBlockEvent")]
-        public PlayerPlaceBlockEvent? playerPlaceBlockEvent { get; init; }
+        public PlayerPlaceBlockEvent? playerPlaceBlockEvent { get; set; }
 
         [JsonPropertyName("PlayerTryAttackEvent")]
-        public PlayerTryAttackEvent? playerTryAttackEvent { get; init; }
+        public PlayerTryAttackEvent? playerTryAttackEvent { get; set; }
 
         [JsonPropertyName("PlayerTryUseEvent")]
-        public PlayerTryUseEvent? playerTryUseEvent { get; init; }
+        public PlayerTryUseEvent? playerTryUseEvent { get; set; }
 
         public record PlayerAttackEvent
         {
@@ -92,7 +92,7 @@ public record CompetitionUpdate : IMessage
             }
 
             [JsonPropertyName("eventType")]
-            public PlayerAttack Type { get; init; }
+            public PlayerAttack Type => PlayerAttack.PlayerAttack;
 
             [JsonPropertyName("playerId")]
             public int playerId { get; init; }
@@ -109,7 +109,7 @@ public record CompetitionUpdate : IMessage
             }
 
             [JsonPropertyName("eventType")]
-            public PlayerDig Type { get; init; }
+            public PlayerDig Type => PlayerDig.PlayerDig;
 
             [JsonPropertyName("playerId")]
             public int playerId { get; init; }
@@ -127,7 +127,7 @@ public record CompetitionUpdate : IMessage
             }
 
             [JsonPropertyName("eventType")]
-            public PlayerPickUp Type;
+            public PlayerPickUp Type => PlayerPickUp.PlayerPickUp;
 
             [JsonPropertyName("playerId")]
             public int playerId { get; init; }
@@ -157,13 +157,13 @@ public record CompetitionUpdate : IMessage
             }
 
             [JsonPropertyName("eventType")]
-            public PlayerPlaceBlock Type { get; init; }
+            public PlayerPlaceBlock Type => PlayerPlaceBlock.PlayerPlaceBlock;
 
             [JsonPropertyName("playerId")]
             public int playerId { get; init; }
 
             [JsonPropertyName("blockType")]
-            public BlockType blockType { get; init; }
+            public BlockType blockType => BlockType.Wool;
 
             public enum BlockType
             {
@@ -179,7 +179,7 @@ public record CompetitionUpdate : IMessage
             }
 
             [JsonPropertyName("eventType")]
-            public PlayerTryAttack Type { get; init; }
+            public PlayerTryAttack Type => PlayerTryAttack.PlayerTryAttack;
 
             [JsonPropertyName("playerId")]
             public int playerId { get; init; }
@@ -197,7 +197,7 @@ public record CompetitionUpdate : IMessage
             }
 
             [JsonPropertyName("eventType")]
-            public PlayerTryUse Type { get; init; }
+            public PlayerTryUse Type => PlayerTryUse.PlayerTryUse;
 
             [JsonPropertyName("playerId")]
             public int playerId { get; init; }
@@ -234,7 +234,7 @@ public record CompetitionUpdate : IMessage
     public record Mine
     {
         [JsonPropertyName("mineId")]
-        public int mineId { get; init; }
+        public string? mineId { get; init; }
 
         [JsonPropertyName("accumulatedOreCount")]
         public int accumulatedOreCount { get; init; }
@@ -270,6 +270,9 @@ public record CompetitionUpdate : IMessage
     {
         [JsonPropertyName("playerId")]
         public int playerId { get; init; }
+
+        [JsonPropertyName("cameraId")]
+        public int cameraId { get; init; }
 
         [JsonPropertyName("attributes")]
         public Attributes? attributes { get; init; }

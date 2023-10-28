@@ -27,9 +27,18 @@ class Player : IPlayer
     public event EventHandler<PlayerPlaceEventArgs> OnPlace = delegate { };
     public event EventHandler<PlayerDieEventArgs> OnDie = delegate { };
 
-    // TODO: Implement the event
-    // public event EventHandler<PlayerDigEventArgs> OnDig = delegate { };
-    // public event EventHandler<PlayerPickUpEventArgs> OnPickUp = delegate { };
+    public event EventHandler<PlayerDigEventArgs> OnDig = delegate { };
+    public event EventHandler<PlayerPickUpEventArgs> OnPickUp = delegate { };
+
+
+    public void PickUpEventInvoker(IMine.OreKindType mineType, int count)
+    {
+        OnPickUp?.Invoke(this, new PlayerPickUpEventArgs(this, mineType, count));
+    }
+    public void DigEventInvoker(int targetChunk)
+    {
+        OnDig?.Invoke(this, new PlayerDigEventArgs(this, targetChunk));
+    }
 
     public void EmeraldAdd(int count)
     {

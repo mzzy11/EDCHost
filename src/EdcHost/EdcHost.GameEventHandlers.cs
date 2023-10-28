@@ -1,8 +1,9 @@
+using Emgu.CV;
+using Emgu.CV.Structure;
+
 using EdcHost.Games;
-using EdcHost.SlaveServers;
-using EdcHost.ViewerServers;
+
 using CompetitionUpdate = EdcHost.ViewerServers.Messages.CompetitionUpdate;
-using System.Drawing;
 
 namespace EdcHost;
 
@@ -51,46 +52,77 @@ partial class EdcHost : IEdcHost
                 );
             }
 
+            // // Black image for test
+            // int defaultImageWidth = 640;
+            // int defaultImageHeight = 480;
+
+            // // Fill it in black
+            // using Mat demoImage = new(defaultImageHeight, defaultImageWidth, Emgu.CV.CvEnum.DepthType.Cv8U, 3);
+
+            // byte[] jpegData = demoImage.ToImage<Bgr, byte>().ToJpegData();
+            // string base64Image = Convert.ToBase64String(jpegData);
+
+            List<CompetitionUpdate.Camera> cameraInfoList = new();
+            foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
+            {
+                CameraServers.ICamera camera = _cameraServer.GetCamera(cameraIndex);
+                if (camera.IsOpened)
+                {
+                    cameraInfoList.Add(new CompetitionUpdate.Camera()
+                    {
+                        cameraId = cameraIndex,
+                        height = camera.Height,
+                        width = camera.Width,
+                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[]{})
+                    });
+                }
+            }
+
+
+            // Events for this tick;
             List<CompetitionUpdate.Event> currentEvents = new();
             while (!_playerEventQueue.IsEmpty)
             {
-                currentEvents.Add(new CompetitionUpdate.Event()
+                if (_playerEventQueue.TryDequeue(out EventArgs? playerEvent) && playerEvent is not null)
                 {
+                    CompetitionUpdate.Event currentEvent = new CompetitionUpdate.Event();
+                    switch (playerEvent)
+                    {
+                        case PlayerDigEventArgs digEvent:
+                            currentEvent.playerDigEvent = new()
+                            {
+                                playerId = digEvent.Player.PlayerId,
+                                targetChunk = digEvent.TargetChunk
+                            };
+                            break;
+                        case PlayerPickUpEventArgs pickUpEvent:
+                            currentEvent.playerPickUpEvent = new()
+                            {
+                                playerId = pickUpEvent.Player.PlayerId,
+                                itemCount = pickUpEvent.ItemCount,
+                                itemType = (CompetitionUpdate.Event.PlayerPickUpEvent.ItemType)pickUpEvent.MineType
+                            };
+                            break;
+                        case PlayerPlaceEventArgs placeEvent:
+                            currentEvent.playerPlaceBlockEvent = new()
+                            {
+                                playerId = placeEvent.Player.PlayerId
+                                // TODO: finish the event param
+                            };
+                            break;
+                        // TODO: finish other cases
+                        default:
+                            break;
+                    }
+                    currentEvents.Add(currentEvent);
+                }
+            }
 
-                });
-            }
-            // Black image for default
-            int defaultImageWidth = 640;
-            int defaultImageHeight = 480;
-            // Create a bitmap
-            Bitmap blackImage = new Bitmap(defaultImageWidth, defaultImageHeight);
-            // Fill it in black
-            using (Graphics g = Graphics.FromImage(blackImage))
-            {
-                g.Clear(Color.Black);
-            }
-            blackImage.
 
             // Send packet to the viewer
             _viewerServer.Publish(new CompetitionUpdate()
             {
-                // TODO: Add cameras
-                cameras = new List<CompetitionUpdate.Camera>(){
-                    new CompetitionUpdate.Camera()
-                    {
-                        cameraId = 0,
-                        height = 480,
-                        width = 640,
-                        frameData = null,
-                    },
-                    new CompetitionUpdate.Camera()
-                    {
-                        cameraId = 1,
-                        height = 480,
-                        width = 640,
-                        frameData = null,
-                    }
-                },
+                cameras = cameraInfoList,
 
                 chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
                 {
@@ -103,21 +135,25 @@ partial class EdcHost : IEdcHost
                     } : null
                 }).ToList(),
 
-                // TODO: Add events
                 events = currentEvents,
 
                 info = new CompetitionUpdate.Info()
                 {
-                    // TODO: Add 'switch'
-                    stage = (CompetitionUpdate.Info.Stage)(e.Game.CurrentStage),
+                    stage = e.Game.CurrentStage switch
+                    {
+                        IGame.Stage.Ready => CompetitionUpdate.Info.Stage.Ready,
+                        IGame.Stage.Running => CompetitionUpdate.Info.Stage.Running,
+                        IGame.Stage.Ended => CompetitionUpdate.Info.Stage.Ended,
+                        IGame.Stage.Finished => CompetitionUpdate.Info.Stage.Finished,
+                        IGame.Stage.Battling => CompetitionUpdate.Info.Stage.Battling,
+                        _ => throw new NotImplementedException($"{e.Game.CurrentStage} is not implemented")
+                    },
                     elapsedTicks = e.Game.ElapsedTicks
                 },
 
                 mines = e.Game.Mines.Select(mine => new CompetitionUpdate.Mine()
                 {
-                    // TODO: Add 'MineId'
-                    mineId = (int)(mine.OreKind), // error
-
+                    mineId = mine.MineId.ToString(),
                     accumulatedOreCount = mine.AccumulatedOreCount,
                     oreType = (CompetitionUpdate.Mine.OreType)mine.OreKind,
                     position = new CompetitionUpdate.Mine.Position()
@@ -130,6 +166,10 @@ partial class EdcHost : IEdcHost
                 players = e.Game.Players.Select(player => new CompetitionUpdate.Player()
                 {
                     playerId = (player.PlayerId),
+
+                    // TODO: Find the correspondence between the camera and the player 
+                    cameraId = player.PlayerId,
+
                     attributes = new()
                     {
                         agility = player.ActionPoints,
@@ -161,6 +201,8 @@ partial class EdcHost : IEdcHost
         }
     }
 
+
+
     void HandleAfterJudgementEvent(object? sender, AfterJudgementEventArgs e)
     {
         if (e.Winner is null)
@@ -174,7 +216,11 @@ partial class EdcHost : IEdcHost
 
         _gameRunner.End();
     }
-
+    void HandlePlayerDigEvent(object? sender, Games.PlayerDigEventArgs e)
+    {
+        // Store the event info to the queue
+        _playerEventQueue.Enqueue(e);
+    }
     void HandlePlayerAttackEvent(object? sender, Games.PlayerAttackEventArgs e)
     {
         // Store the event info to the queue

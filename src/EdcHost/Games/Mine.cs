@@ -6,6 +6,11 @@ namespace EdcHost.Games;
 class Mine : IMine
 {
     /// <summary>
+    /// The id of the mine
+    /// </summary>
+    public Guid MineId { get; }
+
+    /// <summary>
     /// The count of accumulated ores.
     /// </summary>
     public int AccumulatedOreCount { get; private set; }
@@ -37,6 +42,7 @@ class Mine : IMine
     /// <param name="position">The position</param>
     public Mine(IMine.OreKindType oreKind, IPosition<float> position, int tick)
     {
+        MineId = Guid.NewGuid();
         AccumulatedOreCount = 0;
         OreKind = oreKind;
         Position = position;

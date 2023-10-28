@@ -5,32 +5,34 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    const int _mapWidth = 8;
-    const int _mapHeight = 8;
+    const int MapHeight = 8;
+    const int MapWidth = 8;
 
-    readonly Games.IGame _game;
-    readonly Games.IGameRunner _gameRunner;
     readonly ILogger _logger = Log.ForContext("Component", "Program");
     readonly Dictionary<int, string> _playerIdToPortName = new();
-    readonly Dictionary<int, int> _playerIdToCameraId = new();
+    readonly Dictionary<int, int> _playerIdToCameraIndex = new();
+    readonly CameraServers.ICameraServer _cameraServer;
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
-    /// <summary>
-    /// store the player event for every tick in order to transfer to the viewerServer
-    /// </summary>
-    private readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
+    readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
+    readonly EdcHostOptions _options;
 
-    public EdcHost(
-        Games.IGame game,
-        Games.IGameRunner gameRunner,
-        SlaveServers.ISlaveServer slaveServer,
-        ViewerServers.IViewerServer viewerServer
-    )
+    Games.IGame _game;
+    Games.IGameRunner _gameRunner;
+
+    public EdcHost(EdcHostOptions options)
     {
-        _game = game;
-        _gameRunner = gameRunner;
-        _slaveServer = slaveServer;
-        _viewerServer = viewerServer;
+        _options = options;
+
+        _game = Games.IGame.Create(
+            diamondMines: _options.GameDiamondMines,
+            goldMines: _options.GameGoldMines,
+            ironMines: _options.GameIronMines
+        );
+        _gameRunner = Games.IGameRunner.Create(_game);
+        _cameraServer = CameraServers.ICameraServer.Create();
+        _slaveServer = SlaveServers.ISlaveServer.Create();
+        _viewerServer = ViewerServers.IViewerServer.Create(_options.ServerPort);
 
         _game.AfterGameStartEvent += HandleAfterGameStartEvent;
         _game.AfterGameTickEvent += HandleAfterGameTickEvent;
@@ -40,7 +42,7 @@ partial class EdcHost : IEdcHost
         {
             _game.Players[i].OnAttack += HandlePlayerAttackEvent;
             _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
-            // TODO: Add OnDig and OnPickUp Event Handlers
+            _game.Players[i].OnDig += HandlePlayerDigEvent;
         }
 
         _slaveServer.PlayerTryAttackEvent += HandlePlayerTryAttackEvent;
@@ -60,9 +62,22 @@ partial class EdcHost : IEdcHost
 
         try
         {
+            _cameraServer.Start();
+            while (_cameraServer.AvailableCameraIndexes.Count==0)
+            {
+            }
+            _cameraServer.OpenCamera(_cameraServer.AvailableCameraIndexes[0]);
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"failed to start camera server: {e}");
+        }
+
+        try
+        {
             _slaveServer.Start();
-            _slaveServer.OpenPort("COM1");
-            _playerIdToPortName.Add(0, "COM1");
+            // _slaveServer.OpenPort("COM1");
+            // _playerIdToPortName.Add(0, "COM1");
         }
         catch (Exception e)
         {
@@ -79,15 +94,20 @@ partial class EdcHost : IEdcHost
         }
 
         _logger.Information("Started.");
-
-        // Main thread sleeps to guarantee that the program is running
-        Thread.Sleep(Timeout.Infinite);
-
     }
 
     public void Stop()
     {
         _logger.Information("Stopping...");
+
+        try
+        {
+            _cameraServer.Stop();
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"failed to stop camera server: {e}");
+        }
 
         try
         {

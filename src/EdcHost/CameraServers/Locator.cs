@@ -9,13 +9,13 @@ namespace EdcHost.CameraServers;
 
 public class Locator : ILocator
 {
-    public Mat? Mask { get; private set; }
+    public Mat? Mask { get; private set; } = null;
 
-    readonly RecognitionOptions _options;
+    public RecognitionOptions Options { get; set; }
 
-    public Locator(RecognitionOptions options)
+    public Locator(RecognitionOptions? options = null)
     {
-        _options = options;
+        Options = options ?? new RecognitionOptions();
     }
 
     public ILocator.RecognitionResult? Locate(Mat originalFrame)
@@ -23,10 +23,15 @@ public class Locator : ILocator
         using Mat mask = GetMask(originalFrame);
 
         // Show mask if requested.
-        if (_options.ShowMask)
+        if (Options.ShowMask)
         {
             Mask?.Dispose();
             Mask = mask.Clone();
+        }
+        else
+        {
+            Mask?.Dispose();
+            Mask = null;
         }
 
         Tuple<float, float>? location = GetLocation(mask);
@@ -49,10 +54,10 @@ public class Locator : ILocator
     {
         using Mat transform = CvInvoke.GetPerspectiveTransform(
             src: new PointF[] {
-                new(_options.TopLeftX, _options.TopLeftY),
-                new(_options.TopRightX, _options.TopRightY),
-                new(_options.BottomRightX, _options.BottomRightY),
-                new(_options.BottomLeftX, _options.BottomLeftY),
+                new(Options.TopLeftX, Options.TopLeftY),
+                new(Options.TopRightX, Options.TopRightY),
+                new(Options.BottomRightX, Options.BottomRightY),
+                new(Options.BottomLeftX, Options.BottomLeftY),
             },
             dest: new PointF[] {
                 new(0, 0),
@@ -90,14 +95,14 @@ public class Locator : ILocator
         CvInvoke.InRange(
             src: mask,
             lower: new ScalarArray(new MCvScalar(
-                _options.HueCenter - _options.HueRange / 2,
-                _options.SaturationCenter - _options.SaturationRange / 2,
-                _options.ValueCenter - _options.ValueRange / 2
+                Options.HueCenter - Options.HueRange / 2,
+                Options.SaturationCenter - Options.SaturationRange / 2,
+                Options.ValueCenter - Options.ValueRange / 2
             )),
             upper: new ScalarArray(new MCvScalar(
-                _options.HueCenter + _options.HueRange / 2,
-                _options.SaturationCenter + _options.SaturationRange / 2,
-                _options.ValueCenter + _options.ValueRange / 2
+                Options.HueCenter + Options.HueRange / 2,
+                Options.SaturationCenter + Options.SaturationRange / 2,
+                Options.ValueCenter + Options.ValueRange / 2
             )),
             dst: mask
         );
@@ -118,7 +123,7 @@ public class Locator : ILocator
         );
 
         // Find the largest contour.
-        int largestContourIndex = 0;
+        int? largestContourIndex = null;
         double largestContourArea = 0;
         for (int i = 0; i < contours.Size; i++)
         {
@@ -130,14 +135,20 @@ public class Locator : ILocator
             }
         }
 
+        // Return null if no contours were found.
+        if (largestContourIndex is null)
+        {
+            return null;
+        }
+
         // Return null if no area is large enough.
-        if (largestContourArea / (mask.Height * mask.Width) < _options.MinArea)
+        if (largestContourArea / (mask.Height * mask.Width) < Options.MinArea)
         {
             return null;
         }
 
         // Find the center of the largest contour.
-        using VectorOfPoint largestContour = contours[largestContourIndex];
+        using VectorOfPoint largestContour = contours[largestContourIndex.Value];
         using Moments moments = CvInvoke.Moments(largestContour);
         float centerX = (float)(moments.M10 / moments.M00);
         float centerY = (float)(moments.M01 / moments.M00);

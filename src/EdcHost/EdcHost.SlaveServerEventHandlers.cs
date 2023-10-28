@@ -25,7 +25,7 @@ partial class EdcHost : IEdcHost
             }
 
             IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
-            _game.Players[playerId.Value].Attack(e.TargetChunkId / _mapWidth, e.TargetChunkId % _mapWidth);
+            _game.Players[playerId.Value].Attack(e.TargetChunkId / MapWidth, e.TargetChunkId % MapWidth);
         }
         catch (Exception exception)
         {
@@ -53,7 +53,7 @@ partial class EdcHost : IEdcHost
             }
 
             IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
-            _game.Players[playerId.Value].Place(e.TargetChunkId / _mapWidth, e.TargetChunkId % _mapWidth);
+            _game.Players[playerId.Value].Place(e.TargetChunkId / MapWidth, e.TargetChunkId % MapWidth);
         }
         catch (Exception exception)
         {

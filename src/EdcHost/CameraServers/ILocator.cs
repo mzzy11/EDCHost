@@ -4,13 +4,15 @@ namespace EdcHost.CameraServers;
 
 public interface ILocator
 {
-    public Mat? Mask { get; }
-
-    public record RecognitionResult
+    record RecognitionResult
     {
         public Tuple<float, float> CalibratedLocation { get; init; } = null!;
         public Tuple<float, float> Location { get; init; } = null!;
     }
+
+    Mat? Mask { get; }
+
+    RecognitionOptions Options { get; set; }
 
     /// <summary>
     /// Locates the target in the given frame.

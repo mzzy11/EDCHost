@@ -1,12 +1,15 @@
-using System.Drawing;
-
 namespace EdcHost.CameraServers;
 
 public interface ICamera : IDisposable
 {
-    Image? Frame { get; }
+    int CameraIndex { get; }
+    int Height { get; }
+    bool IsOpened { get; }
+    byte[]? JpegData { get; }
+    int Width { get; }
     Tuple<float, float>? TargetPosition { get; }
+    Tuple<float, float>? TargetPositionNotCalibrated { get; }
 
-    void Open();
     void Close();
+    void Open();
 }
