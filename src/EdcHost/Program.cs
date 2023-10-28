@@ -49,10 +49,12 @@ class Program
             }
             catch (JsonException)
             {
-                Log.Error($"Error parsing config file at {path}, using default config");
+                Log.Error($"Error parsing config file at {path}");
 
 #if DEBUG
                 throw;
+#else
+                Log.Information($"Using default config.");
 #endif
             }
         }

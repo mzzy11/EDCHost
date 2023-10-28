@@ -27,9 +27,13 @@ partial class EdcHost : IEdcHost
             IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
             _game.Players[playerId.Value].Attack(e.TargetChunkId / MapWidth, e.TargetChunkId % MapWidth);
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Serilog.Log.Warning($"Action failed: {exception}");
+            _logger.Error($"PlayerTryAttack failed: {ex.Message}");
+
+#if DEBUG
+            throw;
+#endif
         }
     }
 
@@ -55,9 +59,13 @@ partial class EdcHost : IEdcHost
             IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
             _game.Players[playerId.Value].Place(e.TargetChunkId / MapWidth, e.TargetChunkId % MapWidth);
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Serilog.Log.Warning($"Action failed: {exception}");
+            _logger.Error($"PlayerTryPlaceBlock failed: {ex.Message}");
+
+#if DEBUG
+            throw;
+#endif
         }
     }
 
@@ -103,13 +111,17 @@ partial class EdcHost : IEdcHost
                     break;
 
                 default:
-                    Serilog.Log.Warning($"No item with id {e.Item}. Action rejected.");
+                    _logger.Warning($"No item with id {e.Item}. Action rejected."); // Do not throw exception here.
                     break;
             }
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Serilog.Log.Warning($"Action failed: {exception}");
+            _logger.Error($"PlayerTryTrade failed: {ex.Message}");
+
+#if DEBUG
+            throw;
+#endif
         }
     }
 }

@@ -24,13 +24,8 @@ partial class EdcHost : IEdcHost
                         break;
 
                     default:
-                        _logger.Error($"Invalid command: {message.Command}.");
-
-#if DEBUG
-                        throw new Exception($"invalid command: {message.Command}");
-#else
+                        _logger.Warning($"Invalid command: {message.Command}.");
                         break;
-#endif
                 }
                 break;
 
@@ -39,13 +34,8 @@ partial class EdcHost : IEdcHost
                 break;
 
             default:
-                _logger.Error($"Invalid message type: {e.Message.MessageType}.");
-
-#if DEBUG
-                throw new Exception($"invalid message type: {e.Message.MessageType}");
-#else
+                _logger.Warning($"Invalid message type: {e.Message.MessageType}.");
                 break;
-#endif
         }
     }
 

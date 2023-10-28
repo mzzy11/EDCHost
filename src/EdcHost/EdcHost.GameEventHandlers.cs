@@ -197,9 +197,12 @@ partial class EdcHost : IEdcHost
                 }).ToList()
             });
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            _logger.Warning($"An exception is caught when updating packet: {exception}");
+            _logger.Error($"Error while sending data to viewer: {ex.Message}");
+#if DEBUG
+            throw;
+#endif
         }
     }
 
