@@ -8,7 +8,7 @@ partial class EdcHost : IEdcHost
     const int MapHeight = 8;
     const int MapWidth = 8;
 
-    readonly ILogger _logger = Log.ForContext("Component", "Program");
+    readonly ILogger _logger = Log.ForContext("Component", "EdcHost");
     readonly Dictionary<int, string> _playerIdToPortName = new();
     readonly Dictionary<int, int> _playerIdToCameraIndex = new();
     readonly CameraServers.ICameraServer _cameraServer;

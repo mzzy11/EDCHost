@@ -1,15 +1,12 @@
-﻿using System.Text.RegularExpressions;
-using dotenv.net;
-using dotenv.net.Utilities;
+﻿using System.Text.Json;
 using Serilog;
+using Serilog.Templates;
 
 namespace EdcHost;
 
 class Program
 {
-    const string DefaultLoggingLevel = "Information";
-    const int DefaultServerPort = 8080;
-    const string SerilogTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] <{Component}> {Message:lj}{NewLine}{Exception}";
+    const string SerilogTemplate = "[{@t:HH:mm:ss} {@l:u3}] {#if Component is not null}{Component,-13} {#end}{@m}\n{@x}";
 
     static void Main()
     {
@@ -18,34 +15,14 @@ class Program
             .WriteTo.Console()
             .CreateLogger();
 
-        SetupDotEnv();
+        Config config = LoadConfig();
 
-        List<Tuple<int, int>> gameDiamondMines = EnvReader.TryGetStringValue("GAME_DIAMOND_MINES", out string? gameDiamondMinesString) ? ParseMineList(gameDiamondMinesString) : new();
-        List<Tuple<int, int>> gameGoldMines = EnvReader.TryGetStringValue("GAME_GOLD_MINES", out string? gameGoldMinesString) ? ParseMineList(gameGoldMinesString) : new();
-        List<Tuple<int, int>> gameIronMines = EnvReader.TryGetStringValue("GAME_IRON_MINES", out string? gameIronMinesString) ? ParseMineList(gameIronMinesString) : new();
-        string loggingLevel = EnvReader.TryGetStringValue("LOGGING_LEVEL", out loggingLevel) ? loggingLevel : DefaultLoggingLevel;
-        int serverPort = EnvReader.TryGetIntValue("SERVER_PORT", out serverPort) ? serverPort : DefaultServerPort;
+        SetupLogging(config.LoggingLevel);
 
-        SetupLogging(loggingLevel);
-
-        SetupAndRunEdcHost(gameDiamondMines, gameGoldMines, gameIronMines, serverPort);
+        SetupAndRunEdcHost(config.Game.DiamondMines, config.Game.GoldMines, config.Game.IronMines, config.ServerPort);
 
         // Wait forever
         Task.Delay(-1).Wait();
-    }
-
-    static List<Tuple<int, int>> ParseMineList(string input)
-    {
-        List<Tuple<int, int>> mines = new();
-        Regex regex = new(@"\((\d+),\s?(\d+)\)");
-        MatchCollection matches = regex.Matches(input);
-        foreach (Match match in matches.Cast<Match>())
-        {
-            int x = int.Parse(match.Groups[1].Value);
-            int y = int.Parse(match.Groups[2].Value);
-            mines.Add(new Tuple<int, int>(x, y));
-        }
-        return mines;
     }
 
     static void SetupAndRunEdcHost(List<Tuple<int, int>> gameDiamondMines, List<Tuple<int, int>> gameGoldMines, List<Tuple<int, int>> gameIronMines, int serverPort)
@@ -62,12 +39,28 @@ class Program
         edcHost.Start();
     }
 
-    static void SetupDotEnv()
+    static Config LoadConfig()
     {
-        DotEnv.Load(new DotEnvOptions
-        (
-            trimValues: true
-        ));
+        Config config = new();
+        string path = Path.Combine(Directory.GetCurrentDirectory(), "config.json");
+        if (!File.Exists(path))
+        {
+            Log.Warning($"Config file not found at {path}, creating default config file...");
+            File.WriteAllText(path, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        else
+        {
+            try
+            {
+                config = JsonSerializer.Deserialize<Config>(File.ReadAllText(path))!;
+            }
+            catch (JsonException e)
+            {
+                Log.Error(e, $"Error parsing config file at {path}, using default config");
+            }
+        }
+
+        return config;
     }
 
     static void SetupLogging(string loggingLevelString)
@@ -77,33 +70,27 @@ class Program
         {
             "Verbose" => new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.Console(outputTemplate: SerilogTemplate)
-                .Enrich.WithProperty("Component", "Program")
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
                 .CreateLogger(),
             "Debug" => new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Console(outputTemplate: SerilogTemplate)
-                .Enrich.WithProperty("Component", "Program")
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
                 .CreateLogger(),
             "Information" => new LoggerConfiguration()
                 .MinimumLevel.Information()
-                .WriteTo.Console(outputTemplate: SerilogTemplate)
-                .Enrich.WithProperty("Component", "Program")
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
                 .CreateLogger(),
             "Warning" => new LoggerConfiguration()
                 .MinimumLevel.Warning()
-                .WriteTo.Console(outputTemplate: SerilogTemplate)
-                .Enrich.WithProperty("Component", "Program")
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
                 .CreateLogger(),
             "Error" => new LoggerConfiguration()
                 .MinimumLevel.Error()
-                .WriteTo.Console(outputTemplate: SerilogTemplate)
-                .Enrich.WithProperty("Component", "Program")
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
                 .CreateLogger(),
             "Fatal" => new LoggerConfiguration()
                 .MinimumLevel.Fatal()
-                .WriteTo.Console(outputTemplate: SerilogTemplate)
-                .Enrich.WithProperty("Component", "Program")
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
                 .CreateLogger(),
             _ => throw new ArgumentOutOfRangeException(nameof(loggingLevelString), loggingLevelString, "invalid logging level")
         };
