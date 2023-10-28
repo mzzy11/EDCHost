@@ -7,7 +7,7 @@ class GameRunner : IGameRunner
     const int TicksPerSecondExpected = 20;
 
     public bool IsRunning => _shouldRun;
-    
+
     public IGame Game { get; }
 
     bool _shouldRun = false;
