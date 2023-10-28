@@ -1,124 +1,209 @@
-using EdcHost.ViewerServers.EventArgs;
-using ErrorMessage = EdcHost.ViewerServers.Messages.Error;
-
+using System.Reflection.Metadata;
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    void HandleSetPortEvent(object? sender, SetPortEventArgs e)
+    void HandleAfterMessageReceiveEvent(object? sender, ViewerServers.AfterMessageReceiveEventArgs e)
     {
-        try
+        switch (e.Message)
         {
-            if (_playerIdToPortName.Any(kvp => kvp.Value == e.PortName))
-            {
-                _logger.Error($"Port name {e.PortName} is taken by a player.");
-                return;
-            }
+            case ViewerServers.CompetitionControlCommandMessage message:
+                switch (message.Command)
+                {
+                    case "START":
+                        HandleStartGame();
+                        break;
 
-            if (_playerIdToPortName.ContainsKey(e.PlayerId) == false)
-            {
-                _slaveServer.OpenPort(
-                    portName: e.PortName
-                );
-                _playerIdToPortName.Add(e.PlayerId, e.PortName);
-            }
-            else
-            {
-                string oldPortName = _playerIdToPortName[e.PlayerId];
-                _slaveServer.OpenPort(
-                    portName: e.PortName
-                );
-                _playerIdToPortName[e.PlayerId] = e.PortName;
-                _slaveServer.ClosePort(oldPortName);
-            }
+                    case "END":
+                        HandleEndGame();
+                        break;
 
-            _logger.Information("[Update]");
-            _logger.Information($"Player {e.PlayerId}:");
-            _logger.Information($"Port: {e.PortName}");
-        }
-        catch (Exception exception)
-        {
-            _logger.Error($"Failed to set port: {exception}");
-        }
-    }
+                    case "RESET":
+                        HandleResetGame();
+                        break;
 
-    void HandleSetCameraEvent(object? sender, SetCameraEventArgs e)
-    {
-        //TODO: Set camera
+                    case "GET_HOST_CONFIGURATION":
+                        HandleGetHostConfiguration();
+                        break;
+                    default:
+                        _logger.Warning($"Invalid command: {message.Command}.");
+                        break;
+                }
+                break;
 
+            case ViewerServers.HostConfigurationFromClientMessage message:
+                HandleUpdateConfiguration(message);
+                break;
 
-        _logger.Information("[Update]");
-        _logger.Information($"Player {e.PlayerId}:");
-        _logger.Information($"Camera: {e.CameraConfiguration}");
-    }
-
-    private void HandleStartGameEvent(object? sender, EventArgs e)
-    {
-        try
-        {
-            _gameRunner.Start();
-        }
-        catch (Exception exception)
-        {
-            string message = $"Failed to start game: {exception}";
-            _logger.Error(message);
-
-            // Send ERROR packet to the viewer
-            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
+            default:
+                _logger.Warning($"Invalid message type: {e.Message.MessageType}.");
+                break;
         }
     }
 
-    private void HandleEndGameEvent(object? sender, EventArgs e)
+    void HandleStartGame()
     {
-        try
+        _gameRunner.Start();
+    }
+
+    void HandleEndGame()
+    {
+        _gameRunner.End();
+    }
+
+    void HandleResetGame()
+    {
+        if (_gameRunner.IsRunning)
         {
             _gameRunner.End();
-
         }
-        catch (Exception exception)
-        {
-            string message = $"Failed to stop game: {exception}";
-            _logger.Error(message);
 
-            // Send ERROR packet to the viewer
-            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
+        _game = Games.IGame.Create(
+            diamondMines: _config.Game.DiamondMines,
+            goldMines: _config.Game.GoldMines,
+            ironMines: _config.Game.IronMines
+        );
+        _gameRunner = Games.IGameRunner.Create(_game);
+
+        _game.AfterGameStartEvent += HandleAfterGameStartEvent;
+        _game.AfterGameTickEvent += HandleAfterGameTickEvent;
+        _game.AfterJudgementEvent += HandleAfterJudgementEvent;
+
+        for (int i = 0; i < _game.Players.Count; i++)
+        {
+            _game.Players[i].OnAttack += HandlePlayerAttackEvent;
+            _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
+            _game.Players[i].OnDig += HandlePlayerDigEvent;
         }
     }
 
-    private void HandleResetGameEvent(object? sender, EventArgs e)
+    void HandleGetHostConfiguration()
     {
-        try
+        ViewerServers.HostConfigurationFromClientMessage configMessage = new ViewerServers.HostConfigurationFromClientMessage()
         {
-            if (_gameRunner.IsRunning)
+            Players = _game.Players.Select((player, playerIndex) =>
+                {
+                    int? cameraIndex = _playerHardwareInfo[playerIndex].CameraIndex;
+
+
+                    CameraServers.ICamera? camera = null;
+                    if (cameraIndex is not null)
+                    {
+                        camera = _cameraServer.GetCamera(cameraIndex.Value);
+                    }
+
+                    string? portName = _playerHardwareInfo[playerIndex].PortName;
+                    int baudRate = _playerHardwareInfo[playerIndex].BaudRate;
+
+                    return new ViewerServers.HostConfigurationFromClientMessage.PlayerType()
+                    {
+                        Camera = cameraIndex == null ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType()
+                        {
+                            CameraId = cameraIndex!.Value,
+
+                            Recognition = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.RecognitionType()
+                            {
+                                HueCenter = camera!.Locator.Options.HueCenter,
+                                HueRange = camera!.Locator.Options.HueRange,
+                                SaturationCenter = camera!.Locator.Options.SaturationCenter,
+                                SaturationRange = camera!.Locator.Options.SaturationRange,
+                                ValueCenter = camera!.Locator.Options.ValueCenter,
+                                ValueRange = camera!.Locator.Options.ValueRange,
+                                MinArea = camera!.Locator.Options.MinArea,
+                                ShowMask = camera!.Locator.Options.ShowMask
+                            },
+
+                            Calibration = camera!.Locator.Options.Calibrate == false ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType()
+                            {
+                                TopLeft = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.TopLeftX,
+                                    Y = camera!.Locator.Options.TopLeftY
+                                },
+                                TopRight = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.TopRightX,
+                                    Y = camera!.Locator.Options.TopRightY
+                                },
+                                BottomLeft = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.BottomLeftX,
+                                    Y = camera!.Locator.Options.BottomLeftY
+                                },
+                                BottomRight = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                {
+                                    X = camera!.Locator.Options.BottomRightX,
+                                    Y = camera!.Locator.Options.BottomRightY
+                                }
+                            }
+                        },
+                        SerialPort = portName == null ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.SerialPortType()
+                        {
+                            PortName = portName,
+                            BaudRate = baudRate,
+                        }
+                    };
+                }
+            ).ToList()
+        };
+    }
+
+    void HandleUpdateConfiguration(ViewerServers.HostConfigurationFromClientMessage message)
+    {
+        foreach (ViewerServers.HostConfigurationFromClientMessage.PlayerType player in message.Players)
+        {
+            // Do not need to check if a player exists because we do not care.
+
+            PlayerHardwareInfo playerHardwareInfo = new();
+
+            if (player.Camera is not null)
             {
-                _gameRunner.End();
+                playerHardwareInfo.CameraIndex = player.Camera.CameraId;
+
+                CameraServers.ICamera camera = _cameraServer.GetCamera(player.Camera.CameraId)
+                    ?? _cameraServer.OpenCamera(player.Camera.CameraId, new CameraServers.Locator());
+
+                CameraServers.RecognitionOptions recognitionOptions = new()
+                {
+                    HueCenter = player.Camera.Recognition.HueCenter,
+                    HueRange = player.Camera.Recognition.HueRange,
+                    SaturationCenter = player.Camera.Recognition.SaturationCenter,
+                    SaturationRange = player.Camera.Recognition.SaturationRange,
+                    ValueCenter = player.Camera.Recognition.ValueCenter,
+                    ValueRange = player.Camera.Recognition.ValueRange,
+                    MinArea = player.Camera.Recognition.MinArea,
+                    ShowMask = player.Camera.Recognition.ShowMask
+                };
+
+                if (player.Camera.Calibration is not null)
+                {
+                    recognitionOptions.Calibrate = true;
+
+                    recognitionOptions.TopLeftX = player.Camera.Calibration.TopLeft.X;
+                    recognitionOptions.TopLeftY = player.Camera.Calibration.TopLeft.Y;
+                    recognitionOptions.TopRightX = player.Camera.Calibration.TopRight.X;
+                    recognitionOptions.TopRightY = player.Camera.Calibration.TopRight.Y;
+                    recognitionOptions.BottomLeftX = player.Camera.Calibration.BottomLeft.X;
+                    recognitionOptions.BottomLeftY = player.Camera.Calibration.BottomLeft.Y;
+                    recognitionOptions.BottomRightX = player.Camera.Calibration.BottomRight.X;
+                    recognitionOptions.BottomRightY = player.Camera.Calibration.BottomRight.Y;
+                }
+
+                camera.Locator = new CameraServers.Locator(recognitionOptions);
             }
 
-            _game = Games.IGame.Create(
-                diamondMines: _options.GameDiamondMines,
-                goldMines: _options.GameGoldMines,
-                ironMines: _options.GameIronMines
-            );
-            _gameRunner = Games.IGameRunner.Create(_game);
-
-            _game.AfterGameStartEvent += HandleAfterGameStartEvent;
-            _game.AfterGameTickEvent += HandleAfterGameTickEvent;
-            _game.AfterJudgementEvent += HandleAfterJudgementEvent;
-
-            for (int i = 0; i < _game.Players.Count; i++)
+            if (player.SerialPort is not null)
             {
-                _game.Players[i].OnAttack += HandlePlayerAttackEvent;
-                _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
-                _game.Players[i].OnDig += HandlePlayerDigEvent;
-            }
-        }
-        catch (Exception exception)
-        {
-            string message = $"Failed to reset game: {exception}";
-            _logger.Error(message);
+                playerHardwareInfo.PortName = player.SerialPort.PortName;
+                playerHardwareInfo.BaudRate = player.SerialPort.BaudRate;
 
-            // Send ERROR packet to the viewer
-            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
+                _slaveServer.OpenPort(
+                    portName: player.SerialPort.PortName,
+                    baudRate: player.SerialPort.BaudRate
+                );
+            }
+
+            _playerHardwareInfo.AddOrUpdate(player.PlayerId, playerHardwareInfo, (_, _) => playerHardwareInfo);
         }
     }
 }

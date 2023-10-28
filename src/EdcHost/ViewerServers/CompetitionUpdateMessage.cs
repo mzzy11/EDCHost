@@ -1,12 +1,11 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace EdcHost.ViewerServers.Messages;
+namespace EdcHost.ViewerServers;
 
-public record CompetitionUpdate : IMessage
+public record CompetitionUpdateMessage : Message
 {
     [JsonPropertyName("messageType")]
-    public string MessageType { get; } = "COMPETITION_UPDATE";
+    public override string MessageType { get; init; } = "COMPETITION_UPDATE";
 
     [JsonPropertyName("cameras")]
     public List<Camera> cameras { get; init; } = new();
@@ -67,22 +66,22 @@ public record CompetitionUpdate : IMessage
     public record Event
     {
         [JsonPropertyName("PlayerAttackEvent")]
-        public PlayerAttackEvent? playerAttackEvent { get; set; }
+        public PlayerAttackEvent? playerAttackEvent { get; init; }
 
         [JsonPropertyName("PlayerDigEvent")]
-        public PlayerDigEvent? playerDigEvent { get; set; }
+        public PlayerDigEvent? playerDigEvent { get; init; }
 
         [JsonPropertyName("PlayerPickUpEvent")]
-        public PlayerPickUpEvent? playerPickUpEvent { get; set; }
+        public PlayerPickUpEvent? playerPickUpEvent { get; init; }
 
         [JsonPropertyName("PlayerPlaceBlockEvent")]
-        public PlayerPlaceBlockEvent? playerPlaceBlockEvent { get; set; }
+        public PlayerPlaceBlockEvent? playerPlaceBlockEvent { get; init; }
 
         [JsonPropertyName("PlayerTryAttackEvent")]
-        public PlayerTryAttackEvent? playerTryAttackEvent { get; set; }
+        public PlayerTryAttackEvent? playerTryAttackEvent { get; init; }
 
         [JsonPropertyName("PlayerTryUseEvent")]
-        public PlayerTryUseEvent? playerTryUseEvent { get; set; }
+        public PlayerTryUseEvent? playerTryUseEvent { get; init; }
 
         public record PlayerAttackEvent
         {
@@ -332,8 +331,4 @@ public record CompetitionUpdate : IMessage
 
         }
     }
-
-    public byte[] SerializeToUtf8Bytes() => JsonSerializer.SerializeToUtf8Bytes(this);
-
-    public string SerializeToString() => JsonSerializer.Serialize(this);
 }

@@ -8,31 +8,30 @@ partial class EdcHost : IEdcHost
     const int MapHeight = 8;
     const int MapWidth = 8;
 
-    readonly ILogger _logger = Log.ForContext("Component", "Program");
-    readonly Dictionary<int, string> _playerIdToPortName = new();
-    readonly Dictionary<int, int> _playerIdToCameraIndex = new();
+    readonly ILogger _logger = Log.ForContext("Component", "EdcHost");
+    readonly ConcurrentDictionary<int, PlayerHardwareInfo> _playerHardwareInfo = new();
     readonly CameraServers.ICameraServer _cameraServer;
     readonly SlaveServers.ISlaveServer _slaveServer;
     readonly ViewerServers.IViewerServer _viewerServer;
     readonly ConcurrentQueue<EventArgs> _playerEventQueue = new();
-    readonly EdcHostOptions _options;
+    readonly Config _config;
 
     Games.IGame _game;
     Games.IGameRunner _gameRunner;
 
-    public EdcHost(EdcHostOptions options)
+    public EdcHost(Config config)
     {
-        _options = options;
+        _config = config;
 
         _game = Games.IGame.Create(
-            diamondMines: _options.GameDiamondMines,
-            goldMines: _options.GameGoldMines,
-            ironMines: _options.GameIronMines
+            diamondMines: _config.Game.DiamondMines,
+            goldMines: _config.Game.GoldMines,
+            ironMines: _config.Game.IronMines
         );
         _gameRunner = Games.IGameRunner.Create(_game);
         _cameraServer = CameraServers.ICameraServer.Create();
         _slaveServer = SlaveServers.ISlaveServer.Create();
-        _viewerServer = ViewerServers.IViewerServer.Create(_options.ServerPort);
+        _viewerServer = ViewerServers.IViewerServer.Create(_config.ServerPort);
 
         _game.AfterGameStartEvent += HandleAfterGameStartEvent;
         _game.AfterGameTickEvent += HandleAfterGameTickEvent;
@@ -49,49 +48,16 @@ partial class EdcHost : IEdcHost
         _slaveServer.PlayerTryTradeEvent += HandlePlayerTryTradeEvent;
         _slaveServer.PlayerTryPlaceBlockEvent += HandlePlayerTryPlaceBlockEvent;
 
-        _viewerServer.SetCameraEvent += HandleSetCameraEvent;
-        _viewerServer.SetPortEvent += HandleSetPortEvent;
-        _viewerServer.Controller.StartGameEvent += HandleStartGameEvent;
-        _viewerServer.Controller.EndGameEvent += HandleEndGameEvent;
-        _viewerServer.Controller.ResetGameEvent += HandleResetGameEvent;
+        _viewerServer.AfterMessageReceiveEvent += HandleAfterMessageReceiveEvent;
     }
 
     public void Start()
     {
         _logger.Information("Starting...");
 
-        try
-        {
-            _cameraServer.Start();
-            while (_cameraServer.AvailableCameraIndexes.Count==0)
-            {
-            }
-            _cameraServer.OpenCamera(_cameraServer.AvailableCameraIndexes[0]);
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start camera server: {e}");
-        }
-
-        try
-        {
-            _slaveServer.Start();
-            // _slaveServer.OpenPort("COM1");
-            // _playerIdToPortName.Add(0, "COM1");
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start slave server: {e}");
-        }
-
-        try
-        {
-            _viewerServer.Start();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start viewer server: {e}");
-        }
+        _cameraServer.Start();
+        _slaveServer.Start();
+        _viewerServer.Start();
 
         _logger.Information("Started.");
     }
@@ -100,32 +66,9 @@ partial class EdcHost : IEdcHost
     {
         _logger.Information("Stopping...");
 
-        try
-        {
-            _cameraServer.Stop();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to stop camera server: {e}");
-        }
-
-        try
-        {
-            _slaveServer.Stop();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to stop slave server: {e}");
-        }
-
-        try
-        {
-            _viewerServer.Stop();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to stop viewer server: {e}");
-        }
+        _cameraServer.Stop();
+        _slaveServer.Stop();
+        _viewerServer.Stop();
 
         _logger.Information("Stopped.");
     }

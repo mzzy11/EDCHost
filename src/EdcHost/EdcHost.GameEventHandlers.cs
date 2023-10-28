@@ -1,32 +1,25 @@
-using Emgu.CV;
-using Emgu.CV.Structure;
-
-using EdcHost.Games;
-
-using CompetitionUpdate = EdcHost.ViewerServers.Messages.CompetitionUpdate;
-
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    void HandleAfterGameStartEvent(object? sender, AfterGameStartEventArgs e)
+    void HandleAfterGameStartEvent(object? sender, Games.AfterGameStartEventArgs e)
     {
         //Do nothing
     }
 
-    void HandleAfterGameTickEvent(object? sender, AfterGameTickEventArgs e)
+    void HandleAfterGameTickEvent(object? sender, Games.AfterGameTickEventArgs e)
     {
         try
         {
             List<int> heightOfChunks = new();
-            foreach (IChunk chunk in e.Game.GameMap.Chunks)
+            foreach (Games.IChunk chunk in e.Game.GameMap.Chunks)
             {
                 heightOfChunks.Add(chunk.Height);
             }
 
             for (int i = 0; i < 2; i++)
             {
-                string? portName = _playerIdToPortName.GetValueOrDefault(e.Game.Players[i].PlayerId);
+                string? portName = _playerHardwareInfo.GetValueOrDefault(e.Game.Players[i].PlayerId).PortName;
                 if (portName is null)
                 {
                     continue;
@@ -62,52 +55,61 @@ partial class EdcHost : IEdcHost
             // byte[] jpegData = demoImage.ToImage<Bgr, byte>().ToJpegData();
             // string base64Image = Convert.ToBase64String(jpegData);
 
-            List<CompetitionUpdate.Camera> cameraInfoList = new();
+            List<ViewerServers.CompetitionUpdateMessage.Camera> cameraInfoList = new();
             foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
             {
-                CameraServers.ICamera camera = _cameraServer.GetCamera(cameraIndex);
-                if (camera.IsOpened)
+                CameraServers.ICamera? camera = _cameraServer.GetCamera(cameraIndex);
+                if (camera?.IsOpened ?? false)
                 {
-                    cameraInfoList.Add(new CompetitionUpdate.Camera()
+                    cameraInfoList.Add(new ViewerServers.CompetitionUpdateMessage.Camera
                     {
                         cameraId = cameraIndex,
                         height = camera.Height,
                         width = camera.Width,
-                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[]{})
+                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[] { })
                     });
                 }
             }
 
 
             // Events for this tick;
-            List<CompetitionUpdate.Event> currentEvents = new();
+            List<ViewerServers.CompetitionUpdateMessage.Event> currentEvents = new();
             while (!_playerEventQueue.IsEmpty)
             {
                 if (_playerEventQueue.TryDequeue(out EventArgs? playerEvent) && playerEvent is not null)
                 {
-                    CompetitionUpdate.Event currentEvent = new CompetitionUpdate.Event();
+                    ViewerServers.CompetitionUpdateMessage.Event currentEvent = new();
                     switch (playerEvent)
                     {
-                        case PlayerDigEventArgs digEvent:
-                            currentEvent.playerDigEvent = new()
+                        case Games.PlayerDigEventArgs digEvent:
+                            currentEvent = new()
                             {
-                                playerId = digEvent.Player.PlayerId,
-                                targetChunk = digEvent.TargetChunk
+                                playerDigEvent = new()
+                                {
+                                    playerId = digEvent.Player.PlayerId,
+                                    targetChunk = digEvent.TargetChunk
+                                }
                             };
                             break;
-                        case PlayerPickUpEventArgs pickUpEvent:
-                            currentEvent.playerPickUpEvent = new()
+                        case Games.PlayerPickUpEventArgs pickUpEvent:
+                            currentEvent = new()
                             {
-                                playerId = pickUpEvent.Player.PlayerId,
-                                itemCount = pickUpEvent.ItemCount,
-                                itemType = (CompetitionUpdate.Event.PlayerPickUpEvent.ItemType)pickUpEvent.MineType
+                                playerPickUpEvent = new()
+                                {
+                                    playerId = pickUpEvent.Player.PlayerId,
+                                    itemCount = pickUpEvent.ItemCount,
+                                    itemType = (ViewerServers.CompetitionUpdateMessage.Event.PlayerPickUpEvent.ItemType)pickUpEvent.MineType
+                                }
                             };
                             break;
-                        case PlayerPlaceEventArgs placeEvent:
-                            currentEvent.playerPlaceBlockEvent = new()
+                        case Games.PlayerPlaceEventArgs placeEvent:
+                            currentEvent = new()
                             {
-                                playerId = placeEvent.Player.PlayerId
-                                // TODO: finish the event param
+                                playerPlaceBlockEvent = new()
+                                {
+                                    playerId = placeEvent.Player.PlayerId
+                                    // TODO: finish the event param
+                                }
                             };
                             break;
                         // TODO: finish other cases
@@ -120,15 +122,15 @@ partial class EdcHost : IEdcHost
 
 
             // Send packet to the viewer
-            _viewerServer.Publish(new CompetitionUpdate()
+            _viewerServer.Publish(new ViewerServers.CompetitionUpdateMessage()
             {
                 cameras = cameraInfoList,
 
-                chunks = e.Game.GameMap.Chunks.Select(chunk => new CompetitionUpdate.Chunk()
+                chunks = e.Game.GameMap.Chunks.Select(chunk => new ViewerServers.CompetitionUpdateMessage.Chunk()
                 {
                     chunkId = chunk.Position != null ? chunk.Position.X + chunk.Position.Y * 8 : -1,
                     height = chunk.Height,
-                    position = chunk.Position != null ? new CompetitionUpdate.Chunk.Position()
+                    position = chunk.Position != null ? new ViewerServers.CompetitionUpdateMessage.Chunk.Position()
                     {
                         x = chunk.Position.X,
                         y = chunk.Position.Y
@@ -137,33 +139,33 @@ partial class EdcHost : IEdcHost
 
                 events = currentEvents,
 
-                info = new CompetitionUpdate.Info()
+                info = new ViewerServers.CompetitionUpdateMessage.Info()
                 {
                     stage = e.Game.CurrentStage switch
                     {
-                        IGame.Stage.Ready => CompetitionUpdate.Info.Stage.Ready,
-                        IGame.Stage.Running => CompetitionUpdate.Info.Stage.Running,
-                        IGame.Stage.Ended => CompetitionUpdate.Info.Stage.Ended,
-                        IGame.Stage.Finished => CompetitionUpdate.Info.Stage.Finished,
-                        IGame.Stage.Battling => CompetitionUpdate.Info.Stage.Battling,
+                        Games.IGame.Stage.Ready => ViewerServers.CompetitionUpdateMessage.Info.Stage.Ready,
+                        Games.IGame.Stage.Running => ViewerServers.CompetitionUpdateMessage.Info.Stage.Running,
+                        Games.IGame.Stage.Ended => ViewerServers.CompetitionUpdateMessage.Info.Stage.Ended,
+                        Games.IGame.Stage.Finished => ViewerServers.CompetitionUpdateMessage.Info.Stage.Finished,
+                        Games.IGame.Stage.Battling => ViewerServers.CompetitionUpdateMessage.Info.Stage.Battling,
                         _ => throw new NotImplementedException($"{e.Game.CurrentStage} is not implemented")
                     },
                     elapsedTicks = e.Game.ElapsedTicks
                 },
 
-                mines = e.Game.Mines.Select(mine => new CompetitionUpdate.Mine()
+                mines = e.Game.Mines.Select(mine => new ViewerServers.CompetitionUpdateMessage.Mine()
                 {
                     mineId = mine.MineId.ToString(),
                     accumulatedOreCount = mine.AccumulatedOreCount,
-                    oreType = (CompetitionUpdate.Mine.OreType)mine.OreKind,
-                    position = new CompetitionUpdate.Mine.Position()
+                    oreType = (ViewerServers.CompetitionUpdateMessage.Mine.OreType)mine.OreKind,
+                    position = new ViewerServers.CompetitionUpdateMessage.Mine.Position()
                     {
                         x = mine.Position.X,
                         y = mine.Position.Y
                     }
                 }).ToList(),
 
-                players = e.Game.Players.Select(player => new CompetitionUpdate.Player()
+                players = e.Game.Players.Select(player => new ViewerServers.CompetitionUpdateMessage.Player()
                 {
                     playerId = (player.PlayerId),
 
@@ -177,17 +179,17 @@ partial class EdcHost : IEdcHost
                         maxHealth = player.MaxHealth
                     },
                     health = player.Health,
-                    homePosition = new CompetitionUpdate.Player.HomePosition()
+                    homePosition = new ViewerServers.CompetitionUpdateMessage.Player.HomePosition()
                     {
                         x = player.SpawnPoint.X,
                         y = player.SpawnPoint.Y,
                     },
-                    inventory = new CompetitionUpdate.Player.Inventory()
+                    inventory = new ViewerServers.CompetitionUpdateMessage.Player.Inventory()
                     {
                         emerald = player.EmeraldCount,
                         wool = player.WoolCount
                     },
-                    position = new CompetitionUpdate.Player.Position()
+                    position = new ViewerServers.CompetitionUpdateMessage.Player.Position()
                     {
                         x = player.PlayerPosition.X,
                         y = player.PlayerPosition.Y
@@ -195,15 +197,18 @@ partial class EdcHost : IEdcHost
                 }).ToList()
             });
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            _logger.Warning($"An exception is caught when updating packet: {exception}");
+            _logger.Error($"Error while sending data to viewer: {ex.Message}");
+#if DEBUG
+            throw;
+#endif
         }
     }
 
 
 
-    void HandleAfterJudgementEvent(object? sender, AfterJudgementEventArgs e)
+    void HandleAfterJudgementEvent(object? sender, Games.AfterJudgementEventArgs e)
     {
         if (e.Winner is null)
         {

@@ -31,7 +31,7 @@ public class SlaveServer : ISlaveServer
         GC.SuppressFinalize(this);
     }
 
-    public void OpenPort(string portName)
+    public void OpenPort(string portName, int baudRate)
     {
         if (_isRunning is false)
         {
@@ -43,10 +43,17 @@ public class SlaveServer : ISlaveServer
             throw new ArgumentException($"port name already exists: {portName}");
         }
 
-        ISerialPortWrapper serialPort = _serialPortHub.Get(portName);
+        ISerialPortWrapper serialPort = _serialPortHub.Get(portName, baudRate);
         serialPort.AfterReceive += (sender, args) =>
         {
-            PerformAction(args.PortName, new PacketFromSlave(args.Bytes));
+            try
+            {
+                PerformAction(args.PortName, new PacketFromSlave(args.Bytes));
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"Failed to parse packet from slave: {e.Message}");
+            }
         };
 
         serialPort.Open();
