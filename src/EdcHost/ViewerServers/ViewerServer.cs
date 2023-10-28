@@ -15,14 +15,11 @@ public class ViewerServer : IViewerServer
     public event EventHandler<AfterMessageReceiveEventArgs>? AfterMessageReceiveEvent;
 
     readonly ILogger _logger = Log.Logger.ForContext("Component", "ViewerServers");
-    readonly ConcurrentQueue<Message> _messagesToSend = new();
     readonly int _port;
     readonly ConcurrentDictionary<Guid, IWebSocketConnection> _sockets = new();
     readonly IWebSocketServerHub _wsServerHub;
 
     bool _isRunning = false;
-    Task? _task = null;
-    CancellationTokenSource? _taskCancellationTokenSource = null;
     IWebSocketServer? _wsServer = null;
 
 
@@ -42,17 +39,12 @@ public class ViewerServer : IViewerServer
             throw new InvalidOperationException("already running");
         }
 
-        Debug.Assert(_task is null);
-        Debug.Assert(_taskCancellationTokenSource is null);
         Debug.Assert(_wsServer is null);
 
         _logger.Information("Starting...");
 
-        _wsServer = _wsServerHub.Get(8080);
+        _wsServer = _wsServerHub.Get(_port);
         StartWsServer();
-
-        _taskCancellationTokenSource = new();
-        _task = Task.Run(TaskForSendingFunc);
 
         _isRunning = true;
 
@@ -71,19 +63,10 @@ public class ViewerServer : IViewerServer
 
         _logger.Information("Stopping...");
 
-        Debug.Assert(_task is not null);
-        Debug.Assert(_taskCancellationTokenSource is not null);
         Debug.Assert(_wsServer is not null);
-
-        _taskCancellationTokenSource.Cancel();
-        _task.Wait();
-        _taskCancellationTokenSource.Dispose();
-        _task.Dispose();
 
         _wsServer.Dispose();
 
-        _task = null;
-        _taskCancellationTokenSource = null;
         _wsServer = null;
 
         _isRunning = false;
@@ -93,7 +76,12 @@ public class ViewerServer : IViewerServer
 
     public void Publish(Message message)
     {
-        _messagesToSend.Enqueue(message);
+        string jsonString = message.Json;
+
+        foreach (IWebSocketConnection socket in _sockets.Values)
+        {
+            socket.Send(jsonString);
+        }
     }
 
     void ParseMessage(string text)
@@ -192,34 +180,4 @@ public class ViewerServer : IViewerServer
             };
         });
     }
-
-    void TaskForSendingFunc()
-    {
-        _logger.Debug("SendTaskFunc started");
-
-        while (true)
-        {
-            try
-            {
-                if (_messagesToSend.TryDequeue(out Message? message))
-                {
-                    string jsonString = message.Json;
-
-                    foreach (IWebSocketConnection socket in _sockets.Values)
-                    {
-                        socket.Send(jsonString);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                _logger.Error("Error while sending message.");
-
-#if DEBUG
-                throw;
-#endif
-            }
-        }
-    }
-
 }

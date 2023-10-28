@@ -77,13 +77,6 @@ public partial class SlaveServersTests
         return checksum;
     }
 
-    static byte[] GenerateRandomBytes(Random random, int count)
-    {
-        byte[] bytes = new byte[count];
-        random.NextBytes(bytes);
-        return bytes;
-    }
-
     static byte[] MakePacketHeader(byte[] data)
     {
         byte[] header = new byte[5];
