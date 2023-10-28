@@ -6,21 +6,14 @@ public class CameraServer : ICameraServer
 {
     readonly ICameraFactory _cameraFactory;
     readonly List<ICamera> _cameras = new();
-    readonly ILocator _locator;
     readonly ILogger _logger = Log.Logger.ForContext("Component", "CameraServers");
 
     public List<int> AvailableCameraIndexes => _cameraFactory.CameraIndexes;
-    public RecognitionOptions Options
-    {
-        get => _locator.Options;
-        set => _locator.Options = value;
-    }
     bool _isRunning = false;
 
-    public CameraServer(ICameraFactory cameraFactory, ILocator locator)
+    public CameraServer(ICameraFactory cameraFactory)
     {
         _cameraFactory = cameraFactory;
-        _locator = locator;
     }
 
     public void CloseCamera(int cameraIndex)
@@ -40,7 +33,7 @@ public class CameraServer : ICameraServer
         _logger.Information("Camera {cameraIndex} opened.", cameraIndex);
     }
 
-    public ICamera GetCamera(int cameraIndex)
+    public ICamera? GetCamera(int cameraIndex)
     {
         if (_isRunning is false)
         {
@@ -53,7 +46,7 @@ public class CameraServer : ICameraServer
         return camera;
     }
 
-    public void OpenCamera(int cameraIndex)
+    public ICamera OpenCamera(int cameraIndex, ILocator locator)
     {
         if (_isRunning is false)
         {
@@ -65,10 +58,12 @@ public class CameraServer : ICameraServer
             throw new ArgumentException($"camera index already exists: {cameraIndex}");
         }
 
-        ICamera camera = _cameraFactory.Create(cameraIndex, _locator);
+        ICamera camera = _cameraFactory.Create(cameraIndex, locator);
         _cameras.Add(camera);
 
         _logger.Information("Camera {cameraIndex} opened.", cameraIndex);
+
+        return camera;
     }
 
     public void Start()

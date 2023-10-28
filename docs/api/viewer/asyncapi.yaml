@@ -217,8 +217,6 @@ components:
               additionalProperties: false
               required:
                 - playerId
-                - camera
-                - serialPort
               properties:
                 playerId:
                   type: integer
@@ -227,7 +225,6 @@ components:
                   additionalProperties: false
                   required:
                     - cameraId
-                    - calibration
                     - recognition
                   properties:
                     cameraId:

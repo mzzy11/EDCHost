@@ -14,8 +14,8 @@ partial class EdcHost : IEdcHost
 
             string portName = e.PortName;
 
-            int? playerId = _playerIdToPortName
-                .Where(kvp => kvp.Value == portName)
+            int? playerId = _playerHardwareInfo
+                .Where(kvp => kvp.Value.PortName == portName)
                 .Select(kvp => (int?)kvp.Key)
                 .FirstOrDefault((int?)null);
 
@@ -42,8 +42,8 @@ partial class EdcHost : IEdcHost
 
             string portName = e.PortName;
 
-            int? playerId = _playerIdToPortName
-                .Where(kvp => kvp.Value == portName)
+            int? playerId = _playerHardwareInfo
+                .Where(kvp => kvp.Value.PortName == portName)
                 .Select(kvp => (int?)kvp.Key)
                 .FirstOrDefault((int?)null);
 
@@ -70,8 +70,8 @@ partial class EdcHost : IEdcHost
 
             string portName = e.PortName;
 
-            int? playerId = _playerIdToPortName
-                .Where(kvp => kvp.Value == portName)
+            int? playerId = _playerHardwareInfo
+                .Where(kvp => kvp.Value.PortName == portName)
                 .Select(kvp => (int?)kvp.Key)
                 .FirstOrDefault((int?)null);
 

@@ -1,60 +1,43 @@
-using EdcHost.ViewerServers.EventArgs;
-using ErrorMessage = EdcHost.ViewerServers.Messages.Error;
-
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
-    void HandleSetPortEvent(object? sender, SetPortEventArgs e)
+    void HandleAfterMessageReceiveEvent(object? sender, ViewerServers.AfterMessageReceiveEventArgs e)
     {
-        try
+        switch (e.Message)
         {
-            if (_playerIdToPortName.Any(kvp => kvp.Value == e.PortName))
-            {
-                _logger.Error($"Port name {e.PortName} is taken by a player.");
-                return;
-            }
+            case ViewerServers.CompetitionControlCommandMessage message:
+                switch (message.Command)
+                {
+                    case "START":
+                        HandleStartGame();
+                        break;
 
-            if (_playerIdToPortName.ContainsKey(e.PlayerId) == false)
-            {
-                _slaveServer.OpenPort(
-                    portName: e.PortName,
-                    baudRate: e.BaudRate
-                );
-                _playerIdToPortName.Add(e.PlayerId, e.PortName);
-            }
-            else
-            {
-                string oldPortName = _playerIdToPortName[e.PlayerId];
-                _slaveServer.OpenPort(
-                    portName: e.PortName,
-                    baudRate: e.BaudRate
-                );
-                _playerIdToPortName[e.PlayerId] = e.PortName;
-                _slaveServer.ClosePort(oldPortName);
-            }
+                    case "END":
+                        HandleEndGame();
+                        break;
 
-            _logger.Information("[Update]");
-            _logger.Information($"Player {e.PlayerId}:");
-            _logger.Information($"Port: {e.PortName}");
-        }
-        catch (Exception exception)
-        {
-            _logger.Error($"Failed to set port: {exception}");
+                    case "RESET":
+                        HandleResetGameEvent();
+                        break;
+
+                    default:
+                        _logger.Error($"Invalid command: {message.Command}");
+                        break;
+                }
+                break;
+
+            case ViewerServers.HostConfigurationFromClientMessage message:
+
+                break;
+
+            default:
+                _logger.Error($"Invalid message type: {e.Message.MessageType}");
+                break;
         }
     }
 
-    void HandleSetCameraEvent(object? sender, SetCameraEventArgs e)
-    {
-        //TODO: Set camera
-
-
-        _logger.Information("[Update]");
-        _logger.Information($"Player {e.PlayerId}:");
-        _logger.Information($"Camera: {e.CameraConfiguration}");
-    }
-
-    private void HandleStartGameEvent(object? sender, EventArgs e)
+    void HandleStartGame()
     {
         try
         {
@@ -63,14 +46,18 @@ partial class EdcHost : IEdcHost
         catch (Exception exception)
         {
             string message = $"Failed to start game: {exception}";
+
             _logger.Error(message);
 
-            // Send ERROR packet to the viewer
-            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
+            _viewerServer.Publish(new ViewerServers.ErrorMessage()
+            {
+                ErrorCode = 0,
+                Message = message
+            });
         }
     }
 
-    private void HandleEndGameEvent(object? sender, EventArgs e)
+    void HandleEndGame()
     {
         try
         {
@@ -79,15 +66,18 @@ partial class EdcHost : IEdcHost
         }
         catch (Exception exception)
         {
-            string message = $"Failed to stop game: {exception}";
+            string message = $"Failed to end game: {exception}";
             _logger.Error(message);
 
-            // Send ERROR packet to the viewer
-            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
+            _viewerServer.Publish(new ViewerServers.ErrorMessage()
+            {
+                ErrorCode = 0,
+                Message = message
+            });
         }
     }
 
-    private void HandleResetGameEvent(object? sender, EventArgs e)
+    void HandleResetGameEvent()
     {
         try
         {
@@ -97,9 +87,9 @@ partial class EdcHost : IEdcHost
             }
 
             _game = Games.IGame.Create(
-                diamondMines: _options.GameDiamondMines,
-                goldMines: _options.GameGoldMines,
-                ironMines: _options.GameIronMines
+                diamondMines: _config.Game.DiamondMines,
+                goldMines: _config.Game.GoldMines,
+                ironMines: _config.Game.IronMines
             );
             _gameRunner = Games.IGameRunner.Create(_game);
 
@@ -119,8 +109,69 @@ partial class EdcHost : IEdcHost
             string message = $"Failed to reset game: {exception}";
             _logger.Error(message);
 
-            // Send ERROR packet to the viewer
-            _viewerServer.Publish(new ErrorMessage(messageType: "ERROR", errorCode: 0, message: message));
+            _viewerServer.Publish(new ViewerServers.ErrorMessage()
+            {
+                ErrorCode = 0,
+                Message = message
+            });
+        }
+    }
+
+    void HandleUpdateConfiguration(ViewerServers.HostConfigurationFromClientMessage message)
+    {
+        foreach (ViewerServers.HostConfigurationFromClientMessage.PlayerType player in message.Players)
+        {
+            // Do not need to check if a player exists because we do not care.
+
+            PlayerHardwareInfo playerHardwareInfo = new();
+
+            if (player.Camera is not null)
+            {
+                playerHardwareInfo.CameraIndex = player.Camera.CameraId;
+
+                CameraServers.ICamera camera = _cameraServer.GetCamera(player.Camera.CameraId)
+                    ?? _cameraServer.OpenCamera(player.Camera.CameraId, new CameraServers.Locator());
+
+                CameraServers.RecognitionOptions recognitionOptions = new()
+                {
+                    HueCenter = player.Camera.Recognition.HueCenter,
+                    HueRange = player.Camera.Recognition.HueRange,
+                    SaturationCenter = player.Camera.Recognition.SaturationCenter,
+                    SaturationRange = player.Camera.Recognition.SaturationRange,
+                    ValueCenter = player.Camera.Recognition.ValueCenter,
+                    ValueRange = player.Camera.Recognition.ValueRange,
+                    MinArea = player.Camera.Recognition.MinArea,
+                    ShowMask = player.Camera.Recognition.ShowMask
+                };
+
+                if (player.Camera.Calibration is not null)
+                {
+                    recognitionOptions.Calibrate = true;
+
+                    recognitionOptions.TopLeftX = player.Camera.Calibration.TopLeft.X;
+                    recognitionOptions.TopLeftY = player.Camera.Calibration.TopLeft.Y;
+                    recognitionOptions.TopRightX = player.Camera.Calibration.TopRight.X;
+                    recognitionOptions.TopRightY = player.Camera.Calibration.TopRight.Y;
+                    recognitionOptions.BottomLeftX = player.Camera.Calibration.BottomLeft.X;
+                    recognitionOptions.BottomLeftY = player.Camera.Calibration.BottomLeft.Y;
+                    recognitionOptions.BottomRightX = player.Camera.Calibration.BottomRight.X;
+                    recognitionOptions.BottomRightY = player.Camera.Calibration.BottomRight.Y;
+                }
+
+                camera.Locator = new CameraServers.Locator(recognitionOptions);
+            }
+
+            if (player.SerialPort is not null)
+            {
+                playerHardwareInfo.PortName = player.SerialPort.PortName;
+
+                _slaveServer.OpenPort(
+                    portName: player.SerialPort.PortName,
+                    baudRate: player.SerialPort.BaudRate
+                );
+            }
+
+            _playerHardwareInfo.AddOrUpdate(player.PlayerId, playerHardwareInfo, (_, _) => playerHardwareInfo);
         }
     }
 }

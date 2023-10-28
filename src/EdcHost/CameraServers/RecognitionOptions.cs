@@ -2,7 +2,7 @@ namespace EdcHost.CameraServers;
 
 public record RecognitionOptions
 {
-    public bool calibrate = false;
+    public bool Calibrate = false;
     public float TopLeftX;
     public float TopLeftY;
     public float TopRightX;

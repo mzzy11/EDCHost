@@ -6,12 +6,11 @@ namespace EdcHost.CameraServers;
 
 public class Camera : ICamera
 {
-    readonly ILocator _locator;
-
     public int CameraIndex { get; private set; }
     public int Height => _capture.Height;
     public bool IsOpened => _capture.IsOpened;
     public byte[]? JpegData { get; private set; }
+    public ILocator Locator { get; set; }
     public Tuple<float, float>? TargetPosition { get; private set; }
     public Tuple<float, float>? TargetPositionNotCalibrated { get; private set; }
     public int Width => _capture.Width;
@@ -25,7 +24,7 @@ public class Camera : ICamera
         CameraIndex = cameraIndex;
 
         _capture = new(cameraIndex);
-        _locator = locator;
+        Locator = locator;
 
         _taskCancellationTokenSource = new();
         _task = Task.Run(TaskForCapturingFunc);
@@ -45,7 +44,11 @@ public class Camera : ICamera
 
         _taskCancellationTokenSource.Cancel();
         _task.Wait();
+        _taskCancellationTokenSource.Dispose();
         _task.Dispose();
+
+        _task = null;
+        _taskCancellationTokenSource = null;
     }
 
     public void Dispose()
@@ -89,15 +92,15 @@ public class Camera : ICamera
                 continue;
             }
 
-            ILocator.RecognitionResult? recognitionResult = _locator.Locate(frame);
+            ILocator.RecognitionResult? recognitionResult = Locator.Locate(frame);
 
-            if (_locator.Mask is null)
+            if (Locator.Mask is null)
             {
                 JpegData = frame.ToImage<Bgr, byte>().ToJpegData();
             }
             else
             {
-                JpegData = _locator.Mask.ToImage<Bgr, byte>().ToJpegData();
+                JpegData = Locator.Mask.ToImage<Bgr, byte>().ToJpegData();
             }
 
             if (recognitionResult is null)

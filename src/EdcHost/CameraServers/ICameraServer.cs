@@ -4,18 +4,16 @@ public interface ICameraServer : IDisposable
 {
     static ICameraServer Create()
     {
-        return new CameraServer(new CameraFactory(), new Locator());
+        return new CameraServer(new CameraFactory());
     }
 
     List<int> AvailableCameraIndexes { get; }
 
-    RecognitionOptions Options { get; set; }
-
     void CloseCamera(int cameraIndex);
 
-    ICamera GetCamera(int cameraIndex);
+    ICamera? GetCamera(int cameraIndex);
 
-    void OpenCamera(int cameraIndex);
+    ICamera OpenCamera(int cameraIndex, ILocator locator);
 
     void Start();
 

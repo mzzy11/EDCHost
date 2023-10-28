@@ -19,22 +19,15 @@ class Program
 
         SetupLogging(config.LoggingLevel);
 
-        SetupAndRunEdcHost(config.Game.DiamondMines, config.Game.GoldMines, config.Game.IronMines, config.ServerPort);
+        SetupAndRunEdcHost(config);
 
         // Wait forever
         Task.Delay(-1).Wait();
     }
 
-    static void SetupAndRunEdcHost(List<Tuple<int, int>> gameDiamondMines, List<Tuple<int, int>> gameGoldMines, List<Tuple<int, int>> gameIronMines, int serverPort)
+    static void SetupAndRunEdcHost(Config config)
     {
-        EdcHostOptions options = new()
-        {
-            GameDiamondMines = gameDiamondMines,
-            GameGoldMines = gameGoldMines,
-            GameIronMines = gameIronMines,
-            ServerPort = serverPort
-        };
-        IEdcHost edcHost = new EdcHost(options);
+        IEdcHost edcHost = new EdcHost(config);
 
         edcHost.Start();
     }
