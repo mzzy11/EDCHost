@@ -46,7 +46,14 @@ public class SlaveServer : ISlaveServer
         ISerialPortWrapper serialPort = _serialPortHub.Get(portName, baudRate);
         serialPort.AfterReceive += (sender, args) =>
         {
-            PerformAction(args.PortName, new PacketFromSlave(args.Bytes));
+            try
+            {
+                PerformAction(args.PortName, new PacketFromSlave(args.Bytes));
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"Failed to parse packet from slave: {e.Message}");
+            }
         };
 
         serialPort.Open();
