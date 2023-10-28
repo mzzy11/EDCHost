@@ -8,18 +8,14 @@ jobs:
     strategy:
       matrix:
         runtime:
-          - linux-arm
           - linux-arm64
           - linux-x64
-          - linux-musl-arm
           - linux-musl-arm64
           - linux-musl-x64
           - osx-arm64
           - osx-x64
-          - win-arm
           - win-arm64
           - win-x64
-          - win-x86
         include:
           - runs-on: ubuntu-latest
           - runs-on: macos-latest
