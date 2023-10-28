@@ -7,7 +7,7 @@ class SerialPortHubMock : ISerialPortHub
 
     public List<string> PortNames => SerialPorts.Keys.ToList();
 
-    public ISerialPortWrapper Get(string portName)
+    public ISerialPortWrapper Get(string portName, int baudRate)
     {
         if (!SerialPorts.ContainsKey(portName))
         {

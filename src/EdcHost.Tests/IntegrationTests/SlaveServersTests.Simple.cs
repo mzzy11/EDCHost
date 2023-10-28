@@ -33,7 +33,7 @@ public partial class SlaveServerTests
         Assert.Empty(serialPortWrapperMock.WriteBuffer);
 
         // Act
-        slaveServer.OpenPort(PortName);
+        slaveServer.OpenPort(PortName, 0);
 
         Assert.Single(serialPortHubMock.SerialPorts);
         Assert.True(serialPortWrapperMock.IsOpen);

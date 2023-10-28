@@ -16,9 +16,9 @@ class SerialPortWrapper : ISerialPortWrapper
     Task? _taskForReceiving = null;
     Task? _taskForSending = null;
 
-    public SerialPortWrapper(string portName)
+    public SerialPortWrapper(string portName, int baudRate)
     {
-        _serialPort = new(portName: portName);
+        _serialPort = new(portName: portName, baudRate: baudRate);
     }
 
     public int BytesToRead => _serialPort.BytesToRead;

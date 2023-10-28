@@ -18,7 +18,8 @@ partial class EdcHost : IEdcHost
             if (_playerIdToPortName.ContainsKey(e.PlayerId) == false)
             {
                 _slaveServer.OpenPort(
-                    portName: e.PortName
+                    portName: e.PortName,
+                    baudRate: e.BaudRate
                 );
                 _playerIdToPortName.Add(e.PlayerId, e.PortName);
             }
@@ -26,7 +27,8 @@ partial class EdcHost : IEdcHost
             {
                 string oldPortName = _playerIdToPortName[e.PlayerId];
                 _slaveServer.OpenPort(
-                    portName: e.PortName
+                    portName: e.PortName,
+                    baudRate: e.BaudRate
                 );
                 _playerIdToPortName[e.PlayerId] = e.PortName;
                 _slaveServer.ClosePort(oldPortName);

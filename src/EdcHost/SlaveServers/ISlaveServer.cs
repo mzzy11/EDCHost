@@ -31,7 +31,7 @@ public interface ISlaveServer : IDisposable
     /// </summary>
     void Stop();
 
-    void OpenPort(string portName);
+    void OpenPort(string portName, int baudRate);
 
     void ClosePort(string portName);
 
