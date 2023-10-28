@@ -36,6 +36,8 @@ public class CameraServer : ICameraServer
         camera.Close();
         camera.Dispose();
         _cameras.Remove(camera);
+
+        _logger.Information("Camera {cameraIndex} opened.", cameraIndex);
     }
 
     public ICamera GetCamera(int cameraIndex)
@@ -65,6 +67,8 @@ public class CameraServer : ICameraServer
 
         ICamera camera = _cameraFactory.Create(cameraIndex, _locator);
         _cameras.Add(camera);
+
+        _logger.Information("Camera {cameraIndex} opened.", cameraIndex);
     }
 
     public void Start()

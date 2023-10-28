@@ -1,14 +1,12 @@
 using System.Diagnostics;
 using Emgu.CV;
 using Emgu.CV.Structure;
-using Serilog;
 
 namespace EdcHost.CameraServers;
 
 public class Camera : ICamera
 {
     readonly ILocator _locator;
-    readonly ILogger _logger = Log.Logger.ForContext("Component", "CameraServers");
 
     public int CameraIndex { get; private set; }
     public int Height => _capture.Height;
@@ -37,7 +35,7 @@ public class Camera : ICamera
     {
         if (!_capture.IsOpened)
         {
-            throw new InvalidOperationException("camera is not open");
+            throw new InvalidOperationException($"camera {CameraIndex} is not open");
         }
 
         Debug.Assert(_task is not null);
@@ -62,7 +60,7 @@ public class Camera : ICamera
     {
         if (_capture.IsOpened)
         {
-            throw new InvalidOperationException("camera is already open");
+            throw new InvalidOperationException($"camera {CameraIndex} is already open");
         }
 
         Debug.Assert(_task is null);

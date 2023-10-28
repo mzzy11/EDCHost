@@ -46,36 +46,29 @@ class GameRunner : IGameRunner
 
     async Task Run()
     {
-        try
-        {
-            DateTime lastTickStartTime = DateTime.Now;
+        DateTime lastTickStartTime = DateTime.Now;
 
-            while (IsRunning)
+        while (IsRunning)
+        {
+            if (Game.CurrentStage is not IGame.Stage.Running && Game.CurrentStage is not IGame.Stage.Battling)
             {
-                if (Game.CurrentStage is not IGame.Stage.Running && Game.CurrentStage is not IGame.Stage.Battling)
-                {
-                    break;
-                }
-
-                // Wait for next tick
-                DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds((double)1000 / TicksPerSecondExpected);
-                if (currentTickStartTime > DateTime.Now)
-                {
-                    await Task.Delay(currentTickStartTime - DateTime.Now);
-                }
-                else
-                {
-                    currentTickStartTime = DateTime.Now;
-                }
-
-                Game.Tick();
-
-                lastTickStartTime = currentTickStartTime;
+                break;
             }
-        }
-        catch (Exception e)
-        {
-            Serilog.Log.Error($"an error occurred when running the game: {e.Message}");
+
+            // Wait for next tick
+            DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds((double)1000 / TicksPerSecondExpected);
+            if (currentTickStartTime > DateTime.Now)
+            {
+                await Task.Delay(currentTickStartTime - DateTime.Now);
+            }
+            else
+            {
+                currentTickStartTime = DateTime.Now;
+            }
+
+            Game.Tick();
+
+            lastTickStartTime = currentTickStartTime;
         }
     }
 }
