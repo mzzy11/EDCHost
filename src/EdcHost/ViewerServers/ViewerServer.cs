@@ -153,9 +153,13 @@ public class ViewerServer : IViewerServer
                 {
                     ParseMessage(text);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    _logger.Error(e, "Failed to parse message.");
+                    _logger.Error($"Failed to parse message: {text}");
+
+#if DEBUG
+                    throw;
+#endif
                 }
             };
 
@@ -166,15 +170,23 @@ public class ViewerServer : IViewerServer
                     string text = Encoding.UTF8.GetString(bytes);
                     ParseMessage(text);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    _logger.Error(e, "Failed to parse message.");
+                    _logger.Error($"Failed to parse message: {bytes}");
+
+#if DEBUG
+                    throw;
+#endif
                 }
             };
 
             socket.OnError = exception =>
             {
-                _logger.Error(exception, "Socket error.");
+#if DEBUG
+                _logger.Error(exception, "Socket error."); // Even in DEBUG, we don't throw the exception.
+#else
+                _logger.Error("Socket error.");
+#endif
 
                 // Close the socket.
                 socket.Close();
@@ -203,9 +215,13 @@ public class ViewerServer : IViewerServer
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                _logger.Error(e, "Error while sending message.");
+                _logger.Error("Error while sending message.");
+
+#if DEBUG
+                throw;
+#endif
             }
         }
     }

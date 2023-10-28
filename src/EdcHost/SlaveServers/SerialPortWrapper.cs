@@ -90,9 +90,13 @@ class SerialPortWrapper : ISerialPortWrapper
 
                 AfterReceive?.Invoke(this, new(_serialPort.PortName, bytes));
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                _logger.Error(e, "error while sending bytes");
+                _logger.Error("Error while receiving bytes.");
+
+#if DEBUG
+                throw;
+#endif
             }
         }
     }
@@ -110,9 +114,13 @@ class SerialPortWrapper : ISerialPortWrapper
                     _serialPort.Write(bytes, 0, bytes.Length);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                _logger.Error(e, "error while sending bytes");
+                _logger.Error("Error while sending bytes.");
+
+#if DEBUG
+                throw;
+#endif
             }
         }
     }

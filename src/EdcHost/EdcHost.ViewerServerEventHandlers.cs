@@ -1,3 +1,5 @@
+using System.Reflection.Metadata;
+
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
@@ -18,102 +20,68 @@ partial class EdcHost : IEdcHost
                         break;
 
                     case "RESET":
-                        HandleResetGameEvent();
+                        HandleResetGame();
                         break;
 
                     default:
-                        _logger.Error($"Invalid command: {message.Command}");
+                        _logger.Error($"Invalid command: {message.Command}.");
+
+#if DEBUG
+                        throw new Exception($"invalid command: {message.Command}");
+#else
                         break;
+#endif
                 }
                 break;
 
             case ViewerServers.HostConfigurationFromClientMessage message:
-
+                HandleUpdateConfiguration(message);
                 break;
 
             default:
-                _logger.Error($"Invalid message type: {e.Message.MessageType}");
+                _logger.Error($"Invalid message type: {e.Message.MessageType}.");
+
+#if DEBUG
+                throw new Exception($"invalid message type: {e.Message.MessageType}");
+#else
                 break;
+#endif
         }
     }
 
     void HandleStartGame()
     {
-        try
-        {
-            _gameRunner.Start();
-        }
-        catch (Exception exception)
-        {
-            string message = $"Failed to start game: {exception}";
-
-            _logger.Error(message);
-
-            _viewerServer.Publish(new ViewerServers.ErrorMessage()
-            {
-                ErrorCode = 0,
-                Message = message
-            });
-        }
+        _gameRunner.Start();
     }
 
     void HandleEndGame()
     {
-        try
-        {
-            _gameRunner.End();
-
-        }
-        catch (Exception exception)
-        {
-            string message = $"Failed to end game: {exception}";
-            _logger.Error(message);
-
-            _viewerServer.Publish(new ViewerServers.ErrorMessage()
-            {
-                ErrorCode = 0,
-                Message = message
-            });
-        }
+        _gameRunner.End();
     }
 
-    void HandleResetGameEvent()
+    void HandleResetGame()
     {
-        try
+        if (_gameRunner.IsRunning)
         {
-            if (_gameRunner.IsRunning)
-            {
-                _gameRunner.End();
-            }
-
-            _game = Games.IGame.Create(
-                diamondMines: _config.Game.DiamondMines,
-                goldMines: _config.Game.GoldMines,
-                ironMines: _config.Game.IronMines
-            );
-            _gameRunner = Games.IGameRunner.Create(_game);
-
-            _game.AfterGameStartEvent += HandleAfterGameStartEvent;
-            _game.AfterGameTickEvent += HandleAfterGameTickEvent;
-            _game.AfterJudgementEvent += HandleAfterJudgementEvent;
-
-            for (int i = 0; i < _game.Players.Count; i++)
-            {
-                _game.Players[i].OnAttack += HandlePlayerAttackEvent;
-                _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
-                _game.Players[i].OnDig += HandlePlayerDigEvent;
-            }
+            _gameRunner.End();
         }
-        catch (Exception exception)
-        {
-            string message = $"Failed to reset game: {exception}";
-            _logger.Error(message);
 
-            _viewerServer.Publish(new ViewerServers.ErrorMessage()
-            {
-                ErrorCode = 0,
-                Message = message
-            });
+        _game = Games.IGame.Create(
+            diamondMines: _config.Game.DiamondMines,
+            goldMines: _config.Game.GoldMines,
+            ironMines: _config.Game.IronMines
+        );
+        _gameRunner = Games.IGameRunner.Create(_game);
+
+        _game.AfterGameStartEvent += HandleAfterGameStartEvent;
+        _game.AfterGameTickEvent += HandleAfterGameTickEvent;
+        _game.AfterJudgementEvent += HandleAfterJudgementEvent;
+
+        for (int i = 0; i < _game.Players.Count; i++)
+        {
+            _game.Players[i].OnAttack += HandlePlayerAttackEvent;
+            _game.Players[i].OnPlace += HandlePlayerPlaceEvent;
+            _game.Players[i].OnDig += HandlePlayerDigEvent;
         }
     }
 

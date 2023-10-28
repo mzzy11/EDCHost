@@ -47,9 +47,13 @@ class Program
             {
                 config = JsonSerializer.Deserialize<Config>(File.ReadAllText(path))!;
             }
-            catch (JsonException e)
+            catch (JsonException)
             {
-                Log.Error(e, $"Error parsing config file at {path}, using default config");
+                Log.Error($"Error parsing config file at {path}, using default config");
+
+#if DEBUG
+                throw;
+#endif
             }
         }
 

@@ -55,32 +55,9 @@ partial class EdcHost : IEdcHost
     {
         _logger.Information("Starting...");
 
-        try
-        {
-            _cameraServer.Start();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start camera server: {e}");
-        }
-
-        try
-        {
-            _slaveServer.Start();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start slave server: {e}");
-        }
-
-        try
-        {
-            _viewerServer.Start();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to start viewer server: {e}");
-        }
+        _cameraServer.Start();
+        _slaveServer.Start();
+        _viewerServer.Start();
 
         _logger.Information("Started.");
     }
@@ -89,32 +66,9 @@ partial class EdcHost : IEdcHost
     {
         _logger.Information("Stopping...");
 
-        try
-        {
-            _cameraServer.Stop();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to stop camera server: {e}");
-        }
-
-        try
-        {
-            _slaveServer.Stop();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to stop slave server: {e}");
-        }
-
-        try
-        {
-            _viewerServer.Stop();
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"failed to stop viewer server: {e}");
-        }
+        _cameraServer.Stop();
+        _slaveServer.Stop();
+        _viewerServer.Stop();
 
         _logger.Information("Stopped.");
     }
