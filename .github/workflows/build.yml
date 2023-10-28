@@ -8,21 +8,13 @@ jobs:
     strategy:
       matrix:
         runtime:
+          - linux-arm
           - linux-arm64
-          - linux-x64
-          - linux-musl-arm64
-          - linux-musl-x64
-          - osx-arm64
-          - osx-x64
+          - ubuntu-x64
           - win-arm64
           - win-x64
-        include:
-          - runs-on: ubuntu-latest
-          - runs-on: macos-latest
-            runtime: osx-x64
-          - runs-on: macos-latest
-            runtime: osx-arm64
-    runs-on: ${{ matrix.runs-on }}
+          - win-x86
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
