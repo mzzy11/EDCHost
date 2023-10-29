@@ -8,8 +8,8 @@ public interface ICamera : IDisposable
     byte[]? JpegData { get; }
     ILocator Locator { get; set; }
     int Width { get; }
-    Tuple<float, float>? TargetPosition { get; }
-    Tuple<float, float>? TargetPositionNotCalibrated { get; }
+    Tuple<float, float>? TargetLocation { get; }
+    Tuple<float, float>? TargetLocationNotCalibrated { get; }
 
     void Close();
     void Open();
