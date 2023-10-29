@@ -1,7 +1,6 @@
-using Xunit;
-
-using EdcHost.ViewerServers;
 using System.Text;
+using EdcHost.ViewerServers;
+using Xunit;
 
 namespace EdcHost.Tests.IntegrationTests;
 
