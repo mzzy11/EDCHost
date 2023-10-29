@@ -30,7 +30,7 @@ class GameRunner : IGameRunner
 
         Game.Start();
 
-        _task = TaskFunc();
+        _task = Task.Run(TaskFunc);
     }
 
     public void End()
@@ -46,7 +46,7 @@ class GameRunner : IGameRunner
         _task.Wait();
     }
 
-    async Task TaskFunc()
+    void TaskFunc()
     {
         DateTime lastTickStartTime = DateTime.Now;
 
@@ -61,7 +61,7 @@ class GameRunner : IGameRunner
             DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds((double)1000 / TicksPerSecondExpected);
             if (currentTickStartTime > DateTime.Now)
             {
-                await Task.Delay(currentTickStartTime - DateTime.Now);
+                Task.Delay(currentTickStartTime - DateTime.Now).Wait();
             }
             currentTickStartTime = DateTime.Now;
 

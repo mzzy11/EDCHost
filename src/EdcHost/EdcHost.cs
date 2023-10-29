@@ -6,6 +6,8 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
+    const int FrequencyOfSendingToSlave = 20;
+    const int FrequencyOfSendingToViewer = 60;
     const int MapHeight = 8;
     const int MapWidth = 8;
 
@@ -22,8 +24,10 @@ partial class EdcHost : IEdcHost
 
     Games.IGame _game;
     Games.IGameRunner _gameRunner;
-    Task? _task = null;
     CancellationTokenSource? _taskCancellationTokenSource = null;
+    Task? _taskForReadingCamera = null;
+    Task? _taskForSendingToSlave = null;
+    Task? _taskForSendingToViewer = null;
 
     public EdcHost(Config config)
     {
@@ -59,15 +63,19 @@ partial class EdcHost : IEdcHost
     {
         _logger.Information("Starting...");
 
-        Debug.Assert(_task is null);
         Debug.Assert(_taskCancellationTokenSource is null);
+        Debug.Assert(_taskForReadingCamera is null);
+        Debug.Assert(_taskForSendingToSlave is null);
+        Debug.Assert(_taskForSendingToViewer is null);
 
         _cameraServer.Start();
         _slaveServer.Start();
         _viewerServer.Start();
 
         _taskCancellationTokenSource = new CancellationTokenSource();
-        _task = Task.Run(TaskFunc);
+        _taskForReadingCamera = Task.Run(TaskForReadingCameraFunc);
+        _taskForSendingToSlave = Task.Run(TaskForSendingToSlaveFunc);
+        _taskForSendingToViewer = Task.Run(TaskForSendingToViewerFunc);
 
         IsRunning = true;
 
@@ -78,13 +86,18 @@ partial class EdcHost : IEdcHost
     {
         _logger.Information("Stopping...");
 
-        Debug.Assert(_task is not null);
         Debug.Assert(_taskCancellationTokenSource is not null);
+        Debug.Assert(_taskForReadingCamera is not null);
+        Debug.Assert(_taskForSendingToSlave is not null);
+        Debug.Assert(_taskForSendingToViewer is not null);
 
         _taskCancellationTokenSource.Cancel();
-        _task.Wait();
+        _taskForReadingCamera.Wait();
+        _taskForSendingToSlave.Wait();
+        _taskForSendingToViewer.Wait();
+
         _taskCancellationTokenSource.Dispose();
-        _task.Dispose();
+        _taskForReadingCamera.Dispose();
 
         _cameraServer.Stop();
         _slaveServer.Stop();
@@ -95,228 +108,249 @@ partial class EdcHost : IEdcHost
         _logger.Information("Stopped.");
     }
 
-    void ReadFromCamera()
+    void TaskForReadingCameraFunc()
     {
-        foreach (Games.IPlayer player in _game.Players)
+        while (!_taskCancellationTokenSource?.IsCancellationRequested ?? false)
         {
-            // Skip if no hardware info is found
-            if (_playerHardwareInfo.TryGetValue(player.PlayerId, out PlayerHardwareInfo playerHardwareInfo) is false)
+            foreach (Games.IPlayer player in _game.Players)
             {
-                continue;
-            }
+                // Skip if no hardware info is found
+                if (_playerHardwareInfo.TryGetValue(player.PlayerId, out PlayerHardwareInfo playerHardwareInfo) is false)
+                {
+                    continue;
+                }
 
-            // If the camera is not connected, skip this player
-            int? cameraIndex = playerHardwareInfo.CameraIndex;
-            if (cameraIndex is null)
-            {
-                continue;
-            }
+                // If the camera is not connected, skip this player
+                int? cameraIndex = playerHardwareInfo.CameraIndex;
+                if (cameraIndex is null)
+                {
+                    continue;
+                }
 
-            CameraServers.ICamera camera = _cameraServer.GetCamera(cameraIndex.Value) ?? throw new Exception($"camera {cameraIndex} is not found");
-            Tuple<float, float>? location = camera.TargetLocation;
-            Games.IPosition<float>? position = location is null ? null : new Games.Position<float>(location.Item1 * MapWidth, location.Item2 * MapHeight);
+                CameraServers.ICamera camera = _cameraServer.GetCamera(cameraIndex.Value) ?? throw new Exception($"camera {cameraIndex} is not found");
+                Tuple<float, float>? location = camera.TargetLocation;
+                Games.IPosition<float>? position = location is null ? null : new Games.Position<float>(location.Item1 * MapWidth, location.Item2 * MapHeight);
 
-            // TODO: position may be null but legal.
-            if (position is null)
-            {
-                player.Move(float.NaN, float.NaN);
-            }
-            else
-            {
-                player.Move(position.X, position.Y);
+                // TODO: position may be null but legal.
+                if (position is null)
+                {
+                    player.Move(float.NaN, float.NaN);
+                }
+                else
+                {
+                    player.Move(position.X, position.Y);
+                }
             }
         }
     }
 
-    void TaskFunc()
+    void TaskForSendingToSlaveFunc()
     {
-        while (!_taskCancellationTokenSource?.Token.IsCancellationRequested ?? false)
+        DateTime lastTickStartTime = DateTime.Now;
+
+        while (!_taskCancellationTokenSource?.IsCancellationRequested ?? false)
         {
-            ReadFromCamera();
-            SendToSlave();
-            SendToViewer();
+            // Wait for next tick
+            DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds(
+                (double)1000 / FrequencyOfSendingToSlave);
+            if (currentTickStartTime > DateTime.Now)
+            {
+                Task.Delay(currentTickStartTime - DateTime.Now).Wait();
+            }
+            currentTickStartTime = DateTime.Now;
+
+            List<int> heightOfChunks = new();
+            foreach (Games.IChunk chunk in _game.GameMap.Chunks)
+            {
+                heightOfChunks.Add(chunk.Height);
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                string? portName = _playerHardwareInfo.GetValueOrDefault(_game.Players[i].PlayerId).PortName;
+                if (portName is null)
+                {
+                    continue;
+                }
+
+                _slaveServer.Publish(
+                    portName: portName,
+                    gameStage: (int)_game.CurrentStage,
+                    elapsedTime: _game.ElapsedTicks,
+                    heightOfChunks: heightOfChunks,
+                    hasBed: _game.Players[i].HasBed,
+                    hasBedOpponent: _game.Players.Any(player => player.HasBed && player.PlayerId != _game.Players[i].PlayerId),
+                    positionX: _game.Players[i].PlayerPosition.X,
+                    positionY: _game.Players[i].PlayerPosition.Y,
+                    positionOpponentX: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.X,
+                    positionOpponentY: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.Y,
+                    agility: _game.Players[i].ActionPoints,
+                    health: _game.Players[i].Health,
+                    maxHealth: _game.Players[i].MaxHealth,
+                    strength: _game.Players[i].Strength,
+                    emeraldCount: _game.Players[i].EmeraldCount,
+                    woolCount: _game.Players[i].WoolCount
+                );
+            }
         }
     }
 
-    void SendToSlave()
+    void TaskForSendingToViewerFunc()
     {
-        List<int> heightOfChunks = new();
-        foreach (Games.IChunk chunk in _game.GameMap.Chunks)
-        {
-            heightOfChunks.Add(chunk.Height);
-        }
+        DateTime lastTickStartTime = DateTime.Now;
 
-        for (int i = 0; i < 2; i++)
+        while (!_taskCancellationTokenSource?.IsCancellationRequested ?? false)
         {
-            string? portName = _playerHardwareInfo.GetValueOrDefault(_game.Players[i].PlayerId).PortName;
-            if (portName is null)
+            // Wait for next tick
+            DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds(
+                (double)1000 / FrequencyOfSendingToViewer);
+            if (currentTickStartTime > DateTime.Now)
             {
-                continue;
+                Task.Delay(currentTickStartTime - DateTime.Now).Wait();
+            }
+            currentTickStartTime = DateTime.Now;
+
+            List<ViewerServers.CompetitionUpdateMessage.Camera> cameraInfoList = new();
+            foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
+            {
+                CameraServers.ICamera? camera = _cameraServer.GetCamera(cameraIndex);
+                if (camera?.IsOpened ?? false)
+                {
+                    cameraInfoList.Add(new ViewerServers.CompetitionUpdateMessage.Camera
+                    {
+                        cameraId = cameraIndex,
+                        height = camera.Height,
+                        width = camera.Width,
+                        frameData = Convert.ToBase64String(camera.JpegData ?? new byte[] { })
+                    });
+                }
             }
 
-            _slaveServer.Publish(
-                portName: portName,
-                gameStage: (int)_game.CurrentStage,
-                elapsedTime: _game.ElapsedTicks,
-                heightOfChunks: heightOfChunks,
-                hasBed: _game.Players[i].HasBed,
-                hasBedOpponent: _game.Players.Any(player => player.HasBed && player.PlayerId != _game.Players[i].PlayerId),
-                positionX: _game.Players[i].PlayerPosition.X,
-                positionY: _game.Players[i].PlayerPosition.Y,
-                positionOpponentX: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.X,
-                positionOpponentY: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.Y,
-                agility: _game.Players[i].ActionPoints,
-                health: _game.Players[i].Health,
-                maxHealth: _game.Players[i].MaxHealth,
-                strength: _game.Players[i].Strength,
-                emeraldCount: _game.Players[i].EmeraldCount,
-                woolCount: _game.Players[i].WoolCount
-            );
-        }
-    }
 
-    void SendToViewer()
-    {
-        List<ViewerServers.CompetitionUpdateMessage.Camera> cameraInfoList = new();
-        foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
-        {
-            CameraServers.ICamera? camera = _cameraServer.GetCamera(cameraIndex);
-            if (camera?.IsOpened ?? false)
+            // Events for this tick;
+            List<ViewerServers.CompetitionUpdateMessage.Event> currentEvents = new();
+            while (!_playerEventQueue.IsEmpty)
             {
-                cameraInfoList.Add(new ViewerServers.CompetitionUpdateMessage.Camera
+                if (_playerEventQueue.TryDequeue(out EventArgs? playerEvent) && playerEvent is not null)
                 {
-                    cameraId = cameraIndex,
-                    height = camera.Height,
-                    width = camera.Width,
-                    frameData = Convert.ToBase64String(camera.JpegData ?? new byte[] { })
-                });
+                    ViewerServers.CompetitionUpdateMessage.Event currentEvent = new();
+                    switch (playerEvent)
+                    {
+                        case Games.PlayerDigEventArgs digEvent:
+                            currentEvent = new()
+                            {
+                                playerDigEvent = new()
+                                {
+                                    playerId = digEvent.Player.PlayerId,
+                                    targetChunk = digEvent.TargetChunk
+                                }
+                            };
+                            break;
+                        case Games.PlayerPickUpEventArgs pickUpEvent:
+                            currentEvent = new()
+                            {
+                                playerPickUpEvent = new()
+                                {
+                                    playerId = pickUpEvent.Player.PlayerId,
+                                    itemCount = pickUpEvent.ItemCount,
+                                    itemType = (ViewerServers.CompetitionUpdateMessage.Event.PlayerPickUpEvent.ItemType)pickUpEvent.MineType
+                                }
+                            };
+                            break;
+                        case Games.PlayerPlaceEventArgs placeEvent:
+                            currentEvent = new()
+                            {
+                                playerPlaceBlockEvent = new()
+                                {
+                                    playerId = placeEvent.Player.PlayerId
+                                    // TODO: finish the event param
+                                }
+                            };
+                            break;
+                        // TODO: finish other cases
+                        default:
+                            break;
+                    }
+                    currentEvents.Add(currentEvent);
+                }
             }
+
+
+            // Send packet to the viewer
+            _viewerServer.Publish(new ViewerServers.CompetitionUpdateMessage()
+            {
+                cameras = cameraInfoList,
+
+                chunks = _game.GameMap.Chunks.Select(chunk => new ViewerServers.CompetitionUpdateMessage.Chunk()
+                {
+                    chunkId = chunk.Position != null ? chunk.Position.X + chunk.Position.Y * 8 : -1,
+                    height = chunk.Height,
+                    position = chunk.Position != null ? new ViewerServers.CompetitionUpdateMessage.Chunk.Position()
+                    {
+                        x = chunk.Position.X,
+                        y = chunk.Position.Y
+                    } : null
+                }).ToList(),
+
+                events = currentEvents,
+
+                info = new ViewerServers.CompetitionUpdateMessage.Info()
+                {
+                    stage = _game.CurrentStage switch
+                    {
+                        Games.IGame.Stage.Ready => ViewerServers.CompetitionUpdateMessage.Info.Stage.Ready,
+                        Games.IGame.Stage.Running => ViewerServers.CompetitionUpdateMessage.Info.Stage.Running,
+                        Games.IGame.Stage.Ended => ViewerServers.CompetitionUpdateMessage.Info.Stage.Ended,
+                        Games.IGame.Stage.Finished => ViewerServers.CompetitionUpdateMessage.Info.Stage.Finished,
+                        Games.IGame.Stage.Battling => ViewerServers.CompetitionUpdateMessage.Info.Stage.Battling,
+                        _ => throw new NotImplementedException($"{_game.CurrentStage} is not implemented")
+                    },
+                    elapsedTicks = _game.ElapsedTicks
+                },
+
+                mines = _game.Mines.Select(mine => new ViewerServers.CompetitionUpdateMessage.Mine()
+                {
+                    mineId = mine.MineId.ToString(),
+                    accumulatedOreCount = mine.AccumulatedOreCount,
+                    oreType = (ViewerServers.CompetitionUpdateMessage.Mine.OreType)mine.OreKind,
+                    position = new ViewerServers.CompetitionUpdateMessage.Mine.Position()
+                    {
+                        x = mine.Position.X,
+                        y = mine.Position.Y
+                    }
+                }).ToList(),
+
+                players = _game.Players.Select(player => new ViewerServers.CompetitionUpdateMessage.Player()
+                {
+                    playerId = (player.PlayerId),
+
+                    // TODO: Find the correspondence between the camera and the player 
+                    cameraId = player.PlayerId,
+
+                    attributes = new()
+                    {
+                        agility = player.ActionPoints,
+                        strength = player.Strength,
+                        maxHealth = player.MaxHealth
+                    },
+                    health = player.Health,
+                    homePosition = new ViewerServers.CompetitionUpdateMessage.Player.HomePosition()
+                    {
+                        x = player.SpawnPoint.X,
+                        y = player.SpawnPoint.Y,
+                    },
+                    inventory = new ViewerServers.CompetitionUpdateMessage.Player.Inventory()
+                    {
+                        emerald = player.EmeraldCount,
+                        wool = player.WoolCount
+                    },
+                    position = new ViewerServers.CompetitionUpdateMessage.Player.Position()
+                    {
+                        x = player.PlayerPosition.X,
+                        y = player.PlayerPosition.Y
+                    }
+                }).ToList()
+            });
         }
-
-
-        // Events for this tick;
-        List<ViewerServers.CompetitionUpdateMessage.Event> currentEvents = new();
-        while (!_playerEventQueue.IsEmpty)
-        {
-            if (_playerEventQueue.TryDequeue(out EventArgs? playerEvent) && playerEvent is not null)
-            {
-                ViewerServers.CompetitionUpdateMessage.Event currentEvent = new();
-                switch (playerEvent)
-                {
-                    case Games.PlayerDigEventArgs digEvent:
-                        currentEvent = new()
-                        {
-                            playerDigEvent = new()
-                            {
-                                playerId = digEvent.Player.PlayerId,
-                                targetChunk = digEvent.TargetChunk
-                            }
-                        };
-                        break;
-                    case Games.PlayerPickUpEventArgs pickUpEvent:
-                        currentEvent = new()
-                        {
-                            playerPickUpEvent = new()
-                            {
-                                playerId = pickUpEvent.Player.PlayerId,
-                                itemCount = pickUpEvent.ItemCount,
-                                itemType = (ViewerServers.CompetitionUpdateMessage.Event.PlayerPickUpEvent.ItemType)pickUpEvent.MineType
-                            }
-                        };
-                        break;
-                    case Games.PlayerPlaceEventArgs placeEvent:
-                        currentEvent = new()
-                        {
-                            playerPlaceBlockEvent = new()
-                            {
-                                playerId = placeEvent.Player.PlayerId
-                                // TODO: finish the event param
-                            }
-                        };
-                        break;
-                    // TODO: finish other cases
-                    default:
-                        break;
-                }
-                currentEvents.Add(currentEvent);
-            }
-        }
-
-
-        // Send packet to the viewer
-        _viewerServer.Publish(new ViewerServers.CompetitionUpdateMessage()
-        {
-            cameras = cameraInfoList,
-
-            chunks = _game.GameMap.Chunks.Select(chunk => new ViewerServers.CompetitionUpdateMessage.Chunk()
-            {
-                chunkId = chunk.Position != null ? chunk.Position.X + chunk.Position.Y * 8 : -1,
-                height = chunk.Height,
-                position = chunk.Position != null ? new ViewerServers.CompetitionUpdateMessage.Chunk.Position()
-                {
-                    x = chunk.Position.X,
-                    y = chunk.Position.Y
-                } : null
-            }).ToList(),
-
-            events = currentEvents,
-
-            info = new ViewerServers.CompetitionUpdateMessage.Info()
-            {
-                stage = _game.CurrentStage switch
-                {
-                    Games.IGame.Stage.Ready => ViewerServers.CompetitionUpdateMessage.Info.Stage.Ready,
-                    Games.IGame.Stage.Running => ViewerServers.CompetitionUpdateMessage.Info.Stage.Running,
-                    Games.IGame.Stage.Ended => ViewerServers.CompetitionUpdateMessage.Info.Stage.Ended,
-                    Games.IGame.Stage.Finished => ViewerServers.CompetitionUpdateMessage.Info.Stage.Finished,
-                    Games.IGame.Stage.Battling => ViewerServers.CompetitionUpdateMessage.Info.Stage.Battling,
-                    _ => throw new NotImplementedException($"{_game.CurrentStage} is not implemented")
-                },
-                elapsedTicks = _game.ElapsedTicks
-            },
-
-            mines = _game.Mines.Select(mine => new ViewerServers.CompetitionUpdateMessage.Mine()
-            {
-                mineId = mine.MineId.ToString(),
-                accumulatedOreCount = mine.AccumulatedOreCount,
-                oreType = (ViewerServers.CompetitionUpdateMessage.Mine.OreType)mine.OreKind,
-                position = new ViewerServers.CompetitionUpdateMessage.Mine.Position()
-                {
-                    x = mine.Position.X,
-                    y = mine.Position.Y
-                }
-            }).ToList(),
-
-            players = _game.Players.Select(player => new ViewerServers.CompetitionUpdateMessage.Player()
-            {
-                playerId = (player.PlayerId),
-
-                // TODO: Find the correspondence between the camera and the player 
-                cameraId = player.PlayerId,
-
-                attributes = new()
-                {
-                    agility = player.ActionPoints,
-                    strength = player.Strength,
-                    maxHealth = player.MaxHealth
-                },
-                health = player.Health,
-                homePosition = new ViewerServers.CompetitionUpdateMessage.Player.HomePosition()
-                {
-                    x = player.SpawnPoint.X,
-                    y = player.SpawnPoint.Y,
-                },
-                inventory = new ViewerServers.CompetitionUpdateMessage.Player.Inventory()
-                {
-                    emerald = player.EmeraldCount,
-                    wool = player.WoolCount
-                },
-                position = new ViewerServers.CompetitionUpdateMessage.Player.Position()
-                {
-                    x = player.PlayerPosition.X,
-                    y = player.PlayerPosition.Y
-                }
-            }).ToList()
-        });
     }
 }

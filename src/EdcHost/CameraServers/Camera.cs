@@ -75,7 +75,7 @@ public class Camera : ICamera
         _task = Task.Run(TaskFunc);
     }
 
-    async Task TaskFunc()
+    void TaskFunc()
     {
         Debug.Assert(JpegData is null);
         Debug.Assert(TargetLocation is null);
@@ -83,8 +83,6 @@ public class Camera : ICamera
 
         while (!_taskCancellationTokenSource?.Token.IsCancellationRequested ?? false)
         {
-            await Task.Delay(0);
-
             using Mat frame = _capture.QueryFrame();
 
             if (frame is null)
