@@ -111,7 +111,7 @@ partial class EdcHost : IEdcHost
                     break;
 
                 default:
-                    _logger.Warning($"No item with id {e.Item}. Action rejected."); // Do not throw exception here.
+                    _logger.Error($"No item with id {e.Item}. Action rejected."); // Do not throw exception here.
                     break;
             }
         }

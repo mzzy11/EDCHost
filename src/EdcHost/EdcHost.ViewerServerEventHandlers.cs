@@ -1,4 +1,3 @@
-using System.Reflection.Metadata;
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
@@ -26,7 +25,7 @@ partial class EdcHost : IEdcHost
                         HandleGetHostConfiguration();
                         break;
                     default:
-                        _logger.Warning($"Invalid command: {message.Command}.");
+                        _logger.Error($"Invalid command: {message.Command}.");
                         break;
                 }
                 break;
@@ -36,7 +35,7 @@ partial class EdcHost : IEdcHost
                 break;
 
             default:
-                _logger.Warning($"Invalid message type: {e.Message.MessageType}.");
+                _logger.Error($"Invalid message type: {e.Message.MessageType}.");
                 break;
         }
     }
@@ -65,8 +64,6 @@ partial class EdcHost : IEdcHost
         );
         _gameRunner = Games.IGameRunner.Create(_game);
 
-        _game.AfterGameStartEvent += HandleAfterGameStartEvent;
-        _game.AfterGameTickEvent += HandleAfterGameTickEvent;
         _game.AfterJudgementEvent += HandleAfterJudgementEvent;
 
         for (int i = 0; i < _game.Players.Count; i++)
