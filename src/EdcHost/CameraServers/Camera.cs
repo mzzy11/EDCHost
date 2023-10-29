@@ -27,7 +27,7 @@ public class Camera : ICamera
         Locator = locator;
 
         _taskCancellationTokenSource = new();
-        _task = Task.Run(TaskForCapturingFunc);
+        _task = Task.Run(TaskFunc);
     }
 
     public void Close()
@@ -72,10 +72,10 @@ public class Camera : ICamera
         _capture = new(CameraIndex);
 
         _taskCancellationTokenSource = new();
-        _task = Task.Run(TaskForCapturingFunc);
+        _task = Task.Run(TaskFunc);
     }
 
-    async Task TaskForCapturingFunc()
+    async Task TaskFunc()
     {
         Debug.Assert(JpegData is null);
         Debug.Assert(TargetPosition is null);

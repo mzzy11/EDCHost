@@ -28,7 +28,7 @@ class GameRunner : IGameRunner
 
         Game.Start();
 
-        _task = Run();
+        _task = TaskFunc();
     }
 
     public void End()
@@ -44,7 +44,7 @@ class GameRunner : IGameRunner
         _task.Wait();
     }
 
-    async Task Run()
+    async Task TaskFunc()
     {
         DateTime lastTickStartTime = DateTime.Now;
 
