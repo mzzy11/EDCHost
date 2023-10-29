@@ -71,12 +71,6 @@ partial class EdcHost : IEdcHost
         IsRunning = true;
 
         _logger.Information("Started.");
-
-
-        _logger.Information("Test information");
-        _logger.Warning("Test warning");
-        _logger.Error("Test error");
-        _logger.Fatal("Test fatal");
     }
 
     public void Stop()
