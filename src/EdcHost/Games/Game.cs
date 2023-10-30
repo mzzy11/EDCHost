@@ -124,11 +124,6 @@ partial class Game : IGame
 
         //TODO: Start game after all players are ready
 
-        foreach (IMine mine in Mines)
-        {
-            mine.GenerateOre(ElapsedTicks);
-        }
-
         Winner = null;
 
         _isAllBedsDestroyed = false;
