@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Serilog;
 using Serilog.Templates;
+using Serilog.Templates.Themes;
 
 namespace EdcHost;
 
@@ -69,27 +70,27 @@ class Program
         {
             "Verbose" => new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate, theme: TemplateTheme.Literate))
                 .CreateLogger(),
             "Debug" => new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate, theme: TemplateTheme.Literate))
                 .CreateLogger(),
             "Information" => new LoggerConfiguration()
                 .MinimumLevel.Information()
-                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate, theme: TemplateTheme.Literate))
                 .CreateLogger(),
             "Warning" => new LoggerConfiguration()
                 .MinimumLevel.Warning()
-                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate, theme: TemplateTheme.Literate))
                 .CreateLogger(),
             "Error" => new LoggerConfiguration()
                 .MinimumLevel.Error()
-                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate, theme: TemplateTheme.Literate))
                 .CreateLogger(),
             "Fatal" => new LoggerConfiguration()
                 .MinimumLevel.Fatal()
-                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate))
+                .WriteTo.Console(new ExpressionTemplate(SerilogTemplate, theme: TemplateTheme.Literate))
                 .CreateLogger(),
             _ => throw new ArgumentOutOfRangeException(nameof(loggingLevelString), loggingLevelString, "invalid logging level")
         };

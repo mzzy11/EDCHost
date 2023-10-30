@@ -11,8 +11,8 @@ public class Camera : ICamera
     public bool IsOpened => _capture.IsOpened;
     public byte[]? JpegData { get; private set; }
     public ILocator Locator { get; set; }
-    public Tuple<float, float>? TargetPosition { get; private set; }
-    public Tuple<float, float>? TargetPositionNotCalibrated { get; private set; }
+    public Tuple<float, float>? TargetLocation { get; private set; }
+    public Tuple<float, float>? TargetLocationNotCalibrated { get; private set; }
     public int Width => _capture.Width;
 
     VideoCapture _capture;
@@ -27,7 +27,7 @@ public class Camera : ICamera
         Locator = locator;
 
         _taskCancellationTokenSource = new();
-        _task = Task.Run(TaskForCapturingFunc);
+        _task = Task.Run(TaskFunc);
     }
 
     public void Close()
@@ -72,19 +72,17 @@ public class Camera : ICamera
         _capture = new(CameraIndex);
 
         _taskCancellationTokenSource = new();
-        _task = Task.Run(TaskForCapturingFunc);
+        _task = Task.Run(TaskFunc);
     }
 
-    async Task TaskForCapturingFunc()
+    void TaskFunc()
     {
         Debug.Assert(JpegData is null);
-        Debug.Assert(TargetPosition is null);
-        Debug.Assert(TargetPositionNotCalibrated is null);
+        Debug.Assert(TargetLocation is null);
+        Debug.Assert(TargetLocationNotCalibrated is null);
 
         while (!_taskCancellationTokenSource?.Token.IsCancellationRequested ?? false)
         {
-            await Task.Delay(10);
-
             using Mat frame = _capture.QueryFrame();
 
             if (frame is null)
@@ -105,18 +103,18 @@ public class Camera : ICamera
 
             if (recognitionResult is null)
             {
-                TargetPosition = null;
-                TargetPositionNotCalibrated = null;
+                TargetLocation = null;
+                TargetLocationNotCalibrated = null;
             }
             else
             {
-                TargetPosition = recognitionResult.Location;
-                TargetPositionNotCalibrated = recognitionResult.CalibratedLocation;
+                TargetLocation = recognitionResult.Location;
+                TargetLocationNotCalibrated = recognitionResult.CalibratedLocation;
             }
         }
 
         JpegData = null;
-        TargetPosition = null;
-        TargetPositionNotCalibrated = null;
+        TargetLocation = null;
+        TargetLocationNotCalibrated = null;
     }
 }

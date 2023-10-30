@@ -8,8 +8,10 @@ class GameRunner : IGameRunner
 
     public bool IsRunning { get; private set; } = false;
 
+    public double ActualTps => Game.CurrentStage is not IGame.Stage.Running ? 0 : 1000 / _lastTickDuration.TotalMilliseconds;
     public IGame Game { get; }
 
+    TimeSpan _lastTickDuration = TimeSpan.MaxValue;
     Task? _task = null;
 
     public GameRunner(IGame game)
@@ -28,7 +30,7 @@ class GameRunner : IGameRunner
 
         Game.Start();
 
-        _task = Run();
+        _task = Task.Run(TaskFunc);
     }
 
     public void End()
@@ -44,7 +46,7 @@ class GameRunner : IGameRunner
         _task.Wait();
     }
 
-    async Task Run()
+    void TaskFunc()
     {
         DateTime lastTickStartTime = DateTime.Now;
 
@@ -59,12 +61,11 @@ class GameRunner : IGameRunner
             DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds((double)1000 / TicksPerSecondExpected);
             if (currentTickStartTime > DateTime.Now)
             {
-                await Task.Delay(currentTickStartTime - DateTime.Now);
+                Task.Delay(currentTickStartTime - DateTime.Now).Wait();
             }
-            else
-            {
-                currentTickStartTime = DateTime.Now;
-            }
+            currentTickStartTime = DateTime.Now;
+
+            _lastTickDuration = DateTime.Now - lastTickStartTime;
 
             Game.Tick();
 

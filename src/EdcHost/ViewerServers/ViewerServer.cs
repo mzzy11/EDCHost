@@ -80,7 +80,16 @@ public class ViewerServer : IViewerServer
 
         foreach (IWebSocketConnection socket in _sockets.Values)
         {
-            socket.Send(jsonString);
+            try
+            {
+                socket.Send(jsonString).Wait();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to send message to {socket.ConnectionInfo.ClientIpAddress}: {ex.Message}");
+
+                // Do not throw even in debug mode to allow program to continue after a client disconnects.
+            }
         }
     }
 
@@ -144,10 +153,6 @@ public class ViewerServer : IViewerServer
                 catch (Exception)
                 {
                     _logger.Error($"Failed to parse message: {text}");
-
-#if DEBUG
-                    throw;
-#endif
                 }
             };
 
@@ -161,10 +166,6 @@ public class ViewerServer : IViewerServer
                 catch (Exception)
                 {
                     _logger.Error($"Failed to parse message: {bytes}");
-
-#if DEBUG
-                    throw;
-#endif
                 }
             };
 

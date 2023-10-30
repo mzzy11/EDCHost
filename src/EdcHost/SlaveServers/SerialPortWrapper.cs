@@ -72,12 +72,10 @@ class SerialPortWrapper : ISerialPortWrapper
         _queueOfBytesToSend.Enqueue(bytes);
     }
 
-    private async Task TaskForReceivingFunc()
+    private void TaskForReceivingFunc()
     {
         while (_serialPort.IsOpen)
         {
-            await Task.Delay(0);
-
             try
             {
                 if (_serialPort.BytesToRead == 0)
@@ -101,12 +99,10 @@ class SerialPortWrapper : ISerialPortWrapper
         }
     }
 
-    private async Task TaskForSendingFunc()
+    private void TaskForSendingFunc()
     {
         while (_serialPort.IsOpen)
         {
-            await Task.Delay(0);
-
             try
             {
                 if (_queueOfBytesToSend.TryDequeue(out byte[]? bytes))

@@ -5,6 +5,8 @@ namespace EdcHost;
 /// </summary>
 public interface IEdcHost
 {
+    bool IsRunning { get; }
+
     /// <summary>
     /// Starts the host.
     /// </summary>

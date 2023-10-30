@@ -159,7 +159,7 @@ class Player : IPlayer
 
         if (EmeraldCount < price)
         {
-            Serilog.Log.Warning(
+            Serilog.Log.Error(
                 $"Failed to trade: Player {PlayerId} doesn't have enough emerald."
             );
             return false;
@@ -190,7 +190,7 @@ class Player : IPlayer
             case IPlayer.CommodityKindType.Wool:
                 if (WoolCount >= Game.MaximumItemCount)
                 {
-                    Serilog.Log.Warning(
+                    Serilog.Log.Error(
                         $"Failed to trade: Player {PlayerId} cannot hold more wools."
                     );
                     return false;

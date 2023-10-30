@@ -1,4 +1,3 @@
-using System.Reflection.Metadata;
 namespace EdcHost;
 
 partial class EdcHost : IEdcHost
@@ -26,7 +25,7 @@ partial class EdcHost : IEdcHost
                         HandleGetHostConfiguration();
                         break;
                     default:
-                        _logger.Warning($"Invalid command: {message.Command}.");
+                        _logger.Error($"Invalid command: {message.Command}.");
                         break;
                 }
                 break;
@@ -36,7 +35,7 @@ partial class EdcHost : IEdcHost
                 break;
 
             default:
-                _logger.Warning($"Invalid message type: {e.Message.MessageType}.");
+                _logger.Error($"Invalid message type: {e.Message.MessageType}.");
                 break;
         }
     }
@@ -65,8 +64,6 @@ partial class EdcHost : IEdcHost
         );
         _gameRunner = Games.IGameRunner.Create(_game);
 
-        _game.AfterGameStartEvent += HandleAfterGameStartEvent;
-        _game.AfterGameTickEvent += HandleAfterGameTickEvent;
         _game.AfterJudgementEvent += HandleAfterJudgementEvent;
 
         for (int i = 0; i < _game.Players.Count; i++)
@@ -79,12 +76,17 @@ partial class EdcHost : IEdcHost
 
     void HandleGetHostConfiguration()
     {
-        ViewerServers.HostConfigurationFromClientMessage configMessage = new ViewerServers.HostConfigurationFromClientMessage()
+        ViewerServers.HostConfigurationFromServerMessage configMessage = new ViewerServers.HostConfigurationFromServerMessage()
         {
             Players = _game.Players.Select((player, playerIndex) =>
                 {
-                    int? cameraIndex = _playerHardwareInfo[playerIndex].CameraIndex;
+                    if (_playerHardwareInfo.Count <= playerIndex)
+                    {
+                        // Empty
+                        return new ViewerServers.HostConfigurationFromServerMessage.PlayerType();
+                    }
 
+                    int? cameraIndex = _playerHardwareInfo[playerIndex].CameraIndex;
 
                     CameraServers.ICamera? camera = null;
                     if (cameraIndex is not null)
@@ -95,13 +97,13 @@ partial class EdcHost : IEdcHost
                     string? portName = _playerHardwareInfo[playerIndex].PortName;
                     int baudRate = _playerHardwareInfo[playerIndex].BaudRate;
 
-                    return new ViewerServers.HostConfigurationFromClientMessage.PlayerType()
+                    return new ViewerServers.HostConfigurationFromServerMessage.PlayerType()
                     {
-                        Camera = cameraIndex == null ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType()
+                        Camera = cameraIndex == null ? new() : new()
                         {
                             CameraId = cameraIndex!.Value,
 
-                            Recognition = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.RecognitionType()
+                            Recognition = new ViewerServers.HostConfigurationFromServerMessage.PlayerType.CameraType.RecognitionType()
                             {
                                 HueCenter = camera!.Locator.Options.HueCenter,
                                 HueRange = camera!.Locator.Options.HueRange,
@@ -113,97 +115,111 @@ partial class EdcHost : IEdcHost
                                 ShowMask = camera!.Locator.Options.ShowMask
                             },
 
-                            Calibration = camera!.Locator.Options.Calibrate == false ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType()
+                            Calibration = camera!.Locator.Options.Calibrate == false ? new() : new()
                             {
-                                TopLeft = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                TopLeft = new ViewerServers.HostConfigurationFromServerMessage.PlayerType.CameraType.CalibrationType.Point()
                                 {
                                     X = camera!.Locator.Options.TopLeftX,
                                     Y = camera!.Locator.Options.TopLeftY
                                 },
-                                TopRight = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                TopRight = new ViewerServers.HostConfigurationFromServerMessage.PlayerType.CameraType.CalibrationType.Point()
                                 {
                                     X = camera!.Locator.Options.TopRightX,
                                     Y = camera!.Locator.Options.TopRightY
                                 },
-                                BottomLeft = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                BottomLeft = new ViewerServers.HostConfigurationFromServerMessage.PlayerType.CameraType.CalibrationType.Point()
                                 {
                                     X = camera!.Locator.Options.BottomLeftX,
                                     Y = camera!.Locator.Options.BottomLeftY
                                 },
-                                BottomRight = new ViewerServers.HostConfigurationFromClientMessage.PlayerType.CameraType.CalibrationType.Point()
+                                BottomRight = new ViewerServers.HostConfigurationFromServerMessage.PlayerType.CameraType.CalibrationType.Point()
                                 {
                                     X = camera!.Locator.Options.BottomRightX,
                                     Y = camera!.Locator.Options.BottomRightY
                                 }
                             }
                         },
-                        SerialPort = portName == null ? null : new ViewerServers.HostConfigurationFromClientMessage.PlayerType.SerialPortType()
+                        SerialPort = portName == null ? new() : new()
                         {
                             PortName = portName,
                             BaudRate = baudRate,
                         }
                     };
                 }
-            ).ToList()
+            ).ToList(),
+            AvailableCameras = _cameraServer.AvailableCameraIndexes,
+            AvailableSerialPorts = _slaveServer.AvailablePortNames
         };
+
+        _viewerServer.Publish(configMessage);
     }
+
 
     void HandleUpdateConfiguration(ViewerServers.HostConfigurationFromClientMessage message)
     {
-        foreach (ViewerServers.HostConfigurationFromClientMessage.PlayerType player in message.Players)
+        try
         {
-            // Do not need to check if a player exists because we do not care.
-
-            PlayerHardwareInfo playerHardwareInfo = new();
-
-            if (player.Camera is not null)
+            foreach (ViewerServers.HostConfigurationFromClientMessage.PlayerType player in message.Players)
             {
-                playerHardwareInfo.CameraIndex = player.Camera.CameraId;
+                // Do not need to check if a player exists because we do not care.
 
-                CameraServers.ICamera camera = _cameraServer.GetCamera(player.Camera.CameraId)
-                    ?? _cameraServer.OpenCamera(player.Camera.CameraId, new CameraServers.Locator());
+                PlayerHardwareInfo playerHardwareInfo = new();
 
-                CameraServers.RecognitionOptions recognitionOptions = new()
+                if (player.Camera is not null)
                 {
-                    HueCenter = player.Camera.Recognition.HueCenter,
-                    HueRange = player.Camera.Recognition.HueRange,
-                    SaturationCenter = player.Camera.Recognition.SaturationCenter,
-                    SaturationRange = player.Camera.Recognition.SaturationRange,
-                    ValueCenter = player.Camera.Recognition.ValueCenter,
-                    ValueRange = player.Camera.Recognition.ValueRange,
-                    MinArea = player.Camera.Recognition.MinArea,
-                    ShowMask = player.Camera.Recognition.ShowMask
-                };
+                    playerHardwareInfo.CameraIndex = player.Camera.CameraId;
 
-                if (player.Camera.Calibration is not null)
-                {
-                    recognitionOptions.Calibrate = true;
+                    CameraServers.ICamera camera = _cameraServer.GetCamera(player.Camera.CameraId)
+                        ?? _cameraServer.OpenCamera(player.Camera.CameraId, new CameraServers.Locator());
 
-                    recognitionOptions.TopLeftX = player.Camera.Calibration.TopLeft.X;
-                    recognitionOptions.TopLeftY = player.Camera.Calibration.TopLeft.Y;
-                    recognitionOptions.TopRightX = player.Camera.Calibration.TopRight.X;
-                    recognitionOptions.TopRightY = player.Camera.Calibration.TopRight.Y;
-                    recognitionOptions.BottomLeftX = player.Camera.Calibration.BottomLeft.X;
-                    recognitionOptions.BottomLeftY = player.Camera.Calibration.BottomLeft.Y;
-                    recognitionOptions.BottomRightX = player.Camera.Calibration.BottomRight.X;
-                    recognitionOptions.BottomRightY = player.Camera.Calibration.BottomRight.Y;
+                    CameraServers.RecognitionOptions recognitionOptions = new()
+                    {
+                        HueCenter = player.Camera.Recognition.HueCenter,
+                        HueRange = player.Camera.Recognition.HueRange,
+                        SaturationCenter = player.Camera.Recognition.SaturationCenter,
+                        SaturationRange = player.Camera.Recognition.SaturationRange,
+                        ValueCenter = player.Camera.Recognition.ValueCenter,
+                        ValueRange = player.Camera.Recognition.ValueRange,
+                        MinArea = player.Camera.Recognition.MinArea,
+                        ShowMask = player.Camera.Recognition.ShowMask
+                    };
+
+                    if (player.Camera.Calibration is not null)
+                    {
+                        recognitionOptions.Calibrate = true;
+
+                        recognitionOptions.TopLeftX = player.Camera.Calibration.TopLeft.X;
+                        recognitionOptions.TopLeftY = player.Camera.Calibration.TopLeft.Y;
+                        recognitionOptions.TopRightX = player.Camera.Calibration.TopRight.X;
+                        recognitionOptions.TopRightY = player.Camera.Calibration.TopRight.Y;
+                        recognitionOptions.BottomLeftX = player.Camera.Calibration.BottomLeft.X;
+                        recognitionOptions.BottomLeftY = player.Camera.Calibration.BottomLeft.Y;
+                        recognitionOptions.BottomRightX = player.Camera.Calibration.BottomRight.X;
+                        recognitionOptions.BottomRightY = player.Camera.Calibration.BottomRight.Y;
+                    }
+
+                    camera.Locator = new CameraServers.Locator(recognitionOptions);
                 }
 
-                camera.Locator = new CameraServers.Locator(recognitionOptions);
+                if (player.SerialPort is not null)
+                {
+                    playerHardwareInfo.PortName = player.SerialPort.PortName;
+                    playerHardwareInfo.BaudRate = player.SerialPort.BaudRate;
+
+                    _slaveServer.OpenPort(
+                        portName: player.SerialPort.PortName,
+                        baudRate: player.SerialPort.BaudRate
+                    );
+                }
+
+                _playerHardwareInfo.AddOrUpdate(player.PlayerId, playerHardwareInfo, (_, _) => playerHardwareInfo);
             }
-
-            if (player.SerialPort is not null)
-            {
-                playerHardwareInfo.PortName = player.SerialPort.PortName;
-                playerHardwareInfo.BaudRate = player.SerialPort.BaudRate;
-
-                _slaveServer.OpenPort(
-                    portName: player.SerialPort.PortName,
-                    baudRate: player.SerialPort.BaudRate
-                );
-            }
-
-            _playerHardwareInfo.AddOrUpdate(player.PlayerId, playerHardwareInfo, (_, _) => playerHardwareInfo);
+        }
+        catch (Exception e)
+        {
+            _logger.Error("Error updating configuration: {0}", e.Message);
+            _viewerServer.Publish(new ViewerServers.ErrorMessage());
         }
     }
+
 }

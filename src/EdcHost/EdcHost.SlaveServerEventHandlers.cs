@@ -30,10 +30,6 @@ partial class EdcHost : IEdcHost
         catch (Exception ex)
         {
             _logger.Error($"PlayerTryAttack failed: {ex.Message}");
-
-#if DEBUG
-            throw;
-#endif
         }
     }
 
@@ -62,10 +58,6 @@ partial class EdcHost : IEdcHost
         catch (Exception ex)
         {
             _logger.Error($"PlayerTryPlaceBlock failed: {ex.Message}");
-
-#if DEBUG
-            throw;
-#endif
         }
     }
 
@@ -111,17 +103,13 @@ partial class EdcHost : IEdcHost
                     break;
 
                 default:
-                    _logger.Warning($"No item with id {e.Item}. Action rejected."); // Do not throw exception here.
+                    _logger.Error($"No item with id {e.Item}. Action rejected."); // Do not throw exception here.
                     break;
             }
         }
         catch (Exception ex)
         {
             _logger.Error($"PlayerTryTrade failed: {ex.Message}");
-
-#if DEBUG
-            throw;
-#endif
         }
     }
 }
