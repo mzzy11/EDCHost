@@ -5,11 +5,6 @@ partial class Game : IGame
     const int TicksBeforeRespawn = 300;
 
     /// <summary>
-    /// Number of players.
-    /// </summary>
-    public const int PlayerNum = 2;
-
-    /// <summary>
     /// Maximum count of same type of items a player can hold.
     /// </summary>
     public const int MaximumItemCount = 64;
@@ -26,6 +21,11 @@ partial class Game : IGame
     const int Never = -3939;
 
     /// <summary>
+    /// Number of players.
+    /// </summary>
+    public int PlayerNum { get; }
+
+    /// <summary>
     /// All players.
     /// </summary>
     public List<IPlayer> Players { get; private set; }
@@ -38,26 +38,9 @@ partial class Game : IGame
     readonly List<int?> _playerDeathTickList;
     readonly List<int> _playerLastAttackTickList;
 
-    int CommodityValue(
-        IPlayer player, IPlayer.CommodityKindType commodityKind) => commodityKind switch
-        {
-            IPlayer.CommodityKindType.AgilityBoost => (int)Math.Pow(2, player.ActionPoints),
-            IPlayer.CommodityKindType.HealthBoost => player.MaxHealth - 20,
-            IPlayer.CommodityKindType.StrengthBoost => (int)Math.Pow(2, player.Strength),
-            IPlayer.CommodityKindType.Wool => 1,
-            IPlayer.CommodityKindType.HealthPotion => 4,
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(commodityKind), $"No commodity {commodityKind}")
-        };
-
     int AttackTickInterval(IPlayer player)
     {
-        return 200 / player.ActionPoints;
-    }
-
-    IPlayer Opponent(IPlayer player)
-    {
-        return Players[(player.PlayerId == 0) ? 1 : 0];
+        return (int)(Math.Max(8.5 - 0.25 * player.ActionPoints, 0.5) * TicksPerSecondExpected);
     }
 
 }
