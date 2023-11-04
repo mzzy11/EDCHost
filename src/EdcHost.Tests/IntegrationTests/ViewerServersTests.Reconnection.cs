@@ -17,16 +17,24 @@ public partial class ViewerServersTests
             }
         };
         var viewerServer = new ViewerServer(port, wsServerHubMock);
-        viewerServer.Start();
-
         var wsServerMock = (WebSocketServerMock)wsServerHubMock.Get(port);
         var wsConnectionMock = new WebSocketConnectionMock();
+
+        viewerServer.Start();
         wsServerMock.AddConnection(wsConnectionMock);
-        wsConnectionMock.OnMessage?.Invoke("{}");
+
+        //Assertion
+        Assert.Single(wsServerMock.Connections);
+
         wsConnectionMock.OnClose?.Invoke();
-        
+
         //Assertion
         Assert.Empty(wsServerMock.Connections);
+
+        wsConnectionMock.OnOpen?.Invoke();
+
+        //Assertion
+        Assert.Single(wsServerMock.Connections);
 
         viewerServer.Stop();
     }
