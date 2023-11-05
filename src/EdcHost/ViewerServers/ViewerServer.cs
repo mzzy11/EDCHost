@@ -150,9 +150,9 @@ public class ViewerServer : IViewerServer
                 {
                     ParseMessage(text);
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    _logger.Error($"Failed to parse message: {text}");
+                    _logger.Error($"Failed to parse message: {exception}");
                 }
             };
 
@@ -163,9 +163,9 @@ public class ViewerServer : IViewerServer
                     string text = Encoding.UTF8.GetString(bytes);
                     ParseMessage(text);
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    _logger.Error($"Failed to parse message: {bytes}");
+                    _logger.Error($"Failed to parse message: {exception}");
                 }
             };
 

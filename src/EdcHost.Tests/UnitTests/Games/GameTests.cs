@@ -41,6 +41,8 @@ public class GameTest
         Assert.Equal(7.4f, game.Players[1].PlayerPosition.Y);
         Assert.Equal(IGame.Stage.Running, game.CurrentStage);
         Assert.Equal(0, game.ElapsedTicks);
+        Assert.True(game.Players[0].IsAlive);
+        Assert.True(game.Players[1].IsAlive);
         Assert.Null(game.Winner);
     }
 
