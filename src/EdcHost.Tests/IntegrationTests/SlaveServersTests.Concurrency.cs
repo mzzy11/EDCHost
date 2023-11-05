@@ -10,6 +10,10 @@ public partial class SlaveServersTests
 {
     [Theory]
     [InlineData(new int[] { 1, 1 }, 100, "COM1", 9600)]
+    [InlineData(new int[] { 255, 255 }, 100, "COM1", 9600)]
+    [InlineData(new int[] { 0, 255 }, 100, "COM1", 9600)]
+    [InlineData(new int[] { 16, 1 }, 100, "COM1", 9600)]
+    [InlineData(new int[] { 170, 32 }, 100, "COM1", 9600)]
     public void Concurrency(int[] data, int clientCount, string portName, int baudRate)
     {
         SerialPortHubMock serialPortHubMock = new()
@@ -30,7 +34,7 @@ public partial class SlaveServersTests
         byte[] header = IPacket.GeneratePacketHeader(byteData);
         byte[] bytes = new byte[header.Length + byteData.Length];
         header.CopyTo(bytes, 0);
-        data.CopyTo(bytes, header.Length);
+        byteData.CopyTo(bytes, header.Length);
 
         //do concurrency test
         var tasks = new List<Task>();
