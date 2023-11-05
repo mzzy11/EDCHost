@@ -1,5 +1,7 @@
 using EdcHost.ViewerServers;
+
 using Fleck;
+
 using Xunit;
 
 namespace EdcHost.Tests.IntegrationTests;
@@ -8,7 +10,7 @@ public partial class ViewerServersTests
 {
     [Theory]
     [InlineData(100, 8080)]
-    public async Task Concurrency(int clientCount, int port)
+    public void Concurrency(int clientCount, int port)
     {
         WebSocketServerHubMock wsServerHubMock = new()
         {
@@ -22,15 +24,17 @@ public partial class ViewerServersTests
         var tasks = new List<Task>();
         for (int i = 0; i < clientCount; i++)
         {
-            tasks.Add(Task.Run(() => {
+            tasks.Add(Task.Run(() =>
+            {
                 var wsServerMock = (WebSocketServerMock)wsServerHubMock.Get(port);
                 var wsConnectionMock = new WebSocketConnectionMock();
                 wsServerMock.AddConnection(wsConnectionMock);
                 wsConnectionMock.OnMessage?.Invoke("{}");
             }));
         }
-        await Task.WhenAll(tasks);
+        Task.WhenAll(tasks).Wait();
         var wsServerMock = (WebSocketServerMock)wsServerHubMock.Get(port);
+
         //Assertion
         Assert.Equal(clientCount, wsServerMock.Connections.Count);
         viewerServer.Stop();

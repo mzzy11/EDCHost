@@ -1,5 +1,7 @@
 using System.Text;
+
 using EdcHost.SlaveServers;
+
 using Xunit;
 
 namespace EdcHost.Tests.IntegrationTests;
@@ -7,8 +9,8 @@ namespace EdcHost.Tests.IntegrationTests;
 public partial class SlaveServersTests
 {
     [Theory]
-    [InlineData(100, "COM1", 115200)]
-    public async Task Concurrency(int clientCount, string portName, int baudRate)
+    [InlineData(new int[] { 1, 1 }, 100, "COM1", 9600)]
+    public void Concurrency(int[] data, int clientCount, string portName, int baudRate)
     {
         SerialPortHubMock serialPortHubMock = new()
         {
@@ -18,20 +20,33 @@ public partial class SlaveServersTests
         };
         var slaveServer = new SlaveServer(serialPortHubMock);
         slaveServer.Start();
+
+        //data preparation
+        byte[] byteData = new byte[data.Length];
+        for (int i = 0; i < data.Length; i++)
+        {
+            byteData[i] = Convert.ToByte(data[i]);
+        }
+        byte[] header = IPacket.GeneratePacketHeader(byteData);
+        byte[] bytes = new byte[header.Length + byteData.Length];
+        header.CopyTo(bytes, 0);
+        data.CopyTo(bytes, header.Length);
+
         //do concurrency test
         var tasks = new List<Task>();
         for (int i = 0; i < clientCount; i++)
         {
-            tasks.Add(Task.Run(() => {
+            tasks.Add(Task.Run(() =>
+            {
                 var serialPortWrapperMock = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);
-                serialPortWrapperMock.MockReceive(Encoding.UTF8.GetBytes("{}"));
+                serialPortWrapperMock.MockReceive(bytes);
             }));
         }
-        await Task.WhenAll(tasks);
+        Task.WhenAll(tasks).Wait();
         var serialPortWrapperMock = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);
         //Assertion
         Assert.Equal(clientCount, serialPortWrapperMock.WriteBuffer.Count);
-        
+
         slaveServer.Stop();
     }
 }
