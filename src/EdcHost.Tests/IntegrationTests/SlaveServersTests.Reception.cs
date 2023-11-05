@@ -32,7 +32,7 @@ public partial class SlaveServersTests
         serialPortWrapperMock.AfterReceive += (sender, args) =>
         {
             // Assertion
-            Assert.Equal(new PacketFromSlave(packetData), packet);
+            Assert.Equal(new PacketFromSlave(args.Bytes), packet);
             slaveServer.Stop();
         };
         serialPortWrapperMock.MockReceive(bytes);
