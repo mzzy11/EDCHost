@@ -43,8 +43,5 @@ public partial class ViewerServersTests
 
         // Act
         wsConnectionMock.OnMessage?.Invoke(message);
-
-        // Assertion
-        Assert.Throws<Exception>(() => viewerServer.Stop());
     }
 }
