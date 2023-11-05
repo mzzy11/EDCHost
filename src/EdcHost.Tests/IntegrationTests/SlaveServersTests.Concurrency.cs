@@ -53,16 +53,12 @@ public partial class SlaveServersTests
                     Assert.Equal(packetReceived.ActionType, packetReceived.ActionType);
                     Assert.Equal(packetReceived.Param, packetReceived.Param);
                     count++;
-                    if (count == clientCount)
-                    {
-                        slaveServer.Stop();
-                    }
                 };
                 serialPortWrapperMock.MockReceive(bytes);
             }));
         }
         Task.WhenAll(tasks).Wait();
-
+        Assert.Equal(clientCount, count);
         slaveServer.Stop();
     }
 }
