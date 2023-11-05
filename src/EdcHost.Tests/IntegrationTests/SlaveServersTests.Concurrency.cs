@@ -61,8 +61,7 @@ public partial class SlaveServersTests
             }));
         }
         Task.WhenAll(tasks).Wait();
-        var serialPortWrapperMock = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);
-
+        slaveServer.ClosePort(portName);
         slaveServer.Stop();
     }
 }
