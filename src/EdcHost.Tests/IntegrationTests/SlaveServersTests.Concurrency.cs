@@ -24,6 +24,7 @@ public partial class SlaveServersTests
         };
         var slaveServer = new SlaveServer(serialPortHubMock);
         slaveServer.Start();
+        slaveServer.OpenPort(portName, baudRate);
 
         //data preparation
         byte[] byteData = new byte[data.Length];
@@ -61,7 +62,7 @@ public partial class SlaveServersTests
             }));
         }
         Task.WhenAll(tasks).Wait();
-        slaveServer.ClosePort(portName);
+
         slaveServer.Stop();
     }
 }
