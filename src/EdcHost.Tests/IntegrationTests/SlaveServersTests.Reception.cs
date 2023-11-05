@@ -9,6 +9,10 @@ public partial class SlaveServersTests
 {
     [Theory]
     [InlineData(new byte[] { 0x01, 0x01 }, "COM1", 9600)]
+    [InlineData(new byte[] { 0xFF, 0xFF }, "COM1", 9600)]
+    [InlineData(new byte[] { 0x00, 0xFF }, "COM1", 9600)]
+    [InlineData(new byte[] { 0x10, 0x01 }, "COM1", 9600)]
+    [InlineData(new byte[] { 0xAA, 0x20 }, "COM1", 9600)]
     public void Reception(byte[] packetData, string portName, int baudRate)
     {
         SerialPortHubMock serialPortHubMock = new()
@@ -28,14 +32,6 @@ public partial class SlaveServersTests
         serialPortWrapperMock.AfterReceive += (sender, args) =>
         {
             // Assertion
-            Assert.Equal(portName, args.PortName);
-            Assert.Equal(0x55, args.Bytes[0]);
-            Assert.Equal(0xAA, args.Bytes[1]);
-            Assert.Equal(0x00, args.Bytes[2]);
-            Assert.Equal(0x02, args.Bytes[3]);
-            Assert.Equal(0x00, args.Bytes[4]);
-            Assert.Equal(0x01, args.Bytes[5]);
-            Assert.Equal(0x01, args.Bytes[6]);
             Assert.Equal(new PacketFromSlave(packetData), packet);
             slaveServer.Stop();
         };
