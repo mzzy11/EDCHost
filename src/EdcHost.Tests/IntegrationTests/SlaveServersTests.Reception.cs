@@ -31,8 +31,12 @@ public partial class SlaveServersTests
         var serialPortWrapperMock = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);
         serialPortWrapperMock.AfterReceive += (sender, args) =>
         {
+            PacketFromSlave packetReceived = new PacketFromSlave(args.Bytes);
             // Assertion
-            Assert.Equal(new PacketFromSlave(args.Bytes), packet);
+            Assert.Equal(bytes, args.Bytes);
+            Assert.Equal(packetReceived.ActionType, packet.ActionType);
+            Assert.Equal(packetReceived.Param, packet.Param);
+            
             slaveServer.Stop();
         };
         serialPortWrapperMock.MockReceive(bytes);
