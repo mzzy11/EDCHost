@@ -18,6 +18,7 @@ public partial class SlaveServersTests
             }
         };
         var slaveServer = new SlaveServer(serialPortHubMock);
+        slaveServer.OpenPort(portName, baudRate);
         slaveServer.Start();
 
         var serialPort = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);

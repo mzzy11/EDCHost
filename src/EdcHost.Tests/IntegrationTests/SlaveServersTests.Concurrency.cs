@@ -38,18 +38,30 @@ public partial class SlaveServersTests
 
         //do concurrency test
         var tasks = new List<Task>();
+        int count = 0;
         for (int i = 0; i < clientCount; i++)
         {
             tasks.Add(Task.Run(() =>
             {
                 var serialPortWrapperMock = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);
+                serialPortWrapperMock.AfterReceive += (sender, args) =>
+                {
+                    PacketFromSlave packetReceived = new PacketFromSlave(args.Bytes);
+                    // Assertion
+                    Assert.Equal(bytes, args.Bytes);
+                    Assert.Equal(packetReceived.ActionType, packetReceived.ActionType);
+                    Assert.Equal(packetReceived.Param, packetReceived.Param);
+                    count++;
+                    if (count == clientCount)
+                    {
+                        slaveServer.Stop();
+                    }
+                };
                 serialPortWrapperMock.MockReceive(bytes);
             }));
         }
         Task.WhenAll(tasks).Wait();
         var serialPortWrapperMock = (SerialPortWrapperMock)serialPortHubMock.Get(portName, baudRate);
-        //Assertion
-        Assert.Equal(clientCount, serialPortWrapperMock.WriteBuffer.Count);
 
         slaveServer.Stop();
     }

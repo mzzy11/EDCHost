@@ -9,7 +9,7 @@ namespace EdcHost.Tests.IntegrationTests;
 public partial class ViewerServersTests
 {
     [Theory]
-    [InlineData(100, 8080)]
+    [InlineData(500, 8080)]
     public void Concurrency(int clientCount, int port)
     {
         WebSocketServerHubMock wsServerHubMock = new()

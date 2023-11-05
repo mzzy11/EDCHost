@@ -36,7 +36,7 @@ public partial class SlaveServersTests
             Assert.Equal(bytes, args.Bytes);
             Assert.Equal(packetReceived.ActionType, packet.ActionType);
             Assert.Equal(packetReceived.Param, packet.Param);
-            
+
             slaveServer.Stop();
         };
         serialPortWrapperMock.MockReceive(bytes);
