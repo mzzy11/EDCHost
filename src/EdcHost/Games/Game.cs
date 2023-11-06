@@ -162,40 +162,43 @@ partial class Game : IGame
     {
         ++ElapsedTicks;
 
-        if (IsFinished())
+        lock (this)
         {
-            Judge();
-            CurrentStage = IGame.Stage.Finished;
-            return;
-        }
-
-        if (ElapsedTicks > TickBattlingModeStart && CurrentStage == IGame.Stage.Running)
-        {
-            CurrentStage = IGame.Stage.Battling;
-        }
-
-        if (CurrentStage == IGame.Stage.Battling)
-        {
-            if (_isAllBedsDestroyed == false)
+            if (IsFinished())
             {
-                for (int i = 0; i < PlayerNum; i++)
-                {
-                    Players[i].DestroyBed();
-                }
-                _isAllBedsDestroyed = true;
+                Judge();
+                CurrentStage = IGame.Stage.Finished;
+                return;
             }
 
-            if ((ElapsedTicks - TickBattlingModeStart) % TicksBattlingDamageInterval == 0)
+            if (ElapsedTicks > TickBattlingModeStart && CurrentStage == IGame.Stage.Running)
             {
-                for (int i = 0; i < PlayerNum; i++)
+                CurrentStage = IGame.Stage.Battling;
+            }
+
+            if (CurrentStage == IGame.Stage.Battling)
+            {
+                if (_isAllBedsDestroyed == false)
                 {
-                    Players[i].Hurt(BattlingDamage);
+                    for (int i = 0; i < PlayerNum; i++)
+                    {
+                        Players[i].DestroyBed();
+                    }
+                    _isAllBedsDestroyed = true;
+                }
+
+                if ((ElapsedTicks - TickBattlingModeStart) % TicksBattlingDamageInterval == 0)
+                {
+                    for (int i = 0; i < PlayerNum; i++)
+                    {
+                        Players[i].Hurt(BattlingDamage);
+                    }
                 }
             }
-        }
 
-        UpdatePlayerInfo();
-        UpdateMines();
+            UpdatePlayerInfo();
+            UpdateMines();
+        }
 
         AfterGameTickEvent?.Invoke(
             this, new AfterGameTickEventArgs(this, ElapsedTicks));
