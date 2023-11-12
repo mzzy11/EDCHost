@@ -1,66 +1,119 @@
 import asyncio
-import websockets
+import websocket
 import json
 import time
 
 async def send_websocket_message():
-    # WebSocket服务器地址，替换为您的本地WebSocket服务器地址
-    uri = "ws://localhost:8080"
+    # ws server uri
+    uri = "ws://127.0.0.1:8080"
 
-    # 要发送的消息
-    message_start = {
-        "messageType": "COMPETITION_CONTROL_COMMAND",
-        "token": "string",
-        "command": "START"
+    # Message to send
+    messages = {
+        "start": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "START"
+        },
+        "end": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "END"
+        },
+        "reset": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "RESET"
+        },
+        "config": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "GET_HOST_CONFIGURATION"
+        }
     }
-    message_end = {
-        "messageType": "COMPETITION_CONTROL_COMMAND",
-        "token": "string",
-        "command": "END"
+
+    # Bad message to send
+    bad_messages = {
+        "empty": {
+
+        },
+        "key_missing": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string"
+        },
+        "wrong_key": {
+            "asdgkladf": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "START"
+        },
+        "wrong_key_num": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "START",
+            "sdfasdlf": 111
+        },
+        "wrong_value_type": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": 0
+        },
+        "wrong_command": {
+            "messageType": "COMPETITION_CONTROL_COMMAND",
+            "token": "string",
+            "command": "sdklfadsnkfl"
+        },
+        "not_match": {
+            "messageType": "HOST_CONFIGURATION_FROM_CLIENT",
+            "token": "string",
+            "command": "START"
+        }
     }
-    message_reset = {
-        "messageType": "COMPETITION_CONTROL_COMMAND",
-        "token": "string",
-        "command": "RESET"
-    }
-    async with websockets.connect(uri) as websocket:
-            # 将消息转换为JSON格式并发送
-            await websocket.send(json.dumps(message_start))
-            print(f"Sent message: {json.dumps(message_start)}")
 
-            # 等待服务器的响应（可选）
-            response = await websocket.recv()
-            print(f"Received response: {response}")
+    async def send(ws: websocket.WebSocket, message: str):
+        # Send json
+        async def sendtask():
+            ws.send(json.dumps(message))
+        await sendtask()
 
-            time.sleep(1)
+        # Wait for response
+        response = ws.recv()
 
-            await websocket.send(json.dumps(message_end))
-            print(f"Sent message: {json.dumps(message_end)}")
+        print(f"Sent message: {json.dumps(message)}")
+        print(f"Received response: {response}")
 
-            response = await websocket.recv()
-            print(f"Received response: {response}")
+        time.sleep(3)
+        return
 
-            time.sleep(1)
+    ws = websocket.WebSocket()
+    ws.connect(uri)
 
-            await websocket.send(json.dumps(message_reset))
-            print(f"Sent message: {json.dumps(message_reset)}")
+    if ws.connected == True:
+        # Send messages
+        await send(ws, messages["start"])
+        await send(ws, messages["end"])
+        await send(ws, messages["reset"])
+        await send(ws, messages["start"])
+        await send(ws, messages["config"])
 
-            response = await websocket.recv()
-            print(f"Received response: {response}")
+        # Send "START" command again
+        await send(ws, messages["start"])
 
-            time.sleep(1)
+        #Send bad messages
+        await send(ws, bad_messages["empty"])
+        await send(ws, bad_messages["key_missing"])
+        await send(ws, bad_messages["wrong_command"])
+        await send(ws, bad_messages["wrong_key"])
+        await send(ws, bad_messages["wrong_key_num"])
+        await send(ws, bad_messages["wrong_value_type"])
+        await send(ws, bad_messages["not_match"])
 
-            await websocket.send(json.dumps(message_start))
-            print(f"Sent message: {json.dumps(message_start)}")
+        time.sleep(2)
 
-            response = await websocket.recv()
-            print(f"Received response: {response}")
-
-            time.sleep(1)
+        # Close ws connection
+        ws.close()
 
 def main():
     asyncio.get_event_loop().run_until_complete(send_websocket_message())
-    print("Over")
+    print("Done")
 
 if __name__ == "__main__":
     main()
