@@ -43,12 +43,20 @@ public class ViewerServer : IViewerServer
 
         _logger.Information("Starting...");
 
-        _wsServer = _wsServerHub.Get(_port);
-        StartWsServer();
+        try
+        {
+            _wsServer = _wsServerHub.Get(_port);
+            StartWsServer();
 
-        _isRunning = true;
+            _isRunning = true;
 
-        _logger.Information("Started.");
+            _logger.Information("Started.");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Failed to start viewer server: {ex}");
+        }
+
     }
 
     /// <summary>
