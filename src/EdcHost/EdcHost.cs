@@ -62,6 +62,7 @@ partial class EdcHost : IEdcHost
 
     public void Start()
     {
+
         _logger.Information("Starting...");
 
         Debug.Assert(_taskCancellationTokenSource is null);
@@ -69,18 +70,26 @@ partial class EdcHost : IEdcHost
         Debug.Assert(_taskForSendingToSlave is null);
         Debug.Assert(_taskForSendingToViewer is null);
 
-        _cameraServer.Start();
-        _slaveServer.Start();
-        _viewerServer.Start();
+        try
+        {
+            _cameraServer.Start();
+            _slaveServer.Start();
+            _viewerServer.Start();
 
-        _taskCancellationTokenSource = new CancellationTokenSource();
-        _taskForReadingCamera = Task.Run(TaskForReadingCameraFunc);
-        _taskForSendingToSlave = Task.Run(TaskForSendingToSlaveFunc);
-        _taskForSendingToViewer = Task.Run(TaskForSendingToViewerFunc);
+            _taskCancellationTokenSource = new CancellationTokenSource();
+            _taskForReadingCamera = Task.Run(TaskForReadingCameraFunc);
+            _taskForSendingToSlave = Task.Run(TaskForSendingToSlaveFunc);
+            _taskForSendingToViewer = Task.Run(TaskForSendingToViewerFunc);
 
-        IsRunning = true;
+            IsRunning = true;
 
-        _logger.Information("Started.");
+            _logger.Information("Started.");
+        }
+        catch (Exception ex)
+        {
+            _logger.Fatal($"An unhandled exception is caught when starting EdcHost: {ex}");
+        }
+
     }
 
     public void Stop()
