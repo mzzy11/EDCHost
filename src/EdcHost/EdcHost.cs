@@ -183,24 +183,31 @@ partial class EdcHost : IEdcHost
                     continue;
                 }
 
-                _slaveServer.Publish(
-                    portName: portName,
-                    gameStage: (int)_game.CurrentStage,
-                    elapsedTime: _game.ElapsedTicks,
-                    heightOfChunks: heightOfChunks,
-                    hasBed: _game.Players[i].HasBed,
-                    hasBedOpponent: _game.Players.Any(player => player.HasBed && player.PlayerId != _game.Players[i].PlayerId),
-                    positionX: _game.Players[i].PlayerPosition.X,
-                    positionY: _game.Players[i].PlayerPosition.Y,
-                    positionOpponentX: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.X,
-                    positionOpponentY: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.Y,
-                    agility: _game.Players[i].ActionPoints,
-                    health: _game.Players[i].Health,
-                    maxHealth: _game.Players[i].MaxHealth,
-                    strength: _game.Players[i].Strength,
-                    emeraldCount: _game.Players[i].EmeraldCount,
-                    woolCount: _game.Players[i].WoolCount
-                );
+                try
+                {
+                    _slaveServer.Publish(
+                        portName: portName,
+                        gameStage: (int)_game.CurrentStage,
+                        elapsedTime: _game.ElapsedTicks,
+                        heightOfChunks: heightOfChunks,
+                        hasBed: _game.Players[i].HasBed,
+                        hasBedOpponent: _game.Players.Any(player => player.HasBed && player.PlayerId != _game.Players[i].PlayerId),
+                        positionX: _game.Players[i].PlayerPosition.X,
+                        positionY: _game.Players[i].PlayerPosition.Y,
+                        positionOpponentX: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.X,
+                        positionOpponentY: _game.Players[(i == 0) ? 1 : 0].PlayerPosition.Y,
+                        agility: _game.Players[i].ActionPoints,
+                        health: _game.Players[i].Health,
+                        maxHealth: _game.Players[i].MaxHealth,
+                        strength: _game.Players[i].Strength,
+                        emeraldCount: _game.Players[i].EmeraldCount,
+                        woolCount: _game.Players[i].WoolCount
+                    );
+                }
+                catch (Exception e)
+                {
+                    _logger.Error($"failed to publish to slave: ${e.Message}");
+                }
             }
         }
     }
