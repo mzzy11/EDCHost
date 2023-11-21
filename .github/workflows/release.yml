@@ -72,6 +72,7 @@ jobs:
         if: startsWith(matrix.runtime, 'win') == false
         run: |
           cd bin
+          chmod +x EdcHost
           tar -czvf ../edchost-${{ matrix.runtime }}.tar.gz *
           cd ..
 
