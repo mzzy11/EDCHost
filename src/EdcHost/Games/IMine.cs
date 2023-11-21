@@ -1,3 +1,5 @@
+using System;
+
 namespace EdcHost.Games;
 
 /// <summary>
@@ -5,32 +7,58 @@ namespace EdcHost.Games;
 /// </summary>
 public interface IMine
 {
+    static IMine Create(OreKindType oreKind, IPosition<float> position, int tick)
+    {
+        return new Mine(oreKind, position, tick);
+    }
+
     /// <summary>
     /// The ore kind.
     /// </summary>
-    public enum OreKindType
+    enum OreKindType
     {
         IronIngot,
         GoldIngot,
         Diamond,
     }
+    /// <summary>
+    /// The id of the mine
+    /// </summary>
+    Guid MineId { get; }
 
     /// <summary>
     /// The count of accumulated ores.
     /// </summary>
-    public int AccumulatedOreCount { get; }
+    int AccumulatedOreCount { get; }
+
     /// <summary>
     /// The kind of the ore.
     /// </summary>
-    public OreKindType OreKind { get; }
+    OreKindType OreKind { get; }
+
     /// <summary>
     /// The position of the mine.
     /// </summary>
-    public IPosition<float> Position { get; }
+    IPosition<float> Position { get; }
+
+    /// <summary>
+    /// How much time required to generate ore.
+    /// </summary>
+    int AccumulateOreInterval { get; }
+
+    /// <summary>
+    /// Last time ore generated.
+    /// </summary>
+    int LastOreGeneratedTick { get; }
 
     /// <summary>
     /// Picks up some ore.
     /// </summary>
     /// <param name="count">The count of ore to pick up.</param>
-    public void PickUpOre(int count);
+    void PickUpOre(int count);
+
+    /// <summary>
+    /// Generate ore automaticly.
+    /// </summary>
+    void GenerateOre(int tick);
 }

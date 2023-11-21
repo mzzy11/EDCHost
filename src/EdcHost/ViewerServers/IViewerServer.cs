@@ -1,3 +1,4 @@
+using Fleck;
 namespace EdcHost.ViewerServers;
 
 /// <summary>
@@ -5,12 +6,23 @@ namespace EdcHost.ViewerServers;
 /// </summary>
 public interface IViewerServer
 {
+    static IViewerServer Create(int port)
+    {
+        WebSocketServerHub wsServerHub = new();
+        return new ViewerServer(port, wsServerHub);
+    }
+
+    event EventHandler<AfterMessageReceiveEventArgs>? AfterMessageReceiveEvent;
+
     /// <summary>
     /// Starts the server.
     /// </summary>
-    public void Start();
+    void Start();
+
     /// <summary>
     /// Stops the server.
     /// </summary>
-    public void Stop();
+    void Stop();
+
+    void Publish(Message message);
 }

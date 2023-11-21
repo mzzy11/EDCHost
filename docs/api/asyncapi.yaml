@@ -101,10 +101,10 @@ components:
             type: object
             additionalProperties: false
             required:
-              - elapsedTime
+              - elapsedTicks
               - stage
             properties:
-              elapsedTime:
+              elapsedTicks:
                 type: integer
               stage:
                 type: string
@@ -217,8 +217,6 @@ components:
               additionalProperties: false
               required:
                 - playerId
-                - camera
-                - serialPort
               properties:
                 playerId:
                   type: integer
@@ -227,7 +225,6 @@ components:
                   additionalProperties: false
                   required:
                     - cameraId
-                    - calibration
                     - recognition
                   properties:
                     cameraId:
@@ -317,8 +314,6 @@ components:
               additionalProperties: false
               required:
                 - playerId
-                - camera
-                - serialPort
               properties:
                 playerId:
                   type: integer
@@ -327,7 +322,6 @@ components:
                   additionalProperties: false
                   required:
                     - cameraId
-                    - calibration
                     - recognition
                   properties:
                     cameraId:
@@ -450,6 +444,7 @@ components:
         - playerId
         - itemType
         - itemCount
+        - mineId
       properties:
         eventType:
           type: string
@@ -463,6 +458,8 @@ components:
             - GOLD_INGOT
             - DIAMOND
         itemCount:
+          type: integer
+        mineId:
           type: integer
     PlayerPlaceBlockEvent:
       type: object

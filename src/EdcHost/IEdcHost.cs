@@ -5,13 +5,15 @@ namespace EdcHost;
 /// </summary>
 public interface IEdcHost
 {
+    bool IsRunning { get; }
+
     /// <summary>
     /// Starts the host.
     /// </summary>
-    public void Start();
+    void Start();
 
     /// <summary>
     /// Stops the host.
     /// </summary>
-    public void Stop();
+    void Stop();
 }
