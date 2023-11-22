@@ -6,6 +6,7 @@ namespace EdcHost;
 
 partial class EdcHost : IEdcHost
 {
+    const int FrequencyOfReadingCamera = 60;
     const int FrequencyOfSendingToSlave = 20;
     const int FrequencyOfSendingToViewer = 60;
     const int MapHeight = 8;
@@ -120,8 +121,19 @@ partial class EdcHost : IEdcHost
 
     void TaskForReadingCameraFunc()
     {
+        DateTime lastTickStartTime = DateTime.Now;
+
         while (!_taskCancellationTokenSource?.IsCancellationRequested ?? false)
         {
+            // Wait for next tick
+            DateTime currentTickStartTime = lastTickStartTime.AddMilliseconds(
+                (double)1000 / FrequencyOfReadingCamera);
+            if (currentTickStartTime > DateTime.Now)
+            {
+                Task.Delay(currentTickStartTime - DateTime.Now).Wait();
+            }
+            lastTickStartTime = DateTime.Now;
+
             foreach (Games.IPlayer player in _game.Players)
             {
                 // Skip if no hardware info is found
@@ -167,7 +179,7 @@ partial class EdcHost : IEdcHost
             {
                 Task.Delay(currentTickStartTime - DateTime.Now).Wait();
             }
-            currentTickStartTime = DateTime.Now;
+            lastTickStartTime = DateTime.Now;
 
             List<int> heightOfChunks = new();
             foreach (Games.IChunk chunk in _game.GameMap.Chunks)
@@ -218,7 +230,7 @@ partial class EdcHost : IEdcHost
             {
                 Task.Delay(currentTickStartTime - DateTime.Now).Wait();
             }
-            currentTickStartTime = DateTime.Now;
+            lastTickStartTime = DateTime.Now;
 
             List<ViewerServers.CompetitionUpdateMessage.Camera> cameraInfoList = new();
             foreach (int cameraIndex in _cameraServer.AvailableCameraIndexes)
