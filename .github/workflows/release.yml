@@ -68,10 +68,11 @@ jobs:
           zip -r ../edchost-${{ matrix.runtime }}.zip *
           cd ..
   
-      - name: Pack artifact (Linux & macOS)
-        if: startsWith(matrix.runtime, 'linux') || startsWith(matrix.runtime, 'osx')
+      - name: Pack artifact (Others)
+        if: startsWith(matrix.runtime, 'win') == false
         run: |
           cd bin
+          chmod +x EdcHost
           tar -czvf ../edchost-${{ matrix.runtime }}.tar.gz *
           cd ..
 
@@ -83,8 +84,8 @@ jobs:
           files: |
             edchost-${{ matrix.runtime }}.zip
 
-      - name: Upload artifact to release (Linux & macOS)
-        if: startsWith(matrix.runtime, 'linux') || startsWith(matrix.runtime, 'osx')
+      - name: Upload artifact to release (Others)
+        if: startsWith(matrix.runtime, 'win') == false
         uses: softprops/action-gh-release@v1
         with:
           append_body: true
