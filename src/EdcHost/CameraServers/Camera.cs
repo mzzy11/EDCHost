@@ -100,7 +100,7 @@ public class Camera : ICamera
             }
             else
             {
-                var image = frame.ToImage<Bgr, byte>();
+                var image = Locator.Mask.ToImage<Bgr, byte>();
                 JpegData = image.ToJpegData();
                 image.Dispose();
             }
