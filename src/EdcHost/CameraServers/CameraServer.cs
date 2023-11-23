@@ -1,5 +1,5 @@
-using Serilog;
 using System.Diagnostics;
+using Serilog;
 
 namespace EdcHost.CameraServers;
 
@@ -55,7 +55,7 @@ public class CameraServer : ICameraServer
 
         if (_cameras.Any(x => x.CameraIndex == cameraIndex))
         {
-            var camera = _cameras.Find(x => x.CameraIndex == cameraIndex);
+            ICamera? camera = _cameras.Find(x => x.CameraIndex == cameraIndex);
             Debug.Assert(camera is not null);
             return camera;
         }

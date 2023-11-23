@@ -31,7 +31,7 @@ partial class Game : IGame
 
                 //Kill fallen player. Use 'if' instead of 'else if' to avoid fake spawn.
                 if (e.Player.IsAlive == true && IsValidPosition(ToIntPosition(e.Position)) == false)
-                { 
+                {
                     Players[e.Player.PlayerId].Hurt(InstantDeathDamage);
                     return;
                 }
