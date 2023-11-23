@@ -112,8 +112,8 @@ public class Camera : ICamera
             }
             else
             {
-                TargetLocation = recognitionResult.Location;
-                TargetLocationNotCalibrated = recognitionResult.CalibratedLocation;
+                TargetLocation = recognitionResult.CalibratedLocation;
+                TargetLocationNotCalibrated = recognitionResult.Location;
             }
 
             frame.Dispose();
