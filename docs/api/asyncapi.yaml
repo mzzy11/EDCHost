@@ -107,7 +107,7 @@ components:
               elapsedTicks:
                 type: integer
               stage:
-                type: string
+                type: integer
                 enum:
                   - READY
                   - RUNNING
@@ -129,7 +129,7 @@ components:
                 accumulatedOreCount:
                   type: integer
                 oreType:
-                  type: string
+                  type: integer
                   enum:
                     - IRON_ORE
                     - GOLD_ORE
