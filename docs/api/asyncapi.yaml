@@ -113,6 +113,7 @@ components:
                   - RUNNING
                   - BATTLING
                   - FINISHED
+                  - ENDED
           mines:
             type: array
             items:
