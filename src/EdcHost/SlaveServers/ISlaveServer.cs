@@ -1,24 +1,42 @@
-using EdcHost.SlaveServers.EventArgs;
-
 namespace EdcHost.SlaveServers;
 
 /// <summary>
 /// SlaveServer handles the communication with the slaves via UART.
 /// </summary>
-public interface ISlaveServer
+public interface ISlaveServer : IDisposable
 {
-    public event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
-    public event EventHandler<PlayerTryUseEventArgs>? PlayerTryUseEvent;
-    public event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
+    static ISlaveServer Create()
+    {
+        ISerialPortHub serialPortHub = new SerialPortHub();
+
+        return new SlaveServer(serialPortHub);
+    }
+
+    event EventHandler<PlayerTryAttackEventArgs>? PlayerTryAttackEvent;
+    event EventHandler<PlayerTryPlaceBlockEventArgs>? PlayerTryPlaceBlockEvent;
+    event EventHandler<PlayerTryTradeEventArgs>? PlayerTryTradeEvent;
+
+    /// <summary>
+    /// Gets the available port names.
+    /// </summary>
+    List<string> AvailablePortNames { get; }
 
     /// <summary>
     /// Starts the server.
     /// </summary>
-    public void Start();
+    void Start();
+
     /// <summary>
     /// Stops the server.
     /// </summary>
-    public void Stop();
+    void Stop();
 
-    public void UpdatePacket(int id, IPacket packet);
+    void OpenPort(string portName, int baudRate);
+
+    void ClosePort(string portName);
+
+    void Publish(string portName, int gameStage, int elapsedTime, List<int> heightOfChunks,
+        bool hasBed, bool hasBedOpponent, double positionX, double positionY, double positionOpponentX,
+        double positionOpponentY, int agility, int health, int maxHealth, int strength,
+        int emeraldCount, int woolCount);
 }

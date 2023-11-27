@@ -1,11 +1,8 @@
-using System.Reflection;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using EdcHost.ViewerServers.EventArgs;
-using EdcHost.ViewerServers.Messages;
-
 using Fleck;
-
 using Serilog;
 
 namespace EdcHost.ViewerServers;
@@ -15,29 +12,21 @@ namespace EdcHost.ViewerServers;
 /// </summary>
 public class ViewerServer : IViewerServer
 {
-    readonly WebSocketServer _webSocketServer;
-    readonly ILogger _logger = Log.Logger.ForContext<ViewerServer>();
-    IWebSocketConnection? _socket = null;
-    public IUpdater CompetitionUpdater { get; } = new Updater();
-    public IGameController Controller { get; } = new GameController();
-    public event EventHandler<SetPortEventArgs>? SetPortEvent;
-    public event EventHandler<SetCameraEventArgs>? SetCameraEvent;
+    public event EventHandler<AfterMessageReceiveEventArgs>? AfterMessageReceiveEvent;
 
-    public ViewerServer(int port)
-    {
-        //_webSocketServer = new WebSocketServer("ws://localhost:" + port)
-        _webSocketServer = new WebSocketServer("ws://127.0.0.1:" + port)
-        {
-            RestartAfterListenError = true
-        };
-    }
+    readonly ILogger _logger = Log.Logger.ForContext("Component", "ViewerServers");
+    readonly int _port;
+    readonly ConcurrentDictionary<Guid, IWebSocketConnection> _sockets = new();
+    readonly IWebSocketServerHub _wsServerHub;
 
-    public ViewerServer()
+    bool _isRunning = false;
+    IWebSocketServer? _wsServer = null;
+
+
+    public ViewerServer(int port, IWebSocketServerHub wsServerHub)
     {
-        _webSocketServer = new WebSocketServer("ws://localhost:11451")
-        {
-            RestartAfterListenError = true
-        };
+        _port = port;
+        _wsServerHub = wsServerHub;
     }
 
     /// <summary>
@@ -45,81 +34,133 @@ public class ViewerServer : IViewerServer
     /// </summary>
     public void Start()
     {
-        CompetitionUpdater.SendEvent += (sender, args) => Send(args.Message);
+        if (_isRunning)
+        {
+            throw new InvalidOperationException("already running");
+        }
 
-        Controller.GetHostConfigurationEvent += (sender, args) => Send(args.Message);
-        WebSocketServerStart();
-        CompetitionUpdater.StartUpdate();
-        CompetitionUpdater.SendEvent += (sender, args) => Send(args.Message);
+        Debug.Assert(_wsServer is null);
 
-        Controller.GetHostConfigurationEvent += (sender, args) => Send(args.Message);
+        _logger.Information("Starting...");
 
-        _logger.Information("Server started.");
+        try
+        {
+            _wsServer = _wsServerHub.Get(_port);
+            StartWsServer();
+
+            _isRunning = true;
+
+            _logger.Information("Started.");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Failed to start viewer server: {ex}");
+        }
+
     }
+
     /// <summary>
     /// Stops the server.
     /// </summary>
     public void Stop()
     {
-        _webSocketServer.Dispose();
-        _socket?.Close();
-        CompetitionUpdater.End();
-        _logger.Information("Server stopped.");
+        if (!_isRunning)
+        {
+            throw new InvalidOperationException("not running");
+        }
+
+        _logger.Information("Stopping...");
+
+        Debug.Assert(_wsServer is not null);
+
+        _wsServer.Dispose();
+
+        _wsServer = null;
+
+        _isRunning = false;
+
+        _logger.Information("Stopped.");
     }
 
-    /// <summary>
-    /// Sends the message to the viewer.
-    /// </summary>
-    /// <param name="message">the message to send.</param>
-    public void Send(IMessage message)
+    public void Publish(Message message)
     {
-        try
+        string jsonString = message.Json;
+
+        foreach (IWebSocketConnection socket in _sockets.Values)
         {
-            byte[] bytes = message.SerializeToUtf8Bytes();
-            if (_socket == null)
+            try
             {
-                throw new Exception("Socket not specified.");
+                socket.Send(jsonString).Wait();
             }
-            _socket?.Send(bytes);
-        }
-        catch (Exception e)
-        {
-            RaiseError((int)ErrorCode.NoSocketConnection, e.Message);
-            _logger.Error(e, "Error while sending message.");
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to send message to {socket.ConnectionInfo.ClientIpAddress}: {ex.Message}");
+
+                // Do not throw even in debug mode to allow program to continue after a client disconnects.
+            }
         }
     }
 
-    /// <summary>
-    /// Starts the WebSocket server.
-    /// </summary>
-    void WebSocketServerStart()
+    void ParseMessage(string text)
     {
-        _webSocketServer.Start(socket =>
+        Message? generalMessage = JsonSerializer.Deserialize<Message>(text) ?? throw new Exception("failed to deserialize message");
+
+        switch (generalMessage.MessageType)
+        {
+            case "COMPETITION_CONTROL_COMMAND":
+                AfterMessageReceiveEvent?.Invoke(this, new AfterMessageReceiveEventArgs(
+                    JsonSerializer.Deserialize<CompetitionControlCommandMessage>(text)
+                    ?? throw new Exception("failed to deserialize CompetitionControlCommandMessage")
+                ));
+                break;
+
+            case "HOST_CONFIGURATION_FROM_CLIENT":
+                AfterMessageReceiveEvent?.Invoke(this, new AfterMessageReceiveEventArgs(
+                    JsonSerializer.Deserialize<HostConfigurationFromClientMessage>(text)
+                    ?? throw new Exception("failed to deserialize HostConfigurationFromClientMessage")
+                ));
+                break;
+
+            default:
+                throw new Exception($"invalid message type: {generalMessage.MessageType}");
+        }
+    }
+
+
+    void StartWsServer()
+    {
+        Debug.Assert(_wsServer is not null);
+
+        _wsServer.Start(socket =>
         {
             socket.OnOpen = () =>
             {
-                _logger.Debug("WebSocket connection opened.");
-                if (_socket == null)
-                {
-                    _socket = socket;
-                }
+                _logger.Debug("Connection from {ClientIpAddress} opened.", socket.ConnectionInfo.ClientIpAddress);
+
+                // Remove the socket if it already exists.
+                _sockets.TryRemove(socket.ConnectionInfo.Id, out _);
+
+                // Add the socket.
+                _sockets.TryAdd(socket.ConnectionInfo.Id, socket);
             };
 
             socket.OnClose = () =>
             {
-                _logger.Debug("WebSocket connection closed.");
+                _logger.Debug("Connection from {ClientIpAddress} closed.", socket.ConnectionInfo.ClientIpAddress);
+
+                // Remove the socket.
+                _sockets.TryRemove(socket.ConnectionInfo.Id, out _);
             };
 
             socket.OnMessage = text =>
             {
                 try
                 {
-                    DeserializeMessage(text);
+                    ParseMessage(text);
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    _logger.Error(e, "Error while parsing message.");
-                    socket.Close();
+                    _logger.Error($"Failed to parse message: {exception}");
                 }
             };
 
@@ -128,135 +169,24 @@ public class ViewerServer : IViewerServer
                 try
                 {
                     string text = Encoding.UTF8.GetString(bytes);
-                    DeserializeMessage(text);
+                    ParseMessage(text);
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    _logger.Error(e, "Error while parsing message.");
-                    socket.Close();
+                    _logger.Error($"Failed to parse message: {exception}");
                 }
             };
 
             socket.OnError = exception =>
             {
-                _logger.Error(exception, "Error while receiving message.");
+                _logger.Error("Socket error.");
+
+                // Close the socket.
                 socket.Close();
+
+                // Remove the socket.
+                _sockets.TryRemove(socket.ConnectionInfo.Id, out _);
             };
         });
-    }
-
-    /// <summary>
-    /// Deserializes the message and calls the appropriate method.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <exception cref="InvalidDataException"></exception>
-    void DeserializeMessage(string text)
-    {
-        IMessage message = JsonSerializer.Deserialize<Message>(text)!;
-        switch (message.MessageType)
-        {
-            case "COMPETITION_CONTROL_COMMAND":
-                ICompetitionControlCommand command
-                    = JsonSerializer.Deserialize<CompetitionControlCommand>(text)!;
-                switch (command.Command)
-                {
-                    case "START":
-                        Controller.StartGame();
-                        break;
-                    case "END":
-                        Controller.EndGame();
-                        break;
-                    case "RESET":
-                        Controller.ResetGame();
-                        break;
-                    case "GET_HOST_CONFIGURATION":
-                        try
-                        {
-                            Controller.GetHostConfiguration();
-                        }
-                        catch (Exception e)
-                        {
-                            RaiseError((int)ErrorCode.NoDeviceAvailable, e.Message);
-                            throw new Exception(e.Message);
-                        }
-                        break;
-                    default:
-                        RaiseError((int)ErrorCode.InvalidCommand, $"Invalid command: {command.Command}");
-                        throw new Exception($"Invalid command: {command.Command}");
-                }
-                break;
-
-            case "HOST_CONFIGURATION_FROM_CLIENT":
-                IHostConfigurationFromClient hostConfiguration
-                    = JsonSerializer.Deserialize<HostConfigurationFromClient>(text)!;
-                Type Player = hostConfiguration.Players.GetType().GetGenericArguments()[0];
-                PropertyInfo[] playerProperties = Player.GetProperties();
-                foreach (object player in hostConfiguration.Players)
-                {
-                    int playerId = -1;
-                    foreach (PropertyInfo property in playerProperties)
-                    {
-                        if (property.Name == "id")
-                        {
-                            playerId = (int)property.GetValue(player)!;
-                            if (playerId < 0)
-                            {
-                                RaiseError((int)ErrorCode.InvalidPlayer, "Invalid player id.");
-                                throw new Exception("Invalid player id.");
-                            }
-                        }
-                        else if (property.Name == "camera")
-                        {
-                            object? cameraConfiguration = null;
-                            cameraConfiguration = property.GetValue(player);
-                            if (cameraConfiguration == null)
-                            {
-                                RaiseError((int)ErrorCode.InvalidCamera, "Invalid camera configuration.");
-                                throw new Exception("Invalid camera configuration.");
-                            }
-                            SetCameraEvent?.Invoke(this, new SetCameraEventArgs(playerId, cameraConfiguration));
-                        }
-                        else if (property.Name == "serialPort")
-                        {
-                            Type Port = property.GetValue(player)!.GetType();
-                            PropertyInfo[] portProperties = Port.GetProperties();
-                            string? portName = null;
-                            int baudRate = 0;
-                            foreach (PropertyInfo portProperty in portProperties)
-                            {
-                                if (portProperty.Name == "portName")
-                                {
-                                    portName = (string?)portProperty.GetValue(property.GetValue(player));
-                                }
-                                else if (portProperty.Name == "baudRate")
-                                {
-                                    baudRate = (int)portProperty.GetValue(property.GetValue(player))!;
-                                }
-                            }
-                            if (portName == null || baudRate == 0)
-                            {
-                                RaiseError((int)ErrorCode.InvalidPort, "Invalid port configuration.");
-                                throw new Exception("Invalid port configuration.");
-                            }
-                            SetPortEvent?.Invoke(this, new SetPortEventArgs(playerId, portName, baudRate));
-                        }
-                    }
-                }
-                break;
-
-            default:
-                RaiseError((int)ErrorCode.InvalidMessageType, $"Invalid message type: {message.MessageType}");
-                throw new Exception($"Invalid message type: {message.MessageType}");
-        }
-    }
-
-    /// <summary>
-    /// raise an error message to the viewer.
-    /// </summary>
-    /// <param name="errorCode"></param>
-    /// <param name="errorMessage"></param>
-    public void RaiseError(int errorCode, string errorMessage)
-    {
-        Send(new Error(errorCode, errorMessage));
     }
 }

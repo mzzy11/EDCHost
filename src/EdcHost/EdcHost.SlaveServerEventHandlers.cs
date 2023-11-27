@@ -1,6 +1,5 @@
 using EdcHost.Games;
 using EdcHost.SlaveServers;
-using EdcHost.SlaveServers.EventArgs;
 
 namespace EdcHost;
 
@@ -10,119 +9,55 @@ partial class EdcHost : IEdcHost
     {
         try
         {
-            IPosition<float> current = _game.Players[e.PlayerId].PlayerPosition;
-            IPosition<float>? target = null;
-            switch ((Directions)e.TargetChunk)
+            // Store the event info to the queue
+            _playerEventQueue.Enqueue(e);
+
+            string portName = e.PortName;
+
+            int? playerId = _playerHardwareInfo
+                .Where(kvp => kvp.Value.PortName == portName)
+                .Select(kvp => (int?)kvp.Key)
+                .FirstOrDefault((int?)null);
+
+            if (playerId is null)
             {
-                case Directions.Up:
-                    target = new Position<float>(current.X, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.Down:
-                    target = new Position<float>(current.X, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.Left:
-                    target = new Position<float>(current.X - 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.Right:
-                    target = new Position<float>(current.X + 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.UpLeft:
-                    target = new Position<float>(current.X - 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.UpRight:
-                    target = new Position<float>(current.X + 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.DownLeft:
-                    target = new Position<float>(current.X - 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                case Directions.DownRight:
-                    target = new Position<float>(current.X + 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Attack(target.X, target.Y);
-                    break;
-
-                default:
-                    Serilog.Log.Warning(@$"Failed to convert {e.TargetChunk} to a chunk.
-                    Action rejeccted.");
-                    break;
+                return;
             }
+
+            IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
+            _game.Players[playerId.Value].Attack(e.TargetChunkId / MapWidth, e.TargetChunkId % MapWidth);
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Serilog.Log.Warning($"Action failed: {exception}");
+            _logger.Error($"PlayerTryAttack failed: {ex.Message}");
         }
     }
 
-    void HandlePlayerTryUseEvent(object? sender, PlayerTryUseEventArgs e)
+    void HandlePlayerTryPlaceBlockEvent(object? sender, PlayerTryPlaceBlockEventArgs e)
     {
         try
         {
-            IPosition<float> current = _game.Players[e.PlayerId].PlayerPosition;
-            IPosition<float>? target = null;
-            switch ((Directions)e.TargetChunk)
+            // Store the event info to the queue
+            _playerEventQueue.Enqueue(e);
+
+            string portName = e.PortName;
+
+            int? playerId = _playerHardwareInfo
+                .Where(kvp => kvp.Value.PortName == portName)
+                .Select(kvp => (int?)kvp.Key)
+                .FirstOrDefault((int?)null);
+
+            if (playerId is null)
             {
-                case Directions.Up:
-                    target = new Position<float>(current.X, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.Down:
-                    target = new Position<float>(current.X, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.Left:
-                    target = new Position<float>(current.X - 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.Right:
-                    target = new Position<float>(current.X + 1.0f, current.Y);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.UpLeft:
-                    target = new Position<float>(current.X - 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.UpRight:
-                    target = new Position<float>(current.X + 1.0f, current.Y + 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.DownLeft:
-                    target = new Position<float>(current.X - 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                case Directions.DownRight:
-                    target = new Position<float>(current.X + 1.0f, current.Y - 1.0f);
-                    _game.Players[e.PlayerId].Place(target.X, target.Y);
-                    break;
-
-                default:
-                    Serilog.Log.Warning(@$"Failed to convert {e.TargetChunk} to a chunk.
-                        Action rejeccted.");
-                    break;
+                return;
             }
+
+            IPosition<float> current = _game.Players[playerId.Value].PlayerPosition;
+            _game.Players[playerId.Value].Place(e.TargetChunkId / MapWidth, e.TargetChunkId % MapWidth);
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Serilog.Log.Warning($"Action failed: {exception}");
+            _logger.Error($"PlayerTryPlaceBlock failed: {ex.Message}");
         }
     }
 
@@ -130,18 +65,51 @@ partial class EdcHost : IEdcHost
     {
         try
         {
-            switch ((ItemList)e.Item)
+            // Store the event info to the queue
+            _playerEventQueue.Enqueue(e);
+
+            string portName = e.PortName;
+
+            int? playerId = _playerHardwareInfo
+                .Where(kvp => kvp.Value.PortName == portName)
+                .Select(kvp => (int?)kvp.Key)
+                .FirstOrDefault((int?)null);
+
+            if (playerId is null)
             {
-                //TODO: Trade
+                return;
+            }
+
+            switch ((ItemKind)e.Item)
+            {
+                case ItemKind.AgilityBoost:
+                    _game.Players[playerId.Value].Trade(IPlayer.CommodityKindType.AgilityBoost);
+                    break;
+
+                case ItemKind.HealthBoost:
+                    _game.Players[playerId.Value].Trade(IPlayer.CommodityKindType.HealthBoost);
+                    break;
+
+                case ItemKind.StrengthBoost:
+                    _game.Players[playerId.Value].Trade(IPlayer.CommodityKindType.StrengthBoost);
+                    break;
+
+                case ItemKind.Wool:
+                    _game.Players[playerId.Value].Trade(IPlayer.CommodityKindType.Wool);
+                    break;
+
+                case ItemKind.PotionOfHealing:
+                    _game.Players[playerId.Value].Trade(IPlayer.CommodityKindType.HealthPotion);
+                    break;
 
                 default:
-                    Serilog.Log.Warning($"No item with id {e.Item}. Action rejected.");
+                    _logger.Error($"No item with id {e.Item}. Action rejected."); // Do not throw exception here.
                     break;
             }
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            Serilog.Log.Warning($"Action failed: {exception}");
+            _logger.Error($"PlayerTryTrade failed: {ex.Message}");
         }
     }
 }

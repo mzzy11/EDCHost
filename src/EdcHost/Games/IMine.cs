@@ -1,3 +1,5 @@
+using System;
+
 namespace EdcHost.Games;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace EdcHost.Games;
 /// </summary>
 public interface IMine
 {
-    static IMine Create(OreKindType oreKind, IPosition<float> position, int tick)
+    static IMine Create(OreKindType oreKind, IPosition<int> position, int tick)
     {
         return new Mine(oreKind, position, tick);
     }
@@ -19,6 +21,10 @@ public interface IMine
         GoldIngot,
         Diamond,
     }
+    /// <summary>
+    /// The id of the mine
+    /// </summary>
+    Guid MineId { get; }
 
     /// <summary>
     /// The count of accumulated ores.
@@ -33,7 +39,7 @@ public interface IMine
     /// <summary>
     /// The position of the mine.
     /// </summary>
-    IPosition<float> Position { get; }
+    IPosition<int> Position { get; }
 
     /// <summary>
     /// How much time required to generate ore.

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using Serilog;
 
 namespace EdcHost.Games;
 
@@ -9,6 +9,8 @@ partial class Game : IGame
 {
     const int TickBattlingModeStart = 12000;
     public const int TicksPerSecondExpected = 20;
+    const int TicksBattlingDamageInterval = 100;
+    const int BattlingDamage = 1;
 
     /// <summary>
     /// Current stage of the game.
@@ -38,17 +40,49 @@ partial class Game : IGame
     /// </summary>
     public List<IMine> Mines { get; private set; }
 
-    public Game()
-    {
-        var spawnPoints = new IPosition<int>[] { new Position<int>(0, 0), new Position<int>(7, 7) };
-        GameMap = new Map(spawnPoints);
+    /// <summary>
+    /// Default players.
+    /// </summary>
+    readonly IPlayer[] _defaultPlayerList = {
+        new Player(0, 0, 0, 0.5f, 0.5f),
+        new Player(1, 7, 7, 7.5f, 7.5f)
+    };
 
-        Players = new();
+    /// <summary>
+    /// Default spawn points.
+    /// </summary>
+    readonly IPosition<int>[] _defaultSpawnPoints = {
+        new Position<int>(0, 0),
+        new Position<int>(7, 7)
+    };
+
+    readonly ILogger _logger = Log.Logger.ForContext("Component", "Games");
+
+    public Game(
+        List<Tuple<int, int>>? diamondMines = null,
+        List<Tuple<int, int>>? goldMines = null,
+        List<Tuple<int, int>>? ironMines = null,
+        List<IPlayer>? playerList = null,
+        IPosition<int>[]? spawnPoints = null
+    )
+    {
+        spawnPoints ??= _defaultSpawnPoints;
+        playerList ??= new(_defaultPlayerList);
+
+        PlayerNum = playerList.Count;
+
+        if (PlayerNum != spawnPoints.Length)
+        {
+            throw new ArgumentException(
+                "Number of players does not match number of spawn points");
+        }
+
+        GameMap = new Map(spawnPoints);
 
         _playerLastAttackTickList = new();
         for (int i = 0; i < PlayerNum; i++)
         {
-            _playerLastAttackTickList.Add(ElapsedTicks);
+            _playerLastAttackTickList.Add(Never);
         }
 
         _playerDeathTickList = new();
@@ -58,16 +92,17 @@ partial class Game : IGame
         }
 
         Mines = new();
-        GenerateMines();
+        GenerateMines(
+            diamondMines: diamondMines,
+            goldMines: goldMines,
+            ironMines: ironMines
+        );
 
         _isAllBedsDestroyed = false;
 
-        Players.Clear();
-
         //TODO: Set player's initial position and spawnpoint
 
-        Players.Add(new Player(0, 0.4f, 0.4f, 0.4f, 0.4f));
-        Players.Add(new Player(1, 7.4f, 7.4f, 7.4f, 7.4f));
+        Players = new(playerList);
 
         for (int i = 0; i < PlayerNum; i++)
         {
@@ -79,7 +114,7 @@ partial class Game : IGame
 
         for (int i = 0; i < PlayerNum; i++)
         {
-            _playerLastAttackTickList[i] = ElapsedTicks;
+            _playerLastAttackTickList[i] = Never;
         }
 
         for (int i = 0; i < PlayerNum; i++)
@@ -89,11 +124,6 @@ partial class Game : IGame
 
         //TODO: Start game after all players are ready
 
-        foreach (IMine mine in Mines)
-        {
-            mine.GenerateOre(ElapsedTicks);
-        }
-
         Winner = null;
 
         _isAllBedsDestroyed = false;
@@ -101,6 +131,8 @@ partial class Game : IGame
 
     public void Start()
     {
+        _logger.Information("Starting...");
+
         if (CurrentStage != IGame.Stage.Ready)
         {
             throw new InvalidOperationException("the game has already started");
@@ -109,11 +141,13 @@ partial class Game : IGame
         CurrentStage = IGame.Stage.Running;
         AfterGameStartEvent?.Invoke(this, new AfterGameStartEventArgs(this));
 
-        Serilog.Log.Information("Game started.");
+        _logger.Information("Started.");
     }
 
     public void End()
     {
+        _logger.Information("Ending...");
+
         if (CurrentStage != IGame.Stage.Running && CurrentStage != IGame.Stage.Battling)
         {
             throw new InvalidOperationException("the game is not running");
@@ -121,55 +155,53 @@ partial class Game : IGame
 
         CurrentStage = IGame.Stage.Ended;
 
-        Serilog.Log.Information("Game stopped.");
+        _logger.Information("Ended.");
     }
 
     public void Tick()
     {
         ++ElapsedTicks;
 
-        if (IsFinished())
+        lock (this)
         {
-            Judge();
-            CurrentStage = IGame.Stage.Finished;
-            return;
-        }
-
-        if (ElapsedTicks > TickBattlingModeStart && CurrentStage == IGame.Stage.Running)
-        {
-            CurrentStage = IGame.Stage.Battling;
-        }
-
-        if (CurrentStage == IGame.Stage.Battling)
-        {
-            if (_isAllBedsDestroyed == false)
+            if (IsFinished())
             {
-                for (int i = 0; i < PlayerNum; i++)
-                {
-                    Players[i].DestroyBed();
-                }
-                _isAllBedsDestroyed = true;
+                Judge();
+                CurrentStage = IGame.Stage.Finished;
+                return;
             }
 
-            if ((ElapsedTicks - TickBattlingModeStart) % TicksPerSecondExpected == 0)
+            if (ElapsedTicks > TickBattlingModeStart && CurrentStage == IGame.Stage.Running)
             {
-                for (int i = 0; i < PlayerNum; i++)
+                CurrentStage = IGame.Stage.Battling;
+            }
+
+            if (CurrentStage == IGame.Stage.Battling)
+            {
+                if (_isAllBedsDestroyed == false)
                 {
-                    Players[i].Hurt(1);
+                    for (int i = 0; i < PlayerNum; i++)
+                    {
+                        Players[i].DestroyBed();
+                    }
+                    _isAllBedsDestroyed = true;
+                }
+
+                if ((ElapsedTicks - TickBattlingModeStart) % TicksBattlingDamageInterval == 0)
+                {
+                    for (int i = 0; i < PlayerNum; i++)
+                    {
+                        Players[i].Hurt(BattlingDamage);
+                    }
                 }
             }
-        }
 
-        UpdatePlayerInfo();
-        UpdateMines();
+            UpdatePlayerInfo();
+            UpdateMines();
+        }
 
         AfterGameTickEvent?.Invoke(
             this, new AfterGameTickEventArgs(this, ElapsedTicks));
-    }
-
-    void GenerateMines()
-    {
-        //TODO: Generate mines according to game rule
     }
 
     void UpdatePlayerInfo()
@@ -177,7 +209,7 @@ partial class Game : IGame
         for (int i = 0; i < PlayerNum; i++)
         {
             if (Players[i].HasBed == true
-                && GameMap.GetChunkAt(ToIntPosition(Players[i].SpawnPoint)).IsVoid == true)
+                && GameMap.GetChunkAt(Players[i].SpawnPoint).IsVoid == true)
             {
                 Players[i].DestroyBed();
             }
@@ -185,7 +217,7 @@ partial class Game : IGame
             if (Players[i].IsAlive == false && Players[i].HasBed == true
                 && ElapsedTicks - _playerDeathTickList[i] > TicksBeforeRespawn
                 && IsSamePosition(
-                    ToIntPosition(Players[i].PlayerPosition), ToIntPosition(Players[i].SpawnPoint)
+                    ToIntPosition(Players[i].PlayerPosition), Players[i].SpawnPoint
                     ) == true)
             {
                 Players[i].Spawn(Players[i].MaxHealth);
@@ -221,7 +253,7 @@ partial class Game : IGame
             {
                 if (Players[i].IsAlive == true
                     && IsSamePosition(
-                        ToIntPosition(Players[i].PlayerPosition), ToIntPosition(mine.Position)
+                        ToIntPosition(Players[i].PlayerPosition), mine.Position
                         ) == true)
                 {
                     //Remaining capacity of a player
@@ -240,6 +272,9 @@ partial class Game : IGame
                     int collectedOre = Math.Min(capacity / value, mine.AccumulatedOreCount);
 
                     Players[i].EmeraldAdd(collectedOre * value);
+                    // Invoke the event
+                    Players[i].PickUpEventInvoker(mine.OreKind, collectedOre, mine.MineId.ToString());
+
                     mine.PickUpOre(collectedOre);
                 }
             }
@@ -252,14 +287,15 @@ partial class Game : IGame
     /// <returns>True if finished, false otherwise.</returns>
     bool IsFinished()
     {
+        int remainingPlayers = PlayerNum;
         for (int i = 0; i < PlayerNum; i++)
         {
             if (Players[i].IsAlive == false && Players[i].HasBed == false)
             {
-                return true;
+                remainingPlayers--;
             }
         }
-        return false;
+        return remainingPlayers <= 1;
     }
 
     /// <summary>
@@ -276,7 +312,7 @@ partial class Game : IGame
             }
         }
 
-        if (remainingPlayers == 0 || remainingPlayers == PlayerNum)
+        if (remainingPlayers == 0 || remainingPlayers > 1)
         {
             Winner = null;
         }
